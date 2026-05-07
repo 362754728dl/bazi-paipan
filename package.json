@@ -1,0 +1,10 @@
+{
+  "name": "bazi-paipan",
+  "description": "八字排盘网站",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "scripts": {
+    "start": "cd server && npm install && node server.js"
+  }
+}

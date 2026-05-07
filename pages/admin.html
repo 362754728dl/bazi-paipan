@@ -1,0 +1,1078 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>后台管理系统</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif; background: #f5f5f5; color: #333; min-height: 100vh; }
+
+/* ========== 登录页 ========== */
+#loginPage { display: flex; justify-content: center; align-items: center; min-height: 100vh; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%); }
+.login-card { background: #fff; border-radius: 12px; padding: 48px 40px; width: 400px; max-width: 90vw; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
+.login-card h1 { text-align: center; font-size: 24px; color: #1a1a2e; margin-bottom: 32px; }
+.login-card .form-group { margin-bottom: 20px; }
+.login-card label { display: block; font-size: 14px; color: #666; margin-bottom: 6px; }
+.login-card input[type="text"],
+.login-card input[type="password"] { width: 100%; padding: 12px 16px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; transition: border-color 0.3s; outline: none; }
+.login-card input:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,0.1); }
+.login-card .btn-login { width: 100%; padding: 12px; background: #3b82f6; color: #fff; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; transition: background 0.3s; margin-top: 8px; }
+.login-card .btn-login:hover { background: #2563eb; }
+.login-card .btn-login:disabled { background: #93c5fd; cursor: not-allowed; }
+.login-error { color: #ef4444; font-size: 13px; text-align: center; margin-top: 12px; display: none; }
+
+/* ========== 管理面板布局 ========== */
+#adminPanel { display: none; }
+.admin-layout { display: flex; min-height: 100vh; }
+
+/* 左侧导航 */
+.sidebar { width: 220px; background: #1a1a2e; color: #fff; position: fixed; top: 0; left: 0; bottom: 0; z-index: 100; transition: transform 0.3s; overflow-y: auto; }
+.sidebar-header { padding: 24px 20px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+.sidebar-header h2 { font-size: 18px; font-weight: 600; }
+.sidebar-header p { font-size: 12px; color: rgba(255,255,255,0.5); margin-top: 4px; }
+.sidebar-nav { padding: 12px 0; }
+.sidebar-nav .nav-item { display: flex; align-items: center; padding: 12px 20px; cursor: pointer; transition: background 0.2s; font-size: 14px; color: rgba(255,255,255,0.7); text-decoration: none; }
+.sidebar-nav .nav-item:hover { background: rgba(255,255,255,0.08); color: #fff; }
+.sidebar-nav .nav-item.active { background: rgba(59,130,246,0.2); color: #60a5fa; border-right: 3px solid #3b82f6; }
+.sidebar-nav .nav-item .nav-icon { margin-right: 10px; font-size: 16px; width: 20px; text-align: center; }
+.sidebar-nav .nav-divider { height: 1px; background: rgba(255,255,255,0.08); margin: 8px 20px; }
+
+/* 汉堡菜单按钮（手机端） */
+.menu-toggle { display: none; position: fixed; top: 12px; left: 12px; z-index: 200; width: 40px; height: 40px; background: #1a1a2e; color: #fff; border: none; border-radius: 8px; font-size: 20px; cursor: pointer; line-height: 40px; text-align: center; }
+.sidebar-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 90; }
+
+/* 主内容区 */
+.main-content { margin-left: 220px; flex: 1; padding: 24px; min-height: 100vh; }
+.page-header { margin-bottom: 24px; }
+.page-header h2 { font-size: 22px; color: #1a1a2e; }
+.page-header p { font-size: 13px; color: #999; margin-top: 4px; }
+
+/* ========== 仪表盘 ========== */
+.stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 24px; }
+.stat-card { background: #fff; border-radius: 8px; padding: 24px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); transition: transform 0.2s, box-shadow 0.2s; }
+.stat-card:hover { transform: translateY(-2px); box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+.stat-card .stat-icon { font-size: 28px; margin-bottom: 12px; }
+.stat-card .stat-label { font-size: 13px; color: #999; margin-bottom: 8px; }
+.stat-card .stat-value { font-size: 28px; font-weight: 700; color: #1a1a2e; }
+.stat-card.blue .stat-value { color: #3b82f6; }
+.stat-card.green .stat-value { color: #10b981; }
+.stat-card.orange .stat-value { color: #f59e0b; }
+.stat-card.purple .stat-value { color: #8b5cf6; }
+
+/* ========== 表格 ========== */
+.table-toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 12px; }
+.search-box { position: relative; }
+.search-box input { padding: 8px 12px 8px 36px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px; width: 240px; outline: none; transition: border-color 0.3s; }
+.search-box input:focus { border-color: #3b82f6; }
+.search-box::before { content: "\1F50D"; position: absolute; left: 10px; top: 50%; transform: translateY(-50%); font-size: 14px; }
+.filter-tabs { display: flex; gap: 4px; background: #fff; border-radius: 8px; padding: 4px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+.filter-tabs .tab { padding: 6px 16px; border-radius: 6px; font-size: 13px; cursor: pointer; color: #666; transition: all 0.2s; border: none; background: transparent; }
+.filter-tabs .tab:hover { color: #3b82f6; }
+.filter-tabs .tab.active { background: #3b82f6; color: #fff; }
+
+.data-table { width: 100%; background: #fff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 12px rgba(0,0,0,0.06); border-collapse: collapse; }
+.data-table thead { background: #f8f9fa; }
+.data-table th { padding: 12px 16px; text-align: left; font-size: 13px; font-weight: 600; color: #666; border-bottom: 2px solid #eee; white-space: nowrap; }
+.data-table td { padding: 12px 16px; font-size: 13px; border-bottom: 1px solid #f0f0f0; }
+.data-table tbody tr:nth-child(even) { background: #fafbfc; }
+.data-table tbody tr:hover { background: #eff6ff; }
+.data-table .actions { display: flex; gap: 6px; flex-wrap: wrap; }
+
+/* ========== 按钮 ========== */
+.btn { padding: 6px 14px; border: none; border-radius: 6px; font-size: 12px; cursor: pointer; transition: all 0.2s; white-space: nowrap; }
+.btn-primary { background: #3b82f6; color: #fff; }
+.btn-primary:hover { background: #2563eb; }
+.btn-success { background: #10b981; color: #fff; }
+.btn-success:hover { background: #059669; }
+.btn-warning { background: #f59e0b; color: #fff; }
+.btn-warning:hover { background: #d97706; }
+.btn-danger { background: #ef4444; color: #fff; }
+.btn-danger:hover { background: #dc2626; }
+.btn-default { background: #e5e7eb; color: #666; }
+.btn-default:hover { background: #d1d5db; }
+.btn-sm { padding: 4px 10px; font-size: 11px; }
+
+/* ========== 状态标签 ========== */
+.status-tag { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 12px; font-weight: 500; }
+.status-pending { background: #fef3c7; color: #92400e; }
+.status-paid { background: #d1fae5; color: #065f46; }
+.status-cancelled { background: #fee2e2; color: #991b1b; }
+.status-expired { background: #f3f4f6; color: #6b7280; }
+.status-normal { background: #e0e7ff; color: #3730a3; }
+.status-vip { background: #fef3c7; color: #92400e; }
+.status-disabled { background: #fee2e2; color: #991b1b; }
+
+/* ========== 系统设置 ========== */
+.settings-section { background: #fff; border-radius: 8px; padding: 24px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); margin-bottom: 20px; }
+.settings-section h3 { font-size: 16px; color: #1a1a2e; margin-bottom: 20px; padding-bottom: 12px; border-bottom: 1px solid #f0f0f0; }
+.form-row { display: flex; align-items: center; margin-bottom: 16px; gap: 16px; }
+.form-row label { width: 160px; font-size: 13px; color: #666; flex-shrink: 0; }
+.form-row input { flex: 1; padding: 8px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px; outline: none; max-width: 300px; }
+.form-row input:focus { border-color: #3b82f6; }
+.form-row .unit { font-size: 13px; color: #999; }
+.btn-save { padding: 10px 32px; background: #3b82f6; color: #fff; border: none; border-radius: 8px; font-size: 14px; cursor: pointer; transition: background 0.3s; margin-top: 8px; }
+.btn-save:hover { background: #2563eb; }
+
+/* ========== 分页控件 ========== */
+.pagination { display: flex; justify-content: center; align-items: center; gap: 6px; margin-top: 20px; flex-wrap: wrap; }
+.pagination .page-btn { padding: 6px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px; cursor: pointer; background: #fff; color: #666; transition: all 0.2s; min-width: 36px; text-align: center; }
+.pagination .page-btn:hover:not(:disabled) { border-color: #3b82f6; color: #3b82f6; }
+.pagination .page-btn.active { background: #3b82f6; color: #fff; border-color: #3b82f6; }
+.pagination .page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.pagination .page-info { font-size: 13px; color: #999; margin: 0 8px; }
+
+/* ========== Toast 提示 ========== */
+.toast-container { position: fixed; top: 20px; right: 20px; z-index: 9999; }
+.toast { padding: 12px 20px; border-radius: 8px; color: #fff; font-size: 13px; margin-bottom: 8px; animation: slideIn 0.3s ease; box-shadow: 0 4px 12px rgba(0,0,0,0.15); max-width: 360px; }
+.toast-success { background: #10b981; }
+.toast-error { background: #ef4444; }
+.toast-info { background: #3b82f6; }
+@keyframes slideIn { from { opacity: 0; transform: translateX(30px); } to { opacity: 1; transform: translateX(0); } }
+
+/* ========== 确认弹窗 ========== */
+.modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 10000; justify-content: center; align-items: center; }
+.modal-overlay.show { display: flex; }
+.modal-box { background: #fff; border-radius: 12px; padding: 28px; width: 420px; max-width: 90vw; box-shadow: 0 20px 60px rgba(0,0,0,0.3); animation: modalIn 0.25s ease; }
+@keyframes modalIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+.modal-box h3 { font-size: 16px; color: #1a1a2e; margin-bottom: 12px; }
+.modal-box p { font-size: 14px; color: #666; margin-bottom: 20px; line-height: 1.6; }
+.modal-box .modal-input { width: 100%; padding: 8px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px; outline: none; margin-bottom: 16px; }
+.modal-box .modal-input:focus { border-color: #3b82f6; }
+.modal-box .modal-actions { display: flex; justify-content: flex-end; gap: 10px; }
+.modal-box .modal-actions .btn { padding: 8px 20px; font-size: 13px; }
+
+/* ========== 空状态 ========== */
+.empty-state { text-align: center; padding: 60px 20px; color: #999; }
+.empty-state .empty-icon { font-size: 48px; margin-bottom: 12px; }
+.empty-state p { font-size: 14px; }
+
+/* ========== 加载中 ========== */
+.loading { text-align: center; padding: 40px; color: #999; font-size: 14px; }
+.loading::after { content: ''; display: inline-block; width: 20px; height: 20px; border: 2px solid #ddd; border-top-color: #3b82f6; border-radius: 50%; animation: spin 0.8s linear infinite; margin-left: 8px; vertical-align: middle; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ========== 页面内容区 ========== */
+.page-section { display: none; }
+.page-section.active { display: block; }
+
+/* ========== 手机端适配 ========== */
+@media (max-width: 768px) {
+    .menu-toggle { display: block; }
+    .sidebar { transform: translateX(-100%); }
+    .sidebar.open { transform: translateX(0); }
+    .sidebar-overlay.show { display: block; }
+    .main-content { margin-left: 0; padding: 16px; padding-top: 60px; }
+    .stats-grid { grid-template-columns: repeat(2, 1fr); }
+    .data-table { font-size: 12px; }
+    .data-table th, .data-table td { padding: 8px 10px; }
+    .table-toolbar { flex-direction: column; align-items: stretch; }
+    .search-box input { width: 100%; }
+    .form-row { flex-direction: column; align-items: flex-start; }
+    .form-row label { width: auto; margin-bottom: 4px; }
+    .form-row input { max-width: 100%; width: 100%; }
+    .login-card { padding: 32px 24px; }
+    .modal-box { padding: 20px; }
+}
+</style>
+</head>
+<body>
+
+<!-- Toast 容器 -->
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- 确认弹窗 -->
+<div class="modal-overlay" id="modalOverlay">
+    <div class="modal-box">
+        <h3 id="modalTitle">确认操作</h3>
+        <p id="modalMessage">确定要执行此操作吗？</p>
+        <div id="modalBody"></div>
+        <div class="modal-actions">
+            <button class="btn btn-default" id="modalCancel" onclick="closeModal()">取消</button>
+            <button class="btn btn-primary" id="modalConfirm">确定</button>
+        </div>
+    </div>
+</div>
+
+<!-- ========== 登录页 ========== -->
+<div id="loginPage">
+    <div class="login-card">
+        <h1>后台管理系统</h1>
+        <div class="form-group">
+            <label>管理员用户名</label>
+            <input type="text" id="loginUsername" placeholder="请输入用户名" autocomplete="username">
+        </div>
+        <div class="form-group">
+            <label>密码</label>
+            <input type="password" id="loginPassword" placeholder="请输入密码" autocomplete="current-password">
+        </div>
+        <button class="btn-login" id="btnLogin" onclick="handleLogin()">登录</button>
+        <div class="login-error" id="loginError"></div>
+    </div>
+</div>
+
+<!-- ========== 管理面板 ========== -->
+<div id="adminPanel">
+    <!-- 汉堡菜单按钮 -->
+    <button class="menu-toggle" id="menuToggle" onclick="toggleSidebar()">&#9776;</button>
+    <!-- 侧边栏遮罩 -->
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+
+    <div class="admin-layout">
+        <!-- 左侧导航 -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <h2>管理后台</h2>
+                <p>Administration Panel</p>
+            </div>
+            <nav class="sidebar-nav">
+                <a class="nav-item active" data-page="dashboard" onclick="switchPage('dashboard')">
+                    <span class="nav-icon">&#128202;</span> 仪表盘
+                </a>
+                <a class="nav-item" data-page="users" onclick="switchPage('users')">
+                    <span class="nav-icon">&#128101;</span> 用户管理
+                </a>
+                <a class="nav-item" data-page="orders" onclick="switchPage('orders')">
+                    <span class="nav-icon">&#128230;</span> 订单管理
+                </a>
+                <a class="nav-item" data-page="settings" onclick="switchPage('settings')">
+                    <span class="nav-icon">&#9881;&#65039;</span> 系统设置
+                </a>
+                <div class="nav-divider"></div>
+                <a class="nav-item" onclick="handleLogout()">
+                    <span class="nav-icon">&#128682;</span> 退出登录
+                </a>
+            </nav>
+        </aside>
+
+        <!-- 主内容区 -->
+        <main class="main-content">
+
+            <!-- 仪表盘 -->
+            <div class="page-section active" id="page-dashboard">
+                <div class="page-header">
+                    <h2>仪表盘</h2>
+                    <p>查看系统运营数据概览</p>
+                </div>
+                <div class="stats-grid" id="statsGrid">
+                    <div class="stat-card blue">
+                        <div class="stat-icon">&#128100;</div>
+                        <div class="stat-label">今日注册</div>
+                        <div class="stat-value" id="statTodayUsers">--</div>
+                    </div>
+                    <div class="stat-card green">
+                        <div class="stat-icon">&#128196;</div>
+                        <div class="stat-label">今日订单</div>
+                        <div class="stat-value" id="statTodayOrders">--</div>
+                    </div>
+                    <div class="stat-card orange">
+                        <div class="stat-icon">&#165;</div>
+                        <div class="stat-label">今日收入</div>
+                        <div class="stat-value" id="statTodayRevenue">--</div>
+                    </div>
+                    <div class="stat-card purple">
+                        <div class="stat-icon">&#128101;</div>
+                        <div class="stat-label">总用户数</div>
+                        <div class="stat-value" id="statTotalUsers">--</div>
+                    </div>
+                    <div class="stat-card blue">
+                        <div class="stat-icon">&#128230;</div>
+                        <div class="stat-label">总订单数</div>
+                        <div class="stat-value" id="statTotalOrders">--</div>
+                    </div>
+                    <div class="stat-card green">
+                        <div class="stat-icon">&#128176;</div>
+                        <div class="stat-label">总收入</div>
+                        <div class="stat-value" id="statTotalRevenue">--</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 用户管理 -->
+            <div class="page-section" id="page-users">
+                <div class="page-header">
+                    <h2>用户管理</h2>
+                    <p>管理平台注册用户</p>
+                </div>
+                <div class="table-toolbar">
+                    <div class="search-box">
+                        <input type="text" id="userSearchInput" placeholder="搜索用户名/邮箱/手机号..." oninput="handleUserSearch()">
+                    </div>
+                </div>
+                <div id="userTableContainer">
+                    <div class="loading">加载中</div>
+                </div>
+                <div id="userPagination"></div>
+            </div>
+
+            <!-- 订单管理 -->
+            <div class="page-section" id="page-orders">
+                <div class="page-header">
+                    <h2>订单管理</h2>
+                    <p>查看和管理平台订单</p>
+                </div>
+                <div class="table-toolbar">
+                    <div style="margin-bottom:12px;">
+                        <input type="text" id="orderSearchInput" placeholder="搜索订单号/用户名" style="width:200px;padding:8px 12px;border:1px solid #ddd;border-radius:6px;font-size:13px;" oninput="orderSearchDebounce()">
+                    </div>
+                    <div class="filter-tabs" id="orderFilterTabs">
+                        <button class="tab active" data-filter="" onclick="filterOrders('')">全部</button>
+                        <button class="tab" data-filter="pending" onclick="filterOrders('pending')">待支付</button>
+                        <button class="tab" data-filter="paid" onclick="filterOrders('paid')">已支付</button>
+                        <button class="tab" data-filter="cancelled" onclick="filterOrders('cancelled')">已取消</button>
+                    </div>
+                </div>
+                <div id="orderTableContainer">
+                    <div class="loading">加载中</div>
+                </div>
+                <div id="orderPagination"></div>
+            </div>
+
+            <!-- 系统设置 -->
+            <div class="page-section" id="page-settings">
+                <div class="page-header">
+                    <h2>系统设置</h2>
+                    <p>配置系统参数</p>
+                </div>
+
+                <div class="settings-section">
+                    <h3>VIP 设置</h3>
+                    <div class="form-row">
+                        <label>VIP 会员价格</label>
+                        <input type="number" id="settingVipPrice" step="0.1" min="0">
+                        <span class="unit">元</span>
+                    </div>
+                    <div class="form-row">
+                        <label>VIP 有效期</label>
+                        <input type="number" id="settingVipDuration" min="1">
+                        <span class="unit">天</span>
+                    </div>
+                </div>
+
+                <div class="settings-section">
+                    <h3>免费次数设置</h3>
+                    <div class="form-row">
+                        <label>免费取名次数</label>
+                        <input type="number" id="settingFreeNameCount" min="0">
+                        <span class="unit">次</span>
+                    </div>
+                    <div class="form-row">
+                        <label>免费评测次数</label>
+                        <input type="number" id="settingFreeEvalCount" min="0">
+                        <span class="unit">次</span>
+                    </div>
+                </div>
+
+                <div class="settings-section">
+                    <h3>VIP 次数设置</h3>
+                    <div class="form-row">
+                        <label>VIP 取名次数</label>
+                        <input type="number" id="settingVipNameCount" min="0">
+                        <span class="unit">次</span>
+                    </div>
+                    <div class="form-row">
+                        <label>VIP 评测次数</label>
+                        <input type="number" id="settingVipEvalCount" min="0">
+                        <span class="unit">次</span>
+                    </div>
+                </div>
+
+                <div class="settings-section">
+                    <h3>修改管理员密码</h3>
+                    <div class="form-row">
+                        <label>旧密码</label>
+                        <input type="password" id="settingOldPwd" placeholder="请输入旧密码">
+                    </div>
+                    <div class="form-row">
+                        <label>新密码</label>
+                        <input type="password" id="settingNewPwd" placeholder="请输入新密码">
+                    </div>
+                    <div class="form-row">
+                        <label>确认新密码</label>
+                        <input type="password" id="settingConfirmPwd" placeholder="请再次输入新密码">
+                    </div>
+                </div>
+
+                <button class="btn-save" onclick="handleSaveSettings()">保存设置</button>
+            </div>
+
+        </main>
+    </div>
+</div>
+
+<script>
+// ========== 全局变量 ==========
+var API_BASE = '/api';
+var adminToken = localStorage.getItem('admin_token');
+var currentPage = 'dashboard';
+
+// 用户管理分页状态
+var userPage = 1;
+var userPageSize = 10;
+var userTotalPages = 1;
+var userSearchTimer = null;
+
+// 订单管理分页状态
+var orderPage = 1;
+var orderPageSize = 10;
+var orderTotalPages = 1;
+var currentOrderFilter = '';
+
+// ========== API 调用 ==========
+async function apiCall(method, path, data) {
+    var opts = {
+        method: method,
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    };
+    if (adminToken) {
+        opts.headers['Authorization'] = 'Bearer ' + adminToken;
+    }
+    if (data && method !== 'GET') opts.body = JSON.stringify(data);
+
+    var res = await fetch(API_BASE + path, opts);
+    if (res.status === 401) {
+        showLoginPage();
+        showToast('登录已过期，请重新登录', 'error');
+        return null;
+    }
+    var json = await res.json();
+    return json;
+}
+
+// ========== Toast 提示 ==========
+function showToast(msg, type) {
+    type = type || 'info';
+    var container = document.getElementById('toastContainer');
+    var toast = document.createElement('div');
+    toast.className = 'toast toast-' + type;
+    toast.textContent = msg;
+    container.appendChild(toast);
+    setTimeout(function() {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateX(30px)';
+        toast.style.transition = 'all 0.3s';
+        setTimeout(function() { toast.remove(); }, 300);
+    }, 2500);
+}
+
+// ========== 确认弹窗（替代 confirm） ==========
+var modalCallback = null;
+
+function showModal(title, message, onConfirm, bodyHtml) {
+    document.getElementById('modalTitle').textContent = title;
+    document.getElementById('modalMessage').textContent = message;
+    document.getElementById('modalBody').innerHTML = bodyHtml || '';
+    document.getElementById('modalOverlay').classList.add('show');
+    modalCallback = onConfirm;
+    document.getElementById('modalConfirm').onclick = function() {
+        closeModal();
+        if (modalCallback) modalCallback();
+    };
+}
+
+function closeModal() {
+    document.getElementById('modalOverlay').classList.remove('show');
+    modalCallback = null;
+}
+
+// 点击遮罩关闭弹窗
+document.getElementById('modalOverlay').addEventListener('click', function(e) {
+    if (e.target === this) closeModal();
+});
+
+// ========== 登录相关 ==========
+function showLoginPage() {
+    adminToken = null;
+    localStorage.removeItem('admin_token');
+    document.getElementById('loginPage').style.display = 'flex';
+    document.getElementById('adminPanel').style.display = 'none';
+}
+
+function showAdminPanel() {
+    document.getElementById('loginPage').style.display = 'none';
+    document.getElementById('adminPanel').style.display = 'block';
+    loadStatistics();
+}
+
+async function handleLogin() {
+    var username = document.getElementById('loginUsername').value.trim();
+    var password = document.getElementById('loginPassword').value.trim();
+    var errorEl = document.getElementById('loginError');
+    var btn = document.getElementById('btnLogin');
+
+    if (!username || !password) {
+        errorEl.textContent = '请输入用户名和密码';
+        errorEl.style.display = 'block';
+        return;
+    }
+
+    errorEl.style.display = 'none';
+    btn.disabled = true;
+    btn.textContent = '登录中...';
+
+    try {
+        var res = await fetch(API_BASE + '/admin/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username: username, password: password })
+        });
+        var data = await res.json();
+
+        if (data.code === 200 && data.data && data.data.token) {
+            adminToken = data.data.token;
+            localStorage.setItem('admin_token', data.data.token);
+            showAdminPanel();
+            showToast('登录成功', 'success');
+        } else {
+            errorEl.textContent = (data && data.message) || '登录失败，请检查用户名和密码';
+            errorEl.style.display = 'block';
+        }
+    } catch (e) {
+        errorEl.textContent = '网络错误，请稍后重试';
+        errorEl.style.display = 'block';
+    }
+
+    btn.disabled = false;
+    btn.textContent = '登录';
+}
+
+function handleLogout() {
+    showLoginPage();
+    showToast('已退出登录', 'info');
+}
+
+// 回车快捷登录
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter' && document.getElementById('loginPage').style.display !== 'none') {
+        handleLogin();
+    }
+});
+
+// ========== 页面切换 ==========
+function switchPage(page) {
+    currentPage = page;
+    // 更新导航高亮
+    var navItems = document.querySelectorAll('.sidebar-nav .nav-item[data-page]');
+    navItems.forEach(function(item) {
+        item.classList.toggle('active', item.getAttribute('data-page') === page);
+    });
+    // 切换内容区
+    var sections = document.querySelectorAll('.page-section');
+    sections.forEach(function(s) { s.classList.remove('active'); });
+    var target = document.getElementById('page-' + page);
+    if (target) target.classList.add('active');
+
+    // 加载数据
+    if (page === 'dashboard') loadStatistics();
+    if (page === 'users') { userPage = 1; loadUsers(); }
+    if (page === 'orders') { orderPage = 1; loadOrders(); }
+    if (page === 'settings') loadSettings();
+
+    // 手机端收起侧边栏
+    if (window.innerWidth <= 768) {
+        closeSidebar();
+    }
+}
+
+// ========== 侧边栏（手机端） ==========
+function toggleSidebar() {
+    document.getElementById('sidebar').classList.toggle('open');
+    document.getElementById('sidebarOverlay').classList.toggle('show');
+}
+function closeSidebar() {
+    document.getElementById('sidebar').classList.remove('open');
+    document.getElementById('sidebarOverlay').classList.remove('show');
+}
+
+// ========== 仪表盘 ==========
+async function loadStatistics() {
+    try {
+        var res = await apiCall('GET', '/admin/statistics');
+        if (!res) return;
+        if (res.code === 200 && res.data) {
+            var s = res.data;
+            document.getElementById('statTodayUsers').textContent = s.today_users || 0;
+            document.getElementById('statTodayOrders').textContent = s.today_orders || 0;
+            document.getElementById('statTodayRevenue').textContent = '\u00A5' + Number(s.today_revenue || 0).toFixed(2);
+            document.getElementById('statTotalUsers').textContent = s.total_users || 0;
+            document.getElementById('statTotalOrders').textContent = s.total_orders || 0;
+            document.getElementById('statTotalRevenue').textContent = '\u00A5' + Number(s.total_revenue || 0).toFixed(2);
+        } else {
+            showToast(res.message || '加载统计数据失败', 'error');
+        }
+    } catch (e) {
+        showToast('加载统计数据失败', 'error');
+    }
+}
+
+// ========== 用户管理 ==========
+async function loadUsers() {
+    var container = document.getElementById('userTableContainer');
+    container.innerHTML = '<div class="loading">加载中</div>';
+    document.getElementById('userPagination').innerHTML = '';
+
+    var keyword = document.getElementById('userSearchInput').value.trim();
+    var url = '/admin/users?page=' + userPage + '&pageSize=' + userPageSize;
+    if (keyword) url += '&keyword=' + encodeURIComponent(keyword);
+
+    try {
+        var res = await apiCall('GET', url);
+        if (!res) return;
+        if (res.code === 200 && res.data) {
+            var list = res.data.list || [];
+            var total = res.data.total || 0;
+            var totalPages = res.data.total_pages || Math.ceil(total / userPageSize);
+            userTotalPages = totalPages;
+            renderUserTable(list);
+            renderPagination('userPagination', userPage, totalPages, function(p) {
+                userPage = p;
+                loadUsers();
+            });
+        } else {
+            container.innerHTML = '<div class="empty-state"><div class="empty-icon">&#128533;</div><p>' + (res.message || '加载用户列表失败') + '</p></div>';
+        }
+    } catch (e) {
+        container.innerHTML = '<div class="empty-state"><div class="empty-icon">&#128533;</div><p>加载用户列表失败</p></div>';
+    }
+}
+
+function renderUserTable(users) {
+    var container = document.getElementById('userTableContainer');
+    if (!users || users.length === 0) {
+        container.innerHTML = '<div class="empty-state"><div class="empty-icon">&#128100;</div><p>暂无用户数据</p></div>';
+        return;
+    }
+    var html = '<div style="overflow-x:auto;"><table class="data-table"><thead><tr>' +
+        '<th>ID</th><th>用户名</th><th>邮箱</th><th>等级</th><th>会员到期</th><th>注册时间</th><th>操作</th>' +
+        '</tr></thead><tbody>';
+    users.forEach(function(u) {
+        var id = u.id;
+        var username = u.username || '--';
+        var email = u.email || '--';
+        var level = u.level || 'normal';
+        var vipExpire = u.vip_expire_time || '--';
+        if (vipExpire && vipExpire !== '--') {
+            try { vipExpire = new Date(vipExpire).toLocaleDateString('zh-CN'); } catch(e) {}
+        }
+        var createdAt = u.created_at || '--';
+        if (createdAt && createdAt !== '--') {
+            try { createdAt = new Date(createdAt).toLocaleString('zh-CN'); } catch(e) {}
+        }
+
+        var levelText, levelClass;
+        if (level === 'vip') {
+            levelText = 'VIP';
+            levelClass = 'status-vip';
+        } else if (level === 'disabled') {
+            levelText = '已禁用';
+            levelClass = 'status-disabled';
+        } else {
+            levelText = '普通';
+            levelClass = 'status-normal';
+        }
+
+        html += '<tr>';
+        html += '<td>' + id + '</td>';
+        html += '<td>' + escapeHtml(username) + '</td>';
+        html += '<td>' + escapeHtml(email) + '</td>';
+        html += '<td><span class="status-tag ' + levelClass + '">' + levelText + '</span></td>';
+        html += '<td>' + vipExpire + '</td>';
+        html += '<td>' + createdAt + '</td>';
+        html += '<td class="actions">';
+        if (level !== 'vip' && level !== 'disabled') {
+            html += '<button class="btn btn-warning btn-sm" onclick="setUserVip(' + id + ')">设为VIP</button>';
+        }
+        if (level === 'vip') {
+            html += '<button class="btn btn-default btn-sm" onclick="setUserNormal(' + id + ')">设为普通</button>';
+        }
+        if (level === 'disabled') {
+            html += '<button class="btn btn-success btn-sm" onclick="enableUser(' + id + ')">解禁</button>';
+        } else {
+            html += '<button class="btn btn-danger btn-sm" onclick="disableUser(' + id + ')">禁用</button>';
+        }
+        html += '</td></tr>';
+    });
+    html += '</tbody></table></div>';
+    container.innerHTML = html;
+}
+
+// 搜索防抖
+function handleUserSearch() {
+    if (userSearchTimer) clearTimeout(userSearchTimer);
+    userSearchTimer = setTimeout(function() {
+        userPage = 1;
+        loadUsers();
+    }, 400);
+}
+
+// 设为VIP - 弹出自定义到期时间
+function setUserVip(userId) {
+    // 默认到期时间为30天后
+    var defaultDate = new Date();
+    defaultDate.setDate(defaultDate.getDate() + 30);
+    var dateStr = defaultDate.toISOString().split('T')[0];
+
+    var bodyHtml = '<div class="form-row" style="flex-direction:column;align-items:flex-start;gap:8px;">' +
+        '<label style="width:auto;margin-bottom:0;">VIP 到期时间</label>' +
+        '<input type="date" class="modal-input" id="modalVipExpire" value="' + dateStr + '" style="margin-bottom:0;">' +
+        '</div>';
+
+    showModal('设置VIP会员', '请选择VIP到期时间', function() {
+        var expireDate = document.getElementById('modalVipExpire').value;
+        if (!expireDate) {
+            showToast('请选择到期时间', 'error');
+            return;
+        }
+        apiCall('PUT', '/admin/user/' + userId, {
+            level: 'vip',
+            vip_expire_time: expireDate + ' 23:59:59'
+        }).then(function(res) {
+            if (res && res.code === 200) {
+                showToast('已设置为VIP会员', 'success');
+                loadUsers();
+            } else {
+                showToast((res && res.message) || '操作失败', 'error');
+            }
+        }).catch(function() {
+            showToast('操作失败', 'error');
+        });
+    }, bodyHtml);
+}
+
+// 设为普通用户
+function setUserNormal(userId) {
+    showModal('确认操作', '确定将该用户设为普通用户？', function() {
+        apiCall('PUT', '/admin/user/' + userId, {
+            level: 'normal'
+        }).then(function(res) {
+            if (res && res.code === 200) {
+                showToast('已设为普通用户', 'success');
+                loadUsers();
+            } else {
+                showToast((res && res.message) || '操作失败', 'error');
+            }
+        }).catch(function() {
+            showToast('操作失败', 'error');
+        });
+    });
+}
+
+// 禁用用户
+function disableUser(userId) {
+    showModal('确认操作', '确定要禁用该用户吗？禁用后该用户将无法使用系统。', function() {
+        apiCall('PUT', '/admin/user/' + userId, {
+            level: 'disabled'
+        }).then(function(res) {
+            if (res && res.code === 200) {
+                showToast('已禁用该用户', 'success');
+                loadUsers();
+            } else {
+                showToast((res && res.message) || '操作失败', 'error');
+            }
+        }).catch(function() {
+            showToast('操作失败', 'error');
+        });
+    });
+}
+
+// 解禁用户
+function enableUser(userId) {
+    showModal('确认操作', '确定要解禁该用户吗？', function() {
+        apiCall('PUT', '/admin/user/' + userId, {
+            level: 'normal'
+        }).then(function(res) {
+            if (res && res.code === 200) {
+                showToast('已解禁该用户', 'success');
+                loadUsers();
+            } else {
+                showToast((res && res.message) || '操作失败', 'error');
+            }
+        }).catch(function() {
+            showToast('操作失败', 'error');
+        });
+    });
+}
+
+// ========== 订单管理 ==========
+async function loadOrders(keyword) {
+    var container = document.getElementById('orderTableContainer');
+    container.innerHTML = '<div class="loading">加载中</div>';
+    document.getElementById('orderPagination').innerHTML = '';
+
+    var url = '/admin/orders?page=' + orderPage + '&pageSize=' + orderPageSize;
+    if (currentOrderFilter) url += '&status=' + currentOrderFilter;
+    if (keyword) url += '&keyword=' + encodeURIComponent(keyword);
+
+    try {
+        var res = await apiCall('GET', url);
+        if (!res) return;
+        if (res.code === 200 && res.data) {
+            var list = res.data.list || [];
+            var total = res.data.total || 0;
+            var totalPages = res.data.total_pages || Math.ceil(total / orderPageSize);
+            orderTotalPages = totalPages;
+            renderOrderTable(list);
+            renderPagination('orderPagination', orderPage, totalPages, function(p) {
+                orderPage = p;
+                loadOrders();
+            });
+        } else {
+            container.innerHTML = '<div class="empty-state"><div class="empty-icon">&#128533;</div><p>' + (res.message || '加载订单列表失败') + '</p></div>';
+        }
+    } catch (e) {
+        container.innerHTML = '<div class="empty-state"><div class="empty-icon">&#128533;</div><p>加载订单列表失败</p></div>';
+    }
+}
+
+function renderOrderTable(orders) {
+    var container = document.getElementById('orderTableContainer');
+    if (!orders || orders.length === 0) {
+        container.innerHTML = '<div class="empty-state"><div class="empty-icon">&#128230;</div><p>暂无订单数据</p></div>';
+        return;
+    }
+
+    var statusMap = {
+        pending: { text: '待支付', cls: 'status-pending' },
+        paid: { text: '已支付', cls: 'status-paid' },
+        cancelled: { text: '已取消', cls: 'status-cancelled' },
+        expired: { text: '已过期', cls: 'status-expired' }
+    };
+
+    var html = '<div style="overflow-x:auto;"><table class="data-table"><thead><tr>' +
+        '<th>订单号</th><th>用户名</th><th>类型</th><th>金额</th><th>状态</th><th>创建时间</th><th>操作</th>' +
+        '</tr></thead><tbody>';
+    orders.forEach(function(o) {
+        var orderNo = o.order_no || '--';
+        var username = o.username || '--';
+        var type = o.type || '--';
+        var amount = o.amount || 0;
+        var status = o.status || 'pending';
+        var st = statusMap[status] || { text: status, cls: 'status-pending' };
+        var createdAt = o.created_at || '--';
+        if (createdAt && createdAt !== '--') {
+            try { createdAt = new Date(createdAt).toLocaleString('zh-CN'); } catch(e) {}
+        }
+
+        html += '<tr>';
+        html += '<td>' + escapeHtml(String(orderNo)) + '</td>';
+        html += '<td>' + escapeHtml(String(username)) + '</td>';
+        html += '<td>' + escapeHtml(String(type)) + '</td>';
+        html += '<td>\u00A5' + Number(amount).toFixed(2) + '</td>';
+        html += '<td><span class="status-tag ' + st.cls + '">' + st.text + '</span></td>';
+        html += '<td>' + createdAt + '</td>';
+        html += '<td class="actions">';
+        if (status === 'pending') {
+            html += '<button class="btn btn-success btn-sm" onclick="markOrderPaid(' + o.id + ')">标记已支付</button>';
+            html += '<button class="btn btn-danger btn-sm" onclick="markOrderCancelled(' + o.id + ')">标记已取消</button>';
+        }
+        // 表文订单可填写物流号
+        if (type === 'biaowen' && status === 'paid') {
+            html += '<button class="btn btn-primary btn-sm" onclick="showTrackingInput(' + o.id + ', \'' + escapeHtml(String(o.tracking_no || '')) + '\')">填写物流号</button>';
+        }
+        html += '</td></tr>';
+    });
+    html += '</tbody></table></div>';
+    container.innerHTML = html;
+}
+
+function filterOrders(filter) {
+    currentOrderFilter = filter;
+    var tabs = document.querySelectorAll('#orderFilterTabs .tab');
+    tabs.forEach(function(t) { t.classList.toggle('active', t.getAttribute('data-filter') === filter); });
+    orderPage = 1;
+    var keyword = document.getElementById('orderSearchInput').value.trim();
+    loadOrders(keyword);
+}
+
+function searchOrders() {
+    var keyword = document.getElementById('orderSearchInput').value.trim();
+    orderPage = 1;
+    loadOrders(keyword);
+}
+
+var orderSearchTimer = null;
+function orderSearchDebounce() {
+    if (orderSearchTimer) clearTimeout(orderSearchTimer);
+    orderSearchTimer = setTimeout(function() {
+        searchOrders();
+    }, 300);
+}
+
+function markOrderPaid(orderId) {
+    showModal('确认操作', '确定标记该订单为已支付？系统将自动开通会员。', function() {
+        apiCall('PUT', '/admin/order/' + orderId, { status: 'paid' }).then(function(res) {
+            if (res && res.code === 200) {
+                showToast('订单已标记为已支付', 'success');
+                loadOrders();
+            } else {
+                showToast((res && res.message) || '操作失败', 'error');
+            }
+        }).catch(function() {
+            showToast('操作失败', 'error');
+        });
+    });
+}
+
+function markOrderCancelled(orderId) {
+    showModal('确认操作', '确定标记该订单为已取消？', function() {
+        apiCall('PUT', '/admin/order/' + orderId, { status: 'cancelled' }).then(function(res) {
+            if (res && res.code === 200) {
+                showToast('订单已取消', 'success');
+                loadOrders();
+            } else {
+                showToast((res && res.message) || '操作失败', 'error');
+            }
+        }).catch(function() {
+            showToast('操作失败', 'error');
+        });
+    });
+}
+
+function showTrackingInput(orderId, currentTrackingNo) {
+    var bodyHtml = '<div class="form-row" style="flex-direction:column;align-items:flex-start;gap:8px;">' +
+        '<label style="width:auto;margin-bottom:0;">物流单号</label>' +
+        '<input type="text" class="modal-input" id="modalTrackingNo" value="' + currentTrackingNo + '" placeholder="请输入物流单号" style="margin-bottom:0;">' +
+        '</div>';
+
+    showModal('填写物流号', '请输入该表文订单的物流单号', function() {
+        var trackingNo = document.getElementById('modalTrackingNo').value.trim();
+        if (!trackingNo) {
+            showToast('请输入物流单号', 'error');
+            return;
+        }
+        apiCall('PUT', '/admin/order/' + orderId, { tracking_no: trackingNo }).then(function(res) {
+            if (res && res.code === 200) {
+                showToast('物流号已更新', 'success');
+                loadOrders();
+            } else {
+                showToast((res && res.message) || '操作失败', 'error');
+            }
+        }).catch(function() {
+            showToast('操作失败', 'error');
+        });
+    }, bodyHtml);
+}
+
+// ========== 系统设置 ==========
+async function loadSettings() {
+    try {
+        var res = await apiCall('GET', '/admin/settings');
+        if (!res) return;
+        if (res.code === 200 && res.data) {
+            var s = res.data;
+            document.getElementById('settingVipPrice').value = s.vip_price || '';
+            document.getElementById('settingVipDuration').value = s.vip_duration || '';
+            document.getElementById('settingFreeNameCount').value = s.free_name_count || '';
+            document.getElementById('settingFreeEvalCount').value = s.free_eval_count || '';
+            document.getElementById('settingVipNameCount').value = s.vip_name_count || '';
+            document.getElementById('settingVipEvalCount').value = s.vip_eval_count || '';
+        }
+    } catch (e) {
+        // 静默失败，使用默认值
+    }
+}
+
+async function handleSaveSettings() {
+    var vipPrice = document.getElementById('settingVipPrice').value;
+    var vipDuration = document.getElementById('settingVipDuration').value;
+    var freeNameCount = document.getElementById('settingFreeNameCount').value;
+    var freeEvalCount = document.getElementById('settingFreeEvalCount').value;
+    var vipNameCount = document.getElementById('settingVipNameCount').value;
+    var vipEvalCount = document.getElementById('settingVipEvalCount').value;
+    var oldPwd = document.getElementById('settingOldPwd').value;
+    var newPwd = document.getElementById('settingNewPwd').value;
+    var confirmPwd = document.getElementById('settingConfirmPwd').value;
+
+    // 密码校验
+    if (oldPwd || newPwd || confirmPwd) {
+        if (!oldPwd) { showToast('请输入旧密码', 'error'); return; }
+        if (!newPwd) { showToast('请输入新密码', 'error'); return; }
+        if (newPwd !== confirmPwd) { showToast('两次输入的新密码不一致', 'error'); return; }
+        if (newPwd.length < 6) { showToast('新密码长度不能少于6位', 'error'); return; }
+    }
+
+    var body = {
+        vip_price: parseFloat(vipPrice) || 0,
+        vip_duration: parseInt(vipDuration) || 0,
+        free_name_count: parseInt(freeNameCount) || 0,
+        free_eval_count: parseInt(freeEvalCount) || 0,
+        vip_name_count: parseInt(vipNameCount) || 0,
+        vip_eval_count: parseInt(vipEvalCount) || 0
+    };
+
+    if (oldPwd && newPwd) {
+        body.old_password = oldPwd;
+        body.new_password = newPwd;
+    }
+
+    try {
+        var res = await apiCall('PUT', '/admin/settings', body);
+        if (res && res.code === 200) {
+            showToast('设置保存成功', 'success');
+            document.getElementById('settingOldPwd').value = '';
+            document.getElementById('settingNewPwd').value = '';
+            document.getElementById('settingConfirmPwd').value = '';
+        } else {
+            showToast((res && res.message) || '保存失败', 'error');
+        }
+    } catch (e) {
+        showToast('保存失败', 'error');
+    }
+}
+
+// ========== 分页渲染 ==========
+function renderPagination(containerId, current, totalPages, onPageChange) {
+    var container = document.getElementById(containerId);
+    if (totalPages <= 1) {
+        container.innerHTML = '';
+        return;
+    }
+
+    var html = '<div class="pagination">';
+    // 上一页
+    html += '<button class="page-btn" ' + (current <= 1 ? 'disabled' : '') + ' onclick="(' + onPageChange.toString() + ')(' + (current - 1) + ')">&laquo;</button>';
+
+    // 页码按钮
+    var start = Math.max(1, current - 2);
+    var end = Math.min(totalPages, current + 2);
+
+    if (start > 1) {
+        html += '<button class="page-btn" onclick="(' + onPageChange.toString() + ')(1)">1</button>';
+        if (start > 2) html += '<span class="page-info">...</span>';
+    }
+
+    for (var i = start; i <= end; i++) {
+        html += '<button class="page-btn ' + (i === current ? 'active' : '') + '" onclick="(' + onPageChange.toString() + ')(' + i + ')">' + i + '</button>';
+    }
+
+    if (end < totalPages) {
+        if (end < totalPages - 1) html += '<span class="page-info">...</span>';
+        html += '<button class="page-btn" onclick="(' + onPageChange.toString() + ')(' + totalPages + ')">' + totalPages + '</button>';
+    }
+
+    // 下一页
+    html += '<button class="page-btn" ' + (current >= totalPages ? 'disabled' : '') + ' onclick="(' + onPageChange.toString() + ')(' + (current + 1) + ')">&raquo;</button>';
+    html += '</div>';
+    container.innerHTML = html;
+}
+
+// ========== 工具函数 ==========
+function escapeHtml(str) {
+    var div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+}
+
+// ========== 初始化 ==========
+(function init() {
+    if (adminToken) {
+        showAdminPanel();
+    } else {
+        showLoginPage();
+    }
+})();
+</script>
+</body>
+</html>

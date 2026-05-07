@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>民俗表文代写 - 传统民俗文化服务</title>
+    <style>
+    /* ==================== CSS变量 ==================== */
+    :root {
+        --bg-primary: #F5F0E8;
+        --bg-secondary: #FFF8EE;
+        --bg-card: #FFFCF5;
+        --border-color: #D4C5A0;
+        --border-dark: #B8A472;
+        --text-primary: #3D2B1F;
+        --text-secondary: #6B5B4E;
+        --text-light: #8C7B6B;
+        --red-primary: #A81216;
+        --red-dark: #8A0E12;
+        --red-light: #E8D0D0;
+        --gold: #C8A84E;
+        --gold-light: #E8D48C;
+        --green: #4A7C59;
+        --shadow: rgba(61, 43, 31, 0.1);
+        --shadow-strong: rgba(61, 43, 31, 0.2);
+    }
+
+    /* ==================== 全局重置 ==================== */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+        font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+        background: var(--bg-primary);
+        color: var(--text-primary);
+        min-height: 100vh;
+        font-size: 14px;
+        line-height: 1.6;
+        padding-bottom: 20px;
+    }
+
+    /* ==================== 顶部标题栏 ==================== */
+    .header {
+        background: linear-gradient(135deg, #8B1A1A, #A81216);
+        color: #FFF;
+        padding: 15px 20px;
+        text-align: center;
+        position: sticky;
+        top: 0;
+        z-index: 200;
+        box-shadow: 0 2px 8px var(--shadow-strong);
+    }
+    .header h1 {
+        font-size: 20px;
+        font-weight: 600;
+        letter-spacing: 3px;
+    }
+    .header .back-link {
+        position: absolute;
+        left: 15px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #FFF;
+        text-decoration: none;
+        font-size: 14px;
+        opacity: 0.9;
+    }
+    .header .back-link:hover { opacity: 1; }
+
+    /* ==================== 页面容器 ==================== */
+    .page-container {
+        padding: 12px;
+        max-width: 480px;
+        margin: 0 auto;
+    }
+
+    /* ==================== 服务说明卡片 ==================== */
+    .service-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 20px 16px;
+        margin-bottom: 16px;
+        box-shadow: 0 2px 8px var(--shadow);
+        animation: fadeIn 0.3s ease-out;
+    }
+    .service-card-title {
+        font-size: 18px;
+        font-weight: 600;
+        color: var(--red-primary);
+        text-align: center;
+        margin-bottom: 12px;
+        letter-spacing: 2px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid var(--border-color);
+    }
+    .service-card-desc {
+        font-size: 13px;
+        color: var(--text-secondary);
+        line-height: 1.8;
+        margin-bottom: 14px;
+        text-align: justify;
+    }
+    .service-card-price {
+        text-align: center;
+        margin-bottom: 14px;
+    }
+    .service-card-price .price-amount {
+        font-size: 28px;
+        font-weight: 700;
+        color: var(--red-primary);
+    }
+    .service-card-price .price-unit {
+        font-size: 14px;
+        font-weight: 400;
+        color: var(--text-light);
+    }
+    .service-card-price .price-detail {
+        display: block;
+        font-size: 13px;
+        color: var(--text-secondary);
+        margin-top: 4px;
+    }
+    .service-card-features {
+        list-style: none;
+        padding: 0;
+    }
+    .service-card-features li {
+        padding: 5px 0;
+        font-size: 14px;
+        color: var(--text-secondary);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .service-card-features li::before {
+        content: '';
+        display: inline-block;
+        width: 6px;
+        height: 6px;
+        background: var(--red-primary);
+        border-radius: 50%;
+        flex-shrink: 0;
+    }
+
+    /* ==================== 表单样式 ==================== */
+    .form-section {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 20px 16px;
+        margin-bottom: 16px;
+        box-shadow: 0 2px 8px var(--shadow);
+        animation: fadeIn 0.3s ease-out;
+    }
+    .form-section-title {
+        font-size: 16px;
+        font-weight: 600;
+        color: var(--red-primary);
+        margin-bottom: 16px;
+        padding-left: 10px;
+        border-left: 3px solid var(--red-primary);
+        letter-spacing: 1px;
+    }
+    .form-group {
+        margin-bottom: 15px;
+    }
+    .form-group:last-child {
+        margin-bottom: 0;
+    }
+    .form-group label {
+        display: block;
+        font-size: 14px;
+        color: var(--text-secondary);
+        margin-bottom: 6px;
+        font-weight: 500;
+    }
+    .form-group label .required {
+        color: var(--red-primary);
+        margin-left: 2px;
+    }
+    .form-group input[type="text"],
+    .form-group select,
+    .form-group textarea {
+        width: 100%;
+        padding: 10px 12px;
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        font-size: 15px;
+        background: var(--bg-card);
+        color: var(--text-primary);
+        outline: none;
+        transition: border-color 0.3s;
+        -webkit-appearance: none;
+        font-family: inherit;
+    }
+    .form-group input[type="text"]:focus,
+    .form-group select:focus,
+    .form-group textarea:focus {
+        border-color: var(--red-primary);
+        box-shadow: 0 0 0 2px rgba(168, 18, 22, 0.1);
+    }
+    .form-group input::placeholder,
+    .form-group textarea::placeholder {
+        color: var(--text-light);
+        font-size: 13px;
+    }
+    .form-group textarea {
+        min-height: 80px;
+        resize: vertical;
+        line-height: 1.6;
+    }
+    .form-group select {
+        appearance: auto;
+        background-image: none;
+    }
+
+    /* 性别选择 */
+    .gender-switch {
+        display: flex;
+        gap: 10px;
+    }
+    .gender-switch .gender-item {
+        flex: 1;
+        padding: 10px;
+        text-align: center;
+        border: 2px solid var(--border-color);
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 15px;
+        transition: all 0.3s;
+        background: var(--bg-card);
+        user-select: none;
+    }
+    .gender-switch .gender-item.active {
+        border-color: var(--red-primary);
+        background: var(--red-light);
+        color: var(--red-primary);
+        font-weight: 600;
+    }
+
+    /* ==================== 收款区域 ==================== */
+    .payment-section {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 20px 16px;
+        margin-bottom: 16px;
+        box-shadow: 0 2px 8px var(--shadow);
+        animation: fadeIn 0.3s ease-out;
+    }
+    .payment-title {
+        font-size: 16px;
+        font-weight: 600;
+        color: var(--red-primary);
+        text-align: center;
+        margin-bottom: 16px;
+        letter-spacing: 2px;
+    }
+    .qr-area {
+        display: flex;
+        gap: 16px;
+        margin-bottom: 14px;
+    }
+    .qr-item {
+        flex: 1;
+        text-align: center;
+    }
+    .qr-item img {
+        width: 140px;
+        height: 140px;
+        border-radius: 8px;
+        border: 1px solid var(--border-color);
+        object-fit: cover;
+    }
+    .qr-item span {
+        display: block;
+        font-size: 13px;
+        color: var(--text-secondary);
+        margin-top: 6px;
+        font-weight: 500;
+    }
+    .payment-hint {
+        font-size: 13px;
+        color: var(--text-light);
+        text-align: center;
+        line-height: 1.6;
+    }
+
+    /* ==================== 提交按钮 ==================== */
+    .btn-submit {
+        display: block;
+        width: 100%;
+        padding: 14px;
+        border: none;
+        border-radius: 25px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        letter-spacing: 2px;
+        transition: transform 0.2s, box-shadow 0.2s;
+        background: linear-gradient(135deg, #A81216, #C41A1A);
+        color: #FFF;
+        box-shadow: 0 4px 15px rgba(168, 18, 22, 0.4);
+        margin-bottom: 16px;
+    }
+    .btn-submit:active {
+        transform: scale(0.98);
+        box-shadow: 0 2px 8px rgba(168, 18, 22, 0.3);
+    }
+
+    /* ==================== 成功提示 ==================== */
+    .success-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 300;
+        justify-content: center;
+        align-items: center;
+    }
+    .success-overlay.show {
+        display: flex;
+    }
+    .success-modal {
+        background: var(--bg-card);
+        border-radius: 12px;
+        padding: 30px 24px;
+        width: 85%;
+        max-width: 320px;
+        text-align: center;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        animation: fadeIn 0.3s ease-out;
+    }
+    .success-icon {
+        width: 56px;
+        height: 56px;
+        border-radius: 50%;
+        background: #e8f5e9;
+        margin: 0 auto 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 28px;
+        color: #2E8B57;
+    }
+    .success-modal h3 {
+        font-size: 18px;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 10px;
+    }
+    .success-modal p {
+        font-size: 14px;
+        color: var(--text-secondary);
+        line-height: 1.6;
+        margin-bottom: 20px;
+    }
+    .success-modal .btn-confirm {
+        display: inline-block;
+        padding: 10px 32px;
+        background: var(--red-primary);
+        color: #FFF;
+        border: none;
+        border-radius: 20px;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: background 0.2s;
+    }
+    .success-modal .btn-confirm:active {
+        background: var(--red-dark);
+    }
+
+    /* ==================== 底部合规声明 ==================== */
+    .disclaimer-bar {
+        text-align: center;
+        padding: 16px 20px;
+        margin-top: 8px;
+        font-size: 12px;
+        color: var(--text-light);
+        line-height: 1.8;
+        border-top: 1px solid var(--border-color);
+    }
+
+    /* ==================== 动画 ==================== */
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ==================== 滚动条美化 ==================== */
+    ::-webkit-scrollbar { width: 4px; height: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 2px; }
+
+    /* ==================== 响应式 ==================== */
+    @media (min-width: 481px) {
+        .page-container { padding: 20px; }
+        .header h1 { font-size: 22px; }
+        .qr-item img { width: 160px; height: 160px; }
+    }
+
+    @media (max-width: 375px) {
+        .page-container { padding: 10px; }
+        .service-card,
+        .form-section,
+        .payment-section { padding: 16px 12px; }
+        .service-card-title { font-size: 16px; }
+        .service-card-price .price-amount { font-size: 24px; }
+        .header h1 { font-size: 18px; }
+        .qr-area { gap: 10px; }
+        .qr-item img { width: 110px; height: 110px; }
+        .qr-item span { font-size: 12px; }
+    }
+    </style>
+</head>
+<body>
+
+<!-- 顶部标题栏 -->
+<header class="header">
+    <a class="back-link" href="index.html">&larr; 主页</a>
+    <h1>民俗表文代写</h1>
+</header>
+
+<!-- 页面容器 -->
+<div class="page-container">
+
+    <!-- 服务说明卡片 -->
+    <div class="service-card">
+        <div class="service-card-title">传统民俗祭祀表文代写服务</div>
+        <p class="service-card-desc">
+            表文是传统民俗祭祀文化中的重要组成部分，用于表达对先人的缅怀与敬意。本服务提供正规民俗文书撰写，格式规范，庄重得体。
+        </p>
+        <div class="service-card-price">
+            <span class="price-amount">19.9</span>
+            <span class="price-unit">元/份</span>
+            <span class="price-detail">含20份表文，全国包邮</span>
+        </div>
+        <ul class="service-card-features">
+            <li>祭祀表文 - 用于常规祭祀仪式</li>
+            <li>祈福表文 - 用于表达美好祝愿</li>
+            <li>超度表文 - 用于追思缅怀先人</li>
+            <li>多种类型可选，格式规范庄重</li>
+        </ul>
+    </div>
+
+    <!-- 下单表单 -->
+    <div class="form-section">
+        <div class="form-section-title">填写订单信息</div>
+        <form id="orderForm">
+            <div class="form-group">
+                <label>逝者姓名<span class="required">*</span></label>
+                <input type="text" id="deceasedName" placeholder="请输入逝者姓名" required>
+            </div>
+            <div class="form-group">
+                <label>逝者性别<span class="required">*</span></label>
+                <div class="gender-switch">
+                    <div class="gender-item active" data-value="男" onclick="selectGender(this)">男</div>
+                    <div class="gender-item" data-value="女" onclick="selectGender(this)">女</div>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>祭祀类型<span class="required">*</span></label>
+                <select id="ritualType" required>
+                    <option value="">请选择祭祀类型</option>
+                    <option value="祭祀表文">祭祀表文</option>
+                    <option value="祈福表文">祈福表文</option>
+                    <option value="超度表文">超度表文</option>
+                    <option value="其他">其他</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>安葬地址</label>
+                <input type="text" id="burialAddress" placeholder="请输入安葬地址">
+            </div>
+            <div class="form-group">
+                <label>烧化家属姓名<span class="required">*</span></label>
+                <input type="text" id="familyName" placeholder="请输入烧化家属姓名" required>
+            </div>
+            <div class="form-group">
+                <label>家属排行</label>
+                <input type="text" id="familyRank" placeholder="如：长子、次女等">
+            </div>
+            <div class="form-group">
+                <label>备注说明</label>
+                <textarea id="remark" placeholder="如有其他需要说明的事项，请在此填写"></textarea>
+            </div>
+        </form>
+    </div>
+
+    <!-- 收款区域 -->
+    <div class="payment-section">
+        <div class="payment-title">扫码付款</div>
+        <div class="qr-area">
+            <div class="qr-item">
+                <img src="../../images/wechat-qr.jpg" alt="微信收款码">
+                <span>微信收款</span>
+            </div>
+            <div class="qr-item">
+                <img src="../../images/alipay-qr.jpg" alt="支付宝收款码">
+                <span>支付宝收款</span>
+            </div>
+        </div>
+        <p class="payment-hint">付款后请截图，点击下方按钮提交订单</p>
+    </div>
+
+    <!-- 提交按钮 -->
+    <button class="btn-submit" id="btnSubmit" onclick="submitOrder()">提交订单</button>
+
+    <!-- 底部合规声明 -->
+    <div class="disclaimer-bar">
+        本服务仅为传统民俗文化传承，所提供表文均为正规民俗文书格式。不涉及封建迷信，不构成任何命运判定或运势预测建议。
+    </div>
+</div>
+
+<!-- 成功提示弹窗 -->
+<div class="success-overlay" id="successOverlay">
+    <div class="success-modal">
+        <div class="success-icon">&#10003;</div>
+        <h3>订单已提交</h3>
+        <p>站长将在24小时内与您联系确认。</p>
+        <button class="btn-confirm" onclick="closeSuccess()">我知道了</button>
+    </div>
+</div>
+
+<script>
+(function() {
+    'use strict';
+
+    // 当前选中的性别
+    var selectedGender = '男';
+
+    // 性别选择
+    window.selectGender = function(el) {
+        var items = document.querySelectorAll('.gender-switch .gender-item');
+        items.forEach(function(item) { item.classList.remove('active'); });
+        el.classList.add('active');
+        selectedGender = el.getAttribute('data-value');
+    };
+
+    // 提交订单
+    window.submitOrder = function() {
+        var deceasedName = document.getElementById('deceasedName').value.trim();
+        var ritualType = document.getElementById('ritualType').value;
+        var burialAddress = document.getElementById('burialAddress').value.trim();
+        var familyName = document.getElementById('familyName').value.trim();
+        var familyRank = document.getElementById('familyRank').value.trim();
+        var remark = document.getElementById('remark').value.trim();
+
+        // 基本验证
+        if (!deceasedName) {
+            alert('请输入逝者姓名');
+            document.getElementById('deceasedName').focus();
+            return;
+        }
+        if (!ritualType) {
+            alert('请选择祭祀类型');
+            document.getElementById('ritualType').focus();
+            return;
+        }
+        if (!familyName) {
+            alert('请输入烧化家属姓名');
+            document.getElementById('familyName').focus();
+            return;
+        }
+
+        // 在控制台展示表单数据（仅前端展示，不发送到服务器）
+        var orderData = {
+            '逝者姓名': deceasedName,
+            '逝者性别': selectedGender,
+            '祭祀类型': ritualType,
+            '安葬地址': burialAddress || '未填写',
+            '烧化家属姓名': familyName,
+            '家属排行': familyRank || '未填写',
+            '备注说明': remark || '无',
+            '提交时间': new Date().toLocaleString('zh-CN')
+        };
+        console.log('订单信息（仅前端展示）：', orderData);
+
+        // 显示成功提示
+        document.getElementById('successOverlay').classList.add('show');
+    };
+
+    // 关闭成功提示
+    window.closeSuccess = function() {
+        document.getElementById('successOverlay').classList.remove('show');
+    };
+
+    // 点击遮罩层关闭
+    document.getElementById('successOverlay').addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeSuccess();
+        }
+    });
+})();
+</script>
+
+</body>
+</html>

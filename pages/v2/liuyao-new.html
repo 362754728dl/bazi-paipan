@@ -1,0 +1,1711 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>六爻排盘 - 传统民俗文化参考</title>
+    <style>
+        /* ==================== CSS 变量与全局样式 ==================== */
+        :root {
+            --bg-primary: #F5F0E8;
+            --bg-secondary: #FFF8EE;
+            --bg-card: #FFFCF5;
+            --border-color: #D4C5A0;
+            --border-dark: #B8A472;
+            --text-primary: #3D2B1F;
+            --text-secondary: #6B5B4E;
+            --text-light: #8C7B6B;
+            --red-primary: #C41A1A;
+            --red-dark: #A01515;
+            --red-light: #E8D0D0;
+            --gold: #C8A84E;
+            --gold-light: #E8D48C;
+            --green: #4A7C59;
+            --blue: #4A6B8A;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        /* ==================== 顶部标题栏 ==================== */
+        .header {
+            background: linear-gradient(135deg, var(--red-primary), var(--red-dark));
+            color: #fff;
+            padding: 14px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        }
+        .header-title {
+            font-size: 18px;
+            font-weight: 700;
+            letter-spacing: 2px;
+        }
+        .header-back {
+            color: #fff;
+            text-decoration: none;
+            font-size: 14px;
+            opacity: 0.9;
+            padding: 4px 10px;
+            border: 1px solid rgba(255,255,255,0.4);
+            border-radius: 4px;
+            transition: opacity 0.2s;
+        }
+        .header-back:hover { opacity: 1; }
+
+        /* ==================== 内容容器 ==================== */
+        .container {
+            max-width: 480px;
+            margin: 0 auto;
+            padding: 0 0 30px;
+        }
+
+        /* ==================== 表单样式 ==================== */
+        .form-group {
+            padding: 12px 15px;
+        }
+        .form-group label {
+            display: block;
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 14px;
+            color: var(--text-primary);
+            background: var(--bg-card);
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .form-group input:focus {
+            border-color: var(--red-primary);
+        }
+
+        /* ==================== 信息栏 ==================== */
+        .info-bar {
+            background: var(--bg-card);
+            border-radius: 8px;
+            margin: 0 15px 12px;
+            padding: 12px 14px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+        }
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 4px 0;
+            font-size: 13px;
+        }
+        .info-label { color: var(--text-light); }
+        .info-value { color: var(--text-primary); }
+
+        /* ==================== 铜钱区域 ==================== */
+        .ly-coin-area {
+            text-align: center;
+            padding: 30px 0 20px;
+            cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .ly-coins {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        .ly-coin {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 35% 35%, #f0d060, #c8a030, #a08020);
+            border: 3px solid #8b6914;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3), inset 0 2px 4px rgba(255,255,255,0.3);
+            position: relative;
+            transition: transform 0.3s;
+            user-select: none;
+        }
+        .ly-coin-hole {
+            position: absolute;
+            width: 14px;
+            height: 14px;
+            border: 2px solid #8b6914;
+            border-radius: 2px;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: var(--bg-card, #fff);
+            z-index: 2;
+        }
+        .ly-coin-spin {
+            animation: coinSpin 0.3s linear infinite;
+        }
+        @keyframes coinSpin {
+            0% { transform: rotateY(0deg); }
+            100% { transform: rotateY(360deg); }
+        }
+        .ly-coin:active { transform: scale(0.95); }
+        .ly-coin-back { background: radial-gradient(circle at 35% 35%, #d4b84a, #a08020, #7a6018); }
+        .ly-coin-front { background: radial-gradient(circle at 35% 35%, #f0d060, #c8a030, #a08020); }
+        .ly-tip {
+            text-align: center;
+            color: #999;
+            font-size: 13px;
+            padding: 8px 0;
+        }
+
+        /* ==================== 爻象显示 ==================== */
+        .ly-yao-display {
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            padding: 12px 16px;
+            margin: 15px;
+        }
+        .ly-yao-line {
+            display: flex;
+            align-items: center;
+            padding: 6px 0;
+            font-size: 13px;
+            gap: 8px;
+        }
+        .ly-yao-name { width: 36px; color: var(--text-light); font-size: 12px; }
+        .ly-yao-type { width: 36px; color: var(--text-primary); font-size: 12px; }
+        .ly-yao-symbol { flex: 1; font-family: monospace; font-size: 14px; letter-spacing: 2px; color: var(--text-primary); }
+        .ly-yao-dong { width: 20px; text-align: center; color: var(--red-primary); font-weight: 700; font-size: 16px; }
+        .ly-yao-empty { opacity: 0.4; }
+        .ly-yao-progress { text-align: center; color: var(--text-light); font-size: 12px; margin-top: 8px; }
+
+        /* ==================== 按钮 ==================== */
+        .btn {
+            display: inline-block;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, var(--red-primary), var(--red-dark));
+            color: #fff;
+            box-shadow: 0 3px 10px rgba(196, 26, 26, 0.3);
+        }
+        .btn-primary:hover { box-shadow: 0 4px 14px rgba(196, 26, 26, 0.4); }
+        .btn-primary:active { transform: scale(0.97); }
+        .btn-secondary {
+            background: var(--bg-card);
+            color: var(--text-secondary);
+            border: 1px solid var(--border-color);
+        }
+        .btn-secondary:hover { background: var(--bg-secondary); }
+        .btn-secondary:active { transform: scale(0.97); }
+        .btn-group {
+            margin: 15px;
+            display: flex;
+            gap: 10px;
+        }
+        .btn-group .btn { flex: 1; }
+
+        /* ==================== 结果页签 ==================== */
+        .ly-result-tabs {
+            display: flex;
+            border-bottom: 2px solid var(--border-color);
+            margin-bottom: 15px;
+            position: sticky;
+            top: 44px;
+            z-index: 10;
+            background: var(--bg-primary);
+        }
+        .ly-result-tab {
+            flex: 1;
+            text-align: center;
+            padding: 10px 0;
+            font-size: 14px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            margin-bottom: -2px;
+            transition: all 0.2s;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .ly-result-tab.active {
+            color: var(--red-primary);
+            border-bottom-color: var(--red-primary);
+            font-weight: 600;
+        }
+
+        /* AI分析区域样式 */
+        .ly-ai-section { padding: 15px 0; }
+        .ly-ai-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+        .ly-ai-title { font-size: 16px; font-weight: 600; color: #333; }
+        .ly-ai-count { font-size: 12px; color: #999; background: #f0ebe3; padding: 4px 10px; border-radius: 12px; }
+        .ly-ai-tip { font-size: 12px; color: #999; text-align: center; margin-bottom: 16px; }
+        .ly-ai-btn { display: block; width: 100%; padding: 14px; background: var(--red-primary); color: #fff; border: none; border-radius: 10px; font-size: 16px; font-weight: 600; cursor: pointer; transition: opacity 0.2s; box-shadow: 0 2px 8px rgba(196,26,26,0.3); }
+        .ly-ai-btn:disabled { cursor: not-allowed; }
+        .ly-ai-result { margin-top: 16px; padding: 16px; background: #fff; border-radius: 10px; border: 1px solid var(--border-color); }
+        .ly-ai-loading { text-align: center; color: #999; font-size: 14px; padding: 20px 0; }
+        .ly-ai-content { font-size: 14px; line-height: 1.8; color: #333; }
+        .ly-ai-content h4 { font-size: 15px; }
+        .ly-ai-content strong { color: var(--red-primary); }
+        .ly-ai-error { text-align: center; color: #e74c3c; font-size: 14px; padding: 20px 0; }
+        .ly-ai-disclaimer { font-size: 11px; color: #bbb; text-align: center; margin-top: 16px; padding: 10px; background: #faf8f5; border-radius: 8px; }
+
+        /* ==================== 基础信息表 ==================== */
+        .ly-info-table {
+            background: var(--bg-card);
+            border-radius: 8px;
+            margin-bottom: 15px;
+            overflow: hidden;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+        }
+        .ly-info-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 14px;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 13px;
+        }
+        .ly-info-row:last-child { border-bottom: none; }
+        .ly-info-label { color: var(--text-light); white-space: nowrap; }
+        .ly-info-value { color: var(--text-primary); text-align: right; margin-left: 10px; word-break: break-all; }
+        .ly-info-value b { color: var(--red-primary); }
+
+        /* ==================== 卦象并排 ==================== */
+        .ly-hexagram-pair {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+        .ly-hexagram {
+            flex: 1;
+            background: var(--bg-card);
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+        }
+        .ly-hex-title {
+            background: var(--red-primary);
+            color: #fff;
+            padding: 8px 10px;
+            font-size: 13px;
+            font-weight: 600;
+            text-align: center;
+        }
+        .ly-hex-body { padding: 8px; }
+        .ly-hex-line {
+            display: flex;
+            align-items: center;
+            padding: 5px 2px;
+            font-size: 11px;
+            gap: 3px;
+            border-bottom: 1px solid var(--border-color);
+            min-height: 28px;
+        }
+        .ly-hex-line:last-child { border-bottom: none; }
+        .ly-hex-shen { width: 18px; color: var(--text-light); font-size: 10px; }
+        .ly-hex-qin { width: 22px; color: var(--red-primary); font-size: 10px; font-weight: 600; }
+        .ly-hex-zhi { width: 32px; font-size: 11px; }
+        .ly-hex-gan { width: 16px; font-size: 11px; color: var(--text-light); }
+        .ly-hex-yao { flex: 1; font-family: monospace; font-size: 13px; letter-spacing: 1px; }
+        .ly-hex-tag { width: 24px; font-size: 10px; text-align: center; }
+        .ly-hex-tag.shi { color: var(--red-primary); font-weight: 700; }
+        .ly-hex-tag.ying { color: #228B22; font-weight: 700; }
+        .ly-hex-tag.dong { color: var(--red-primary); font-weight: 700; }
+        .ly-fushen-line { font-size: 10px; color: #999; padding: 2px 0; border-bottom: 1px solid var(--border-color); }
+
+        /* ==================== 卦象总断 ==================== */
+        .ly-summary {
+            background: var(--bg-card);
+            border-radius: 8px;
+            padding: 14px;
+            margin-bottom: 15px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+        }
+        .ly-section-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+            padding-bottom: 6px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .ly-summary-text {
+            font-size: 13px;
+            color: var(--text-secondary);
+            line-height: 1.8;
+        }
+
+        /* ==================== 持世分析 ==================== */
+        .ly-shishi {
+            background: var(--bg-card);
+            border-radius: 8px;
+            padding: 14px;
+            margin-bottom: 15px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+        }
+        .ly-shishi-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+            padding-bottom: 6px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .ly-shishi-text {
+            font-size: 13px;
+            color: var(--text-secondary);
+            line-height: 1.8;
+        }
+
+        /* ==================== 传统解卦 ==================== */
+        .ly-traditional { padding: 0; }
+        .ly-trad-header {
+            text-align: center;
+            padding: 15px;
+            background: linear-gradient(135deg, var(--red-primary), #e74c3c);
+            color: #fff;
+            border-radius: 8px 8px 0 0;
+        }
+        .ly-trad-name { font-size: 18px; font-weight: 700; }
+        .ly-trad-desc { font-size: 13px; margin-top: 4px; opacity: 0.9; }
+        .ly-trad-section {
+            background: var(--bg-card);
+            padding: 12px 14px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .ly-trad-label { font-size: 14px; font-weight: 600; color: var(--red-primary); margin-bottom: 6px; }
+        .ly-trad-text { font-size: 13px; color: var(--text-secondary); line-height: 1.8; }
+
+        /* ==================== 分类占断 ==================== */
+        .ly-categories {
+            background: var(--bg-card);
+            border-radius: 0 0 8px 8px;
+            overflow: hidden;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+        }
+        .ly-cat-title { font-size: 15px; font-weight: 600; padding: 12px 14px; border-bottom: 1px solid var(--border-color); }
+        .ly-cat-item { display: flex; padding: 10px 14px; border-bottom: 1px solid var(--border-color); font-size: 13px; }
+        .ly-cat-item:last-child { border-bottom: none; }
+        .ly-cat-label { width: 60px; color: var(--red-primary); font-weight: 600; flex-shrink: 0; }
+        .ly-cat-text { color: var(--text-secondary); line-height: 1.6; }
+
+        /* ==================== 卦辞爻辞页 ==================== */
+        .ly-classic-tabs {
+            display: flex;
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            overflow: hidden;
+            margin-bottom: 15px;
+        }
+        .ly-classic-tab {
+            flex: 1;
+            text-align: center;
+            padding: 10px;
+            font-size: 13px;
+            cursor: pointer;
+            color: var(--text-secondary);
+            transition: all 0.2s;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .ly-classic-tab.active {
+            background: var(--red-primary);
+            color: #fff;
+            font-weight: 600;
+        }
+        .ly-guaci {
+            background: var(--bg-card);
+            border-radius: 8px;
+            padding: 14px;
+            margin-bottom: 12px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+        }
+        .ly-guaci-title { font-size: 15px; font-weight: 600; color: var(--red-primary); margin-bottom: 8px; }
+        .ly-guaci-text { font-size: 13px; color: var(--text-secondary); line-height: 2; }
+        .ly-yaoci-item {
+            background: var(--bg-card);
+            border-radius: 8px;
+            padding: 10px 14px;
+            margin-bottom: 8px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+        }
+        .ly-yaoci-name { font-size: 14px; font-weight: 600; color: var(--text-primary); margin-bottom: 4px; }
+        .ly-yaoci-text { font-size: 13px; color: var(--text-secondary); line-height: 1.8; }
+
+        /* ==================== 断语详解 ==================== */
+        .ly-detail-judgments {
+            background: var(--bg-card);
+            border-radius: 8px;
+            overflow: hidden;
+            margin-top: 15px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+        }
+        .ly-dj-title {
+            font-size: 15px;
+            font-weight: 600;
+            padding: 12px 14px;
+            border-bottom: 1px solid var(--border-color);
+            color: var(--text-primary);
+        }
+        .ly-dj-item {
+            display: flex;
+            padding: 10px 14px;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 13px;
+        }
+        .ly-dj-item:last-child { border-bottom: none; }
+        .ly-dj-item span:first-child {
+            width: 50px;
+            color: var(--red-primary);
+            font-weight: 600;
+            flex-shrink: 0;
+        }
+        .ly-dj-item span:last-child {
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        /* ==================== 象传/彖传 ==================== */
+        .ly-xiangzhuan, .ly-tuanzhuan {
+            background: var(--bg-card);
+            border-radius: 8px;
+            padding: 14px;
+            margin-bottom: 12px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+        }
+        .ly-xiangzhuan-title, .ly-tuanzhuan-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--red-primary);
+            margin-bottom: 8px;
+        }
+        .ly-xiangzhuan-text, .ly-tuanzhuan-text {
+            font-size: 13px;
+            color: var(--text-secondary);
+            line-height: 2;
+        }
+        .ly-yaoci-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 10px;
+            padding-bottom: 6px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .ly-yaoci-label { font-size: 14px; font-weight: 600; color: var(--red-primary); margin-bottom: 4px; }
+
+        /* ==================== 底部合规声明 ==================== */
+        .disclaimer {
+            background: #FFF8E1;
+            color: #E65100;
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 12px;
+            margin: 20px 15px;
+            text-align: center;
+            line-height: 1.6;
+        }
+
+        /* ==================== Toast 提示 ==================== */
+        .toast {
+            position: fixed;
+            top: 60px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-20px);
+            background: rgba(0,0,0,0.75);
+            color: #fff;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-size: 14px;
+            z-index: 9999;
+            opacity: 0;
+            transition: all 0.3s;
+            pointer-events: none;
+            white-space: nowrap;
+        }
+        .toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        /* ==================== 结果页容器 ==================== */
+        .ly-result-page { padding: 10px 15px; }
+        .ly-result-page.hidden { display: none; }
+
+        /* ==================== 摇卦输入页 ==================== */
+        .ly-input-page { padding: 15px 0; }
+        .ly-input-page.hidden { display: none; }
+
+        /* ==================== 响应式 ==================== */
+        @media (max-width: 360px) {
+            .ly-hexagram-pair { flex-direction: column; }
+            .ly-coins { gap: 12px; }
+            .ly-coin { width: 60px; height: 60px; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- 顶部标题栏 -->
+<header class="header">
+    <a class="header-back" href="index.html">&larr; 主页</a>
+    <span class="header-title">六爻排盘</span>
+    <span style="width:60px;"></span>
+</header>
+
+<!-- Toast 提示 -->
+<div class="toast" id="toast"></div>
+
+<!-- 内容容器 -->
+<div class="container">
+
+    <!-- 摇卦输入页 -->
+    <div class="ly-input-page" id="lyInputPage">
+        <!-- 事项输入 -->
+        <div class="form-group">
+            <label>所占事项</label>
+            <input type="text" id="lyMatter" placeholder="请输入所占事项（如：财运、婚姻、事业等）" maxlength="50">
+        </div>
+
+        <!-- 起卦时间 -->
+        <div class="info-bar" id="lyInfoBar"></div>
+
+        <!-- 铜钱区域 -->
+        <div id="lyCoinArea" class="ly-coin-area">
+            <div class="ly-coins">
+                <div class="ly-coin" id="lyCoin0"><div class="ly-coin-hole"></div></div>
+                <div class="ly-coin" id="lyCoin1"><div class="ly-coin-hole"></div></div>
+                <div class="ly-coin" id="lyCoin2"><div class="ly-coin-hole"></div></div>
+            </div>
+            <p class="ly-tip" id="lyTip">请集中精力默想所占之事，点击铜钱开始旋转</p>
+        </div>
+
+        <!-- 爻象结果显示区 -->
+        <div class="ly-yao-display" id="lyYaoDisplay"></div>
+
+        <!-- 操作按钮 -->
+        <div class="btn-group">
+            <button class="btn btn-primary" id="lyBtnSubmit" style="display:none;">开始排盘</button>
+            <button class="btn btn-secondary" id="lyBtnReset">重新摇卦</button>
+        </div>
+    </div>
+
+    <!-- 结果页 -->
+    <div class="ly-result-page hidden" id="lyResultPage">
+        <div class="ly-result-tabs" id="lyResultTabs">
+            <button class="ly-result-tab active" data-tab="0">六爻排盘</button>
+            <button class="ly-result-tab" data-tab="1">传统解卦</button>
+            <button class="ly-result-tab" data-tab="2">卦辞爻辞</button>
+            <button class="ly-result-tab" data-tab="3">AI分析</button>
+        </div>
+        <div id="lyResultContent"></div>
+        <div class="btn-group" style="margin-top:15px;">
+            <button class="btn btn-secondary" id="lyBtnBack">返回重摇</button>
+        </div>
+    </div>
+
+    <!-- 底部合规声明 -->
+    <div class="disclaimer">
+        本内容仅供传统民俗文化参考，非医疗及命运预测建议。
+    </div>
+
+</div>
+
+<!-- 引入依赖模块 -->
+<script src="../../js/lunar.js"></script>
+<script src="../../js/liuyao.js"></script>
+<script src="../../js/liuyao-ui.js"></script>
+
+<script>
+(function() {
+    'use strict';
+
+    // ==================== 状态变量 ====================
+    var _yaoState = 'IDLE';
+    var _yaoResults = [];
+    var _yaoCount = 0;
+    var _matter = '';
+    var _guaTime = null;
+    var _currentResultTab = 0;
+    var _lastHexData = null;
+
+    // 爻位名称
+    var YAO_NAMES = ['初爻', '二爻', '三爻', '四爻', '五爻', '上爻'];
+
+    // ==================== DOM 辅助 ====================
+    function $(id) { return document.getElementById(id); }
+
+    function showToast(msg) {
+        var toast = $('toast');
+        if (toast) {
+            toast.textContent = msg;
+            toast.classList.add('show');
+            setTimeout(function() { toast.classList.remove('show'); }, 2500);
+        }
+    }
+
+    // ==================== 初始化 ====================
+    function init() {
+        _guaTime = new Date();
+        _renderInfoBar();
+        _updateYaoDisplay([]);
+        _bindEvents();
+    }
+
+    // ==================== 渲染时间信息栏 ====================
+    function _renderInfoBar() {
+        var bar = $('lyInfoBar');
+        if (!bar || !_guaTime) return;
+
+        var now = _guaTime;
+        var dateStr = now.getFullYear() + '年' + (now.getMonth() + 1) + '月' + now.getDate() + '日';
+        var timeStr = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
+
+        var html = '<div class="info-item"><span class="info-label">起卦时间：</span><span class="info-value">' + dateStr + ' ' + timeStr + '</span></div>';
+
+        if (window.Lunar) {
+            var lunarInfo = window.Lunar.solarToLunar(now.getFullYear(), now.getMonth() + 1, now.getDate());
+            if (lunarInfo) {
+                var lunarDateStr = window.Lunar.getLunarMonthName(lunarInfo.lunarMonth, lunarInfo.isLeap) +
+                    window.Lunar.getLunarDayName(lunarInfo.lunarDay) + '（' + lunarInfo.shengXiao + '年）';
+                html += '<div class="info-item"><span class="info-label">农历：</span><span class="info-value">' + lunarDateStr + '</span></div>';
+            }
+        }
+
+        bar.innerHTML = html;
+    }
+
+    // ==================== 事件绑定 ====================
+    function _bindEvents() {
+        // 铜钱区域点击
+        var coinArea = $('lyCoinArea');
+        if (coinArea) {
+            coinArea.addEventListener('click', function(e) {
+                e.preventDefault();
+                _startCoinAnimation();
+            });
+        }
+
+        // 开始排盘
+        var submitBtn = $('lyBtnSubmit');
+        if (submitBtn) {
+            submitBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                _submitHexagram();
+            });
+        }
+
+        // 重新摇卦
+        var resetBtn = $('lyBtnReset');
+        if (resetBtn) {
+            resetBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                _resetYao();
+            });
+        }
+
+        // 返回重摇
+        var backBtn = $('lyBtnBack');
+        if (backBtn) {
+            backBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                _resetYao();
+                $('lyInputPage').classList.remove('hidden');
+                $('lyResultPage').classList.add('hidden');
+            });
+        }
+
+        // 结果页签切换
+        var tabs = document.querySelectorAll('.ly-result-tab');
+        tabs.forEach(function(tab) {
+            tab.addEventListener('click', function() {
+                var idx = parseInt(this.getAttribute('data-tab')) || 0;
+                _switchResultTab(idx);
+            });
+        });
+
+        // 事项输入
+        var matterInput = $('lyMatter');
+        if (matterInput) {
+            matterInput.addEventListener('input', function() {
+                _matter = this.value.trim();
+            });
+        }
+    }
+
+    // ==================== 铜钱动画 ====================
+    function _startCoinAnimation() {
+        if (_yaoState === 'IDLE') {
+            _yaoState = 'SPINNING';
+            var coins = document.querySelectorAll('.ly-coin');
+            coins.forEach(function(coin) { coin.classList.add('ly-coin-spin'); });
+            var tip = $('lyTip');
+            if (tip) tip.textContent = '点击任意位置停止摇卦';
+        } else if (_yaoState === 'SPINNING') {
+            _stopCoinAnimation();
+        }
+    }
+
+    function _stopCoinAnimation() {
+        _yaoState = 'RESULT';
+        var coins = document.querySelectorAll('.ly-coin');
+        coins.forEach(function(coin) { coin.classList.remove('ly-coin-spin'); });
+
+        // 随机生成三枚铜钱结果
+        var results = [];
+        for (var i = 0; i < 3; i++) {
+            results.push(Math.random() < 0.5 ? 0 : 1);
+        }
+
+        // 显示铜钱正反面
+        coins.forEach(function(coin, idx) {
+            if (results[idx] === 1) {
+                coin.classList.add('ly-coin-back');
+                coin.classList.remove('ly-coin-front');
+            } else {
+                coin.classList.add('ly-coin-front');
+                coin.classList.remove('ly-coin-back');
+            }
+        });
+
+        // 计算爻象
+        var backCount = results.filter(function(r) { return r === 1; }).length;
+        var yaoType;
+        if (backCount === 3) yaoType = '老阳';
+        else if (backCount === 2) yaoType = '少阴';
+        else if (backCount === 1) yaoType = '少阳';
+        else yaoType = '老阴';
+
+        _yaoResults.push(yaoType);
+        _yaoCount++;
+
+        _updateYaoDisplay(_yaoResults);
+
+        var tip = $('lyTip');
+        if (tip) {
+            if (_yaoCount < 6) {
+                tip.textContent = '第' + _yaoCount + '爻：' + yaoType + '（还差' + (6 - _yaoCount) + '爻）';
+            } else {
+                tip.textContent = '六爻已满，请点击"开始排盘"';
+            }
+        }
+
+        var submitBtn = $('lyBtnSubmit');
+        if (submitBtn) {
+            submitBtn.style.display = _yaoCount >= 6 ? 'block' : 'none';
+        }
+
+        if (_yaoCount < 6) {
+            setTimeout(function() {
+                _yaoState = 'IDLE';
+                var tip2 = $('lyTip');
+                if (tip2) tip2.textContent = '点击铜钱继续摇卦';
+            }, 1500);
+        }
+    }
+
+    // ==================== 爻象显示 ====================
+    function _updateYaoDisplay(results) {
+        var container = $('lyYaoDisplay');
+        if (!container) return;
+
+        var html = '';
+        var yaoNames = ['初爻', '二爻', '三爻', '四爻', '五爻', '上爻'];
+
+        // 从上到下显示（上爻在顶部，初爻在底部）
+        for (var i = 5; i >= 0; i--) {
+            var name = yaoNames[i];
+            var type = results[i] || '';
+            var symbol = '';
+            var dong = '';
+
+            if (results[i]) {
+                if (results[i] === '老阳' || results[i] === '少阳') {
+                    symbol = '\u2501\u2501\u2501\u2501\u2501\u2501\u2501';
+                } else {
+                    symbol = '\u2501\u2501 \u2501\u2501';
+                }
+                if (results[i] === '老阳') dong = '\u25CB';
+                else if (results[i] === '老阴') dong = '\u00D7';
+            }
+
+            var emptyClass = results[i] ? '' : ' ly-yao-empty';
+
+            html += '<div class="ly-yao-line' + emptyClass + '">';
+            html += '  <span class="ly-yao-name">' + name + '</span>';
+            html += '  <span class="ly-yao-type">' + (type || '--') + '</span>';
+            html += '  <span class="ly-yao-symbol">' + (symbol || '\u2501\u2501 \u2501\u2501') + '</span>';
+            html += '  <span class="ly-yao-dong">' + dong + '</span>';
+            html += '</div>';
+        }
+
+        if (results.length > 0 && results.length < 6) {
+            html += '<div class="ly-yao-progress">已完成 ' + results.length + ' / 6 爻</div>';
+        }
+
+        container.innerHTML = html;
+    }
+
+    // ==================== 重置 ====================
+    function _resetYao() {
+        _yaoState = 'IDLE';
+        _yaoCount = 0;
+        _yaoResults = [];
+        _matter = '';
+        _lastHexData = null;
+        _currentResultTab = 0;
+        _guaTime = new Date();
+
+        _updateYaoDisplay([]);
+        _renderInfoBar();
+
+        var tip = $('lyTip');
+        if (tip) tip.textContent = '请集中精力默想所占之事，点击铜钱开始旋转';
+
+        var submitBtn = $('lyBtnSubmit');
+        if (submitBtn) submitBtn.style.display = 'none';
+
+        var matterInput = $('lyMatter');
+        if (matterInput) matterInput.value = '';
+
+        // 重置铜钱样式
+        var coins = document.querySelectorAll('.ly-coin');
+        coins.forEach(function(coin) {
+            coin.classList.remove('ly-coin-spin', 'ly-coin-back', 'ly-coin-front');
+        });
+
+        // 重置页签
+        var tabs = document.querySelectorAll('.ly-result-tab');
+        tabs.forEach(function(t) { t.classList.remove('active'); });
+        var firstTab = document.querySelector('.ly-result-tab[data-tab="0"]');
+        if (firstTab) firstTab.classList.add('active');
+    }
+
+    // ==================== 提交排盘 ====================
+    function _submitHexagram() {
+        if (_yaoResults.length < 6) {
+            showToast('请先完成6爻摇卦');
+            return;
+        }
+
+        var matterInput = $('lyMatter');
+        if (matterInput) _matter = matterInput.value.trim();
+
+        var hexData = null;
+
+        if (window.LiuYao && window.LiuYao.calculateHexagram) {
+            var numResults = _yaoResults.map(function(y) {
+                if (y === '老阴') return 0;
+                if (y === '少阳') return 1;
+                if (y === '少阴') return 2;
+                if (y === '老阳') return 3;
+                return 1;
+            });
+            hexData = window.LiuYao.calculateHexagram(numResults);
+        }
+
+        if (!hexData) {
+            showToast('排盘计算失败，请重试');
+            return;
+        }
+
+        hexData.matter = _matter || '未指定事项';
+        hexData.guaTime = _guaTime;
+
+        // 获取干支等信息
+        if (_guaTime && window.Lunar) {
+            var y = _guaTime.getFullYear();
+            var m = _guaTime.getMonth() + 1;
+            var d = _guaTime.getDate();
+            var h = _guaTime.getHours();
+
+            var yearGZ = window.Lunar.getYearGanZhi(y, m, d);
+            var monthGZ = window.Lunar.getMonthGanZhi(y, m, d);
+            var dayGZ = window.Lunar.getDayGanZhi(y, m, d);
+            var hourGZ = window.Lunar.getHourGanZhi(dayGZ.ganIndex, h);
+
+            hexData.yearGZ = yearGZ;
+            hexData.monthGZ = monthGZ;
+            hexData.dayGZ = dayGZ;
+            hexData.hourGZ = hourGZ;
+
+            var lunar = window.Lunar.solarToLunar(y, m, d);
+            if (lunar) {
+                hexData.lunarDate = window.Lunar.getLunarMonthName(lunar.lunarMonth, lunar.isLeap) +
+                    window.Lunar.getLunarDayName(lunar.lunarDay);
+            }
+
+            hexData.solarTerm = _getCurrentSolarTerm(y, m, d);
+        }
+
+        // 合并HEXAGRAMS中的丰富数据
+        if (window.LiuYao && window.LiuYao.HEXAGRAMS) {
+            var origData = window.LiuYao.HEXAGRAMS[hexData.original.binary];
+            var changedData = window.LiuYao.HEXAGRAMS[hexData.changed.binary];
+            if (origData) {
+                hexData.name = origData.name || hexData.name;
+                hexData.shortName = origData.shortName || hexData.shortName;
+                hexData.palace = origData.palace || hexData.palace;
+                hexData.description = origData.description || '';
+                hexData.xiangYue = origData.xiangYue || '';
+                hexData.shiYue = origData.shiYue || '';
+                hexData.duanYue = origData.duanYue || '';
+                hexData.jieGua = origData.jieGua || '';
+                hexData.categoryJudgments = origData.categoryJudgments || {};
+                hexData.lineTexts = origData.lineTexts || [];
+                hexData.upperName = origData.upper || '';
+                hexData.lowerName = origData.lower || '';
+            }
+            if (changedData) {
+                hexData.changedName = changedData.name || hexData.changedName;
+                hexData.changedShort = changedData.shortName || hexData.changedShort;
+                hexData.changedPalace = changedData.palace || hexData.changedPalace;
+                hexData.changedLineTexts = changedData.lineTexts || [];
+                hexData.changedUpperName = changedData.upper || '';
+                hexData.changedLowerName = changedData.lower || '';
+            }
+        }
+
+        // 使用LiuYao模块函数构建完整爻数据
+        if (window.LiuYao && hexData.palace && window.LiuYao.getNajia) {
+            var palaceWX = window.LiuYao.BA_GUA[hexData.palace].wuXing;
+            var dayGanIdx = hexData.dayGZ ? hexData.dayGZ.ganIndex : 0;
+            var monthZhiIdx = hexData.monthGZ ? hexData.monthGZ.zhiIndex : 0;
+            var dayZhiIdx = hexData.dayGZ ? hexData.dayGZ.zhiIndex : 0;
+
+            var fullLines = [];
+            for (var i = 0; i < 6; i++) {
+                var najia = window.LiuYao.getNajia(hexData.palace, i);
+                var liuQin = window.LiuYao.getLiuQin(najia.wuXing, palaceWX);
+                var liuShenArr = window.LiuYao.getLiuShen(dayGanIdx);
+                var isYang = hexData.original.binary[i] === '1';
+                var isDong = hexData.changingLines.indexOf(i) !== -1;
+
+                fullLines.push({
+                    index: i,
+                    yaoType: _yaoResults[i],
+                    isYang: isYang,
+                    isDong: isDong,
+                    gan: najia.gan,
+                    zhi: najia.zhi,
+                    wuXing: najia.wuXing,
+                    liuQin: liuQin,
+                    liuShen: liuShenArr[i],
+                    yaoHua: _getYaoHua(_yaoResults[i]),
+                    dongBiao: _getDongBiao(_yaoResults[i])
+                });
+            }
+
+            var shiYing = window.LiuYao.getShiYing(hexData.palace, hexData.original.binary);
+            var fuShen = window.LiuYao.getFuShen(hexData.palace, fullLines);
+            var kongWang = window.LiuYao.getKongWang(dayGanIdx);
+            var shenSha = window.LiuYao.getShenSha(dayZhiIdx, monthZhiIdx);
+
+            hexData.lines = fullLines;
+            hexData.shiIndex = shiYing.shi;
+            hexData.yingIndex = shiYing.ying;
+            hexData.fuShen = fuShen.map(function(f) { return f.qinType + '(' + f.fuZhi + ')'; }).join('、') || '六亲齐全';
+            hexData.shiShiQin = fullLines[shiYing.shi] ? fullLines[shiYing.shi].liuQin : '未知';
+            hexData.kongWang = kongWang.map(function(idx) { return window.LiuYao.DI_ZHI[idx]; }).join('');
+            hexData.yiMa = shenSha.yiMa;
+            hexData.taoHua = shenSha.taoHua;
+            hexData.huaGai = shenSha.huaGai;
+        }
+
+        _lastHexData = hexData;
+
+        // 切换到结果页
+        $('lyInputPage').classList.add('hidden');
+        $('lyResultPage').classList.remove('hidden');
+        _switchResultTab(0);
+    }
+
+    // ==================== 辅助函数 ====================
+    function _getYaoHua(yaoType) {
+        if (yaoType === '老阳' || yaoType === '少阳') {
+            return '\u2501\u2501\u2501\u2501\u2501\u2501\u2501';
+        } else {
+            return '\u2501\u2501 \u2501\u2501';
+        }
+    }
+
+    function _getDongBiao(yaoType) {
+        if (yaoType === '老阳') return '\u25CB';
+        if (yaoType === '老阴') return '\u00D7';
+        return '';
+    }
+
+    function _getYaoName(index, isYang) {
+        var names = ['初', '二', '三', '四', '五', '上'];
+        return isYang ? names[index] + '九' : names[index] + '六';
+    }
+
+    function _formatDate(date) {
+        if (!date) return '未知';
+        return date.getFullYear() + '年' + (date.getMonth() + 1) + '月' + date.getDate() + '日 ' +
+            date.getHours().toString().padStart(2, '0') + ':' + date.getMinutes().toString().padStart(2, '0');
+    }
+
+    function _getCurrentSolarTerm(year, month, day) {
+        if (!window.Lunar || !window.Lunar.solarTermNames) return '未知';
+        var termNames = window.Lunar.solarTermNames;
+        var termMonths = window.Lunar.solarTermMonths;
+        for (var i = 0; i < termMonths.length; i++) {
+            if (termMonths[i].month === month && termMonths[i].day <= day) {
+                if (i + 1 < termMonths.length && termMonths[i + 1].month === month && termMonths[i + 1].day <= day) {
+                    continue;
+                }
+                return termNames[i];
+            }
+        }
+        return '未知';
+    }
+
+    function _getShiShiAnalysis(liuQin) {
+        var analysisMap = {
+            '父母': '世爻持父母，主文书、长辈、辛苦劳碌。父母持世，利于考试、文书、契约之事，但多劳少得，操心费力。若父母旺相，主长辈有助力；若休囚，则多劳累而少收获。占婚姻，主长辈干涉；占财运，主辛苦求财。',
+            '兄弟': '世爻持兄弟，主劫财、竞争、同辈。兄弟持世，不利于求财，有劫财之象，凡占皆多竞争阻碍。若兄弟旺相，朋友多助力但易有口舌争执；若休囚，则孤立无援。占婚姻，主有竞争者；占事业，主同事掣肘。',
+            '子孙': '世爻持子孙，主福气、平安、无忧。子孙持世，为福神持世，百事无忧，最利消灾解厄。子孙旺相，主有贵人暗助，诸事顺遂；若休囚，则虽无忧但缺乏进取之力。占官司，主胜诉；占疾病，主易愈；占求财，主财源广进。',
+            '妻财': '世爻持妻财，主财运、女性、物质。妻财持世，利于求财、经商、女性缘。妻财旺相，主财运亨通，妻缘美满；若休囚，则财运平淡，感情有波折。占婚姻，男占主妻缘佳；占事业，主有实际收益。',
+            '官鬼': '世爻持官鬼，主官职、名望、压力。官鬼持世，利于求名、升迁、考试。官鬼旺相，主有权势，受人尊重；若休囚，则压力大，易有是非。占婚姻，女占主夫缘佳；占疾病，主病情较重；占出行，主有阻碍。'
+        };
+        return analysisMap[liuQin] || '世爻持' + (liuQin || '未知') + '，需结合整体卦象综合分析。';
+    }
+
+    function _getSummaryText(hexData) {
+        if (!hexData) return '卦象数据不足，无法生成总断。';
+
+        var name = hexData.name || '';
+        var shortName = hexData.shortName || '';
+        var changedName = hexData.changedName || '';
+        var dongYaoCount = 0;
+        var dongYaoPositions = [];
+
+        if (hexData.lines) {
+            for (var i = 0; i < hexData.lines.length; i++) {
+                if (hexData.lines[i] && hexData.lines[i].isDong) {
+                    dongYaoCount++;
+                    dongYaoPositions.push(YAO_NAMES[i]);
+                }
+            }
+        }
+
+        var text = '';
+        text += '本卦' + (name || shortName) + '，';
+        if (changedName && changedName !== name) {
+            text += '变卦' + changedName + '。';
+        } else {
+            text += '无变卦。';
+        }
+
+        if (dongYaoCount === 0) {
+            text += '六爻安静，无动爻，主事态稳定，按部就班。';
+        } else if (dongYaoCount === 1) {
+            text += '一爻独发（' + dongYaoPositions[0] + '），事有专一之象，以此爻为主断。';
+        } else if (dongYaoCount === 2) {
+            text += '二爻齐动（' + dongYaoPositions.join('、') + '），事有两端，需权衡取舍。';
+        } else if (dongYaoCount === 3) {
+            text += '三爻同动（' + dongYaoPositions.join('、') + '），事态复杂，变化较多。';
+        } else if (dongYaoCount === 4) {
+            text += '四爻俱动（' + dongYaoPositions.join('、') + '），事多变故，宜静待时机。';
+        } else if (dongYaoCount === 5) {
+            text += '五爻俱动，主事态纷乱，以不动之一爻为断。';
+        } else {
+            text += '六爻皆动，乾坤翻覆，以变卦为主断。';
+        }
+
+        if (hexData.shiIndex !== undefined && hexData.yingIndex !== undefined) {
+            text += '世在' + YAO_NAMES[hexData.shiIndex] + '，应在' + YAO_NAMES[hexData.yingIndex] + '。';
+            if (hexData.shiIndex === hexData.yingIndex) {
+                text += '世应同位，主事不分彼此。';
+            } else {
+                text += '世应异位，主彼此有别。';
+            }
+        }
+
+        return text;
+    }
+
+    // ==================== 结果页签切换 ====================
+    function _switchResultTab(tabIdx) {
+        _currentResultTab = tabIdx;
+
+        var tabs = document.querySelectorAll('.ly-result-tab');
+        tabs.forEach(function(t) {
+            t.classList.remove('active');
+            if (parseInt(t.getAttribute('data-tab')) === tabIdx) {
+                t.classList.add('active');
+            }
+        });
+
+        var contentEl = $('lyResultContent');
+        if (!contentEl || !_lastHexData) return;
+
+        switch (tabIdx) {
+            case 0:
+                contentEl.innerHTML = _renderPage1(_lastHexData);
+                break;
+            case 1:
+                contentEl.innerHTML = _renderPage2(_lastHexData);
+                break;
+            case 2:
+                contentEl.innerHTML = _renderPage3(_lastHexData);
+                break;
+            case 3:
+                contentEl.innerHTML = _renderPage4(_lastHexData);
+                break;
+        }
+    }
+
+    // ==================== 页面1：六爻排盘 ====================
+    function _renderPage1(hexData) {
+        var html = '';
+        html += '<div class="liuyao-result">';
+
+        // 基础信息表
+        html += '<div class="ly-info-table">';
+        html += _renderInfoRow('事项', hexData.matter || '未指定事项');
+        html += _renderInfoRow('日期', _formatDate(hexData.guaTime) + '（' + (hexData.lunarDate || '') + '）');
+        html += _renderInfoRow('卦式', '【在线摇卦】');
+        html += _renderInfoRow('节气', hexData.solarTerm || '未知');
+        html += _renderInfoRow('干支',
+            (hexData.yearGZ ? hexData.yearGZ.ganZhi : '—') + ' / ' +
+            '<b>' + (hexData.monthGZ ? hexData.monthGZ.ganZhi : '—') + '</b> / ' +
+            '<b>' + (hexData.dayGZ ? hexData.dayGZ.ganZhi : '—') + '</b> / ' +
+            (hexData.hourGZ ? hexData.hourGZ.ganZhi : '—'));
+        html += _renderInfoRow('空亡', hexData.kongWang || '未知');
+        html += _renderInfoRow('神煞',
+            '卦身--' + (hexData.guaShen || '未定') +
+            ' / 驿马--' + (hexData.yiMa || '未知') +
+            ' / 桃花--' + (hexData.taoHua || '未知'));
+        html += '</div>';
+
+        // 核心卦象：本卦+变卦 并排
+        html += '<div class="ly-hexagram-pair">';
+        html += _renderHexagramBlock(hexData, 'original');
+        html += _renderHexagramBlock(hexData, 'changed');
+        html += '</div>';
+
+        // 卦象总断
+        html += '<div class="ly-summary">';
+        html += '  <div class="ly-section-title">卦象总断</div>';
+        html += '  <div class="ly-summary-text">' + _getSummaryText(hexData) + '</div>';
+        html += '</div>';
+
+        // 持世分析
+        html += '<div class="ly-shishi">';
+        html += '  <div class="ly-shishi-title">持世分析</div>';
+        html += '  <div class="ly-shishi-text">' + _getShiShiAnalysis(hexData.shiShiQin) + '</div>';
+        html += '</div>';
+
+        html += '</div>';
+        return html;
+    }
+
+    function _renderInfoRow(label, value) {
+        return '<div class="ly-info-row"><span class="ly-info-label">' + label + '</span><span class="ly-info-value">' + value + '</span></div>';
+    }
+
+    function _renderHexagramBlock(hexData, type) {
+        var isOriginal = (type === 'original');
+        var name = isOriginal ? (hexData.name || '') : (hexData.changedName || '');
+        var shortName = isOriginal ? (hexData.shortName || '') : (hexData.changedShort || '');
+        var palace = isOriginal ? (hexData.palace || '') : (hexData.changedPalace || '');
+        var lines = hexData.lines || [];
+
+        var html = '';
+        html += '<div class="ly-hexagram ' + type + '">';
+        html += '  <div class="ly-hex-title">' + (isOriginal ? '本卦' : '变卦') + '：' + name + '（' + shortName + '\u00B7' + palace + '宫）</div>';
+        html += '  <div class="ly-hex-body">';
+
+        for (var i = 5; i >= 0; i--) {
+            var line = lines[i];
+            if (!line) continue;
+
+            var tag = '';
+            if (isOriginal) {
+                if (i === hexData.shiIndex) tag = '世';
+                if (i === hexData.yingIndex) tag = '应';
+                if (line.isDong) tag += (tag ? ' ' : '') + '动';
+            }
+
+            var tagClass = '';
+            if (tag.indexOf('世') !== -1) tagClass = 'shi';
+            if (tag.indexOf('应') !== -1) tagClass = 'ying';
+            if (tag.indexOf('动') !== -1) tagClass = 'dong';
+
+            html += '<div class="ly-hex-line">';
+            html += '  <span class="ly-hex-shen">' + (line.liuShen || '') + '</span>';
+            html += '  <span class="ly-hex-qin">' + (line.liuQin || '') + '</span>';
+            html += '  <span class="ly-hex-zhi">' + (line.zhi || '') + (line.wuXing || '') + '</span>';
+            html += '  <span class="ly-hex-gan">' + (line.gan || '') + '</span>';
+            html += '  <span class="ly-hex-yao">' + (line.yaoHua || '') + '</span>';
+            html += '  <span class="ly-hex-tag ' + tagClass + '">' + tag + '</span>';
+            html += '</div>';
+        }
+
+        // 伏神（仅本卦显示）
+        if (isOriginal && hexData.fuShen) {
+            html += '<div class="ly-fushen-line">伏神：' + hexData.fuShen + '</div>';
+        }
+
+        html += '  </div>';
+        html += '</div>';
+        return html;
+    }
+
+    // ==================== 页面2：传统解卦 ====================
+    function _renderPage2(hexData) {
+        var html = '';
+        html += '<div class="ly-traditional">';
+
+        var name = hexData.name || '';
+        var shortName = hexData.shortName || '';
+        html += '<div class="ly-trad-header">';
+        html += '  <div class="ly-trad-name">' + name + '（' + shortName + '）</div>';
+        html += '</div>';
+
+        // 象曰
+        html += '<div class="ly-trad-section">';
+        html += '  <div class="ly-trad-label">象曰</div>';
+        html += '  <div class="ly-trad-text">' + (hexData.xiangYue || '') + '</div>';
+        html += '</div>';
+
+        // 诗曰
+        html += '<div class="ly-trad-section">';
+        html += '  <div class="ly-trad-label">诗曰</div>';
+        html += '  <div class="ly-trad-text">' + (hexData.shiYue || '') + '</div>';
+        html += '</div>';
+
+        // 断曰
+        html += '<div class="ly-trad-section">';
+        html += '  <div class="ly-trad-label">断曰</div>';
+        html += '  <div class="ly-trad-text">' + (hexData.duanYue || '') + '</div>';
+        html += '</div>';
+
+        // 解卦
+        html += '<div class="ly-trad-section">';
+        html += '  <div class="ly-trad-label">解卦</div>';
+        html += '  <div class="ly-trad-text">' + (hexData.jieGua || '') + '</div>';
+        html += '</div>';
+
+        // 分类占断
+        html += '<div class="ly-categories">';
+        html += '  <div class="ly-cat-title">分类参考</div>';
+        var categories = hexData.categoryJudgments || {};
+        var catLabels = ['事业', '经商', '求名', '出行', '婚姻', '恋爱', '决策', '财运', '健康', '诉讼', '失物', '学业'];
+        catLabels.forEach(function(label) {
+            if (categories[label]) {
+                html += '<div class="ly-cat-item">';
+                html += '  <span class="ly-cat-label">' + label + '</span>';
+                html += '  <span class="ly-cat-text">' + categories[label] + '</span>';
+                html += '</div>';
+            }
+        });
+        html += '</div>';
+
+        html += '</div>';
+        return html;
+    }
+
+    // ==================== 页面3：卦辞爻辞 ====================
+    function _renderPage3(hexData) {
+        var html = '';
+        html += '<div class="ly-classic">';
+
+        // Tab切换：本卦 / 变卦
+        html += '<div class="ly-classic-tabs">';
+        html += '  <div class="ly-classic-tab active" data-gua="original" id="tabOriginal">本卦: ' + (hexData.name || '') + '</div>';
+        html += '  <div class="ly-classic-tab" data-gua="changed" id="tabChanged">变卦: ' + (hexData.changedName || '') + '</div>';
+        html += '</div>';
+
+        // 卦辞内容区
+        html += '<div id="lyClassicContent">';
+        html += _renderClassicContent(hexData, 'original');
+        html += '</div>';
+
+        // 断语详解
+        html += '<div class="ly-detail-judgments">';
+        html += '  <div class="ly-dj-title">断语详解</div>';
+
+        var jLabels = ['总断', '运势', '事业', '财运', '婚姻', '恋爱', '健康', '出行', '诉讼', '失物', '学业', '家宅'];
+        var judgments = _getDetailJudgments(hexData);
+        jLabels.forEach(function(label) {
+            if (judgments[label]) {
+                html += '<div class="ly-dj-item">';
+                html += '  <span>' + label + '</span>';
+                html += '  <span>' + judgments[label] + '</span>';
+                html += '</div>';
+            }
+        });
+
+        html += '</div>';
+        html += '</div>';
+        return html;
+    }
+
+    function _renderClassicContent(hexData, type) {
+        var isOriginal = (type === 'original');
+        var shortName = isOriginal ? (hexData.shortName || '') : (hexData.changedShort || '');
+        var lines = hexData.lines || [];
+
+        var classicData = _getClassicData(hexData, type);
+
+        var html = '';
+
+        // 卦辞
+        html += '<div class="ly-guaci">';
+        html += '  <div class="ly-guaci-title">卦辞</div>';
+        html += '  <div class="ly-guaci-text">' + (classicData.guaCi || '') + '</div>';
+        html += '</div>';
+
+        // 象传
+        if (classicData.xiangZhuan) {
+            html += '<div class="ly-xiangzhuan">';
+            html += '  <div class="ly-xiangzhuan-title">象传</div>';
+            html += '  <div class="ly-xiangzhuan-text">' + classicData.xiangZhuan + '</div>';
+            html += '</div>';
+        }
+
+        // 彖传
+        if (classicData.tuanZhuan) {
+            html += '<div class="ly-tuanzhuan">';
+            html += '  <div class="ly-tuanzhuan-title">彖传</div>';
+            html += '  <div class="ly-tuanzhuan-text">' + classicData.tuanZhuan + '</div>';
+            html += '</div>';
+        }
+
+        // 六爻爻辞
+        html += '<div class="ly-yaoci-list">';
+        html += '  <div class="ly-yaoci-title">爻辞</div>';
+
+        for (var i = 0; i < 6; i++) {
+            var line = lines[i];
+            if (!line) continue;
+
+            var isYang = isOriginal ? line.isYang : !line.isYang;
+            if (!line.isDong) isYang = line.isYang;
+            var yaoName = _getYaoName(i, isYang);
+            var yaoCi = classicData.yaoCi ? (classicData.yaoCi[i] || '') : '';
+
+            html += '<div class="ly-yaoci-item">';
+            html += '  <div class="ly-yaoci-label">' + yaoName + '：</div>';
+            html += '  <div class="ly-yaoci-text">' + yaoCi + '</div>';
+            html += '</div>';
+        }
+
+        html += '</div>';
+        return html;
+    }
+
+    function _getClassicData(hexData, type) {
+        var isOriginal = (type === 'original');
+        var shortName = isOriginal ? (hexData.shortName || '') : (hexData.changedShort || '');
+
+        if (isOriginal && hexData.lineTexts && hexData.lineTexts.length > 0) {
+            return {
+                guaCi: hexData.description || (shortName + '：卦辞待补。'),
+                xiangZhuan: hexData.xiangYue || '',
+                tuanZhuan: hexData.jieGua || '',
+                yaoCi: hexData.lineTexts
+            };
+        }
+        if (!isOriginal && hexData.changedLineTexts && hexData.changedLineTexts.length > 0) {
+            return {
+                guaCi: (hexData.changedName || shortName) + '：变卦卦辞。',
+                xiangZhuan: '',
+                tuanZhuan: '',
+                yaoCi: hexData.changedLineTexts
+            };
+        }
+
+        return {
+            guaCi: shortName + '：元亨利贞。卦象显示天地之道，万物之理。君子观此卦，当明辨是非，审时度势。',
+            xiangZhuan: '象曰：天行健，君子以自强不息。观乎天文以察时变，观乎人文以化成天下。',
+            tuanZhuan: '彖曰：大哉乾元，万物资始，乃统天。云行雨施，品物流形。大明终始，六位时成。',
+            yaoCi: [
+                '初爻：潜龙勿用。阳气潜藏，宜韬光养晦，不可轻举妄动。',
+                '二爻：见龙在田，利见大人。阳气渐显，宜有所作为，贵人相助。',
+                '三爻：君子终日乾乾，夕惕若厉，无咎。勤勉谨慎，可保无虞。',
+                '四爻：或跃在渊，无咎。进退自如，审时度势，把握时机。',
+                '五爻：飞龙在天，利见大人。如日中天，事业有成，名利双收。',
+                '上爻：亢龙有悔。盛极而衰，宜知进退，不可贪得无厌。'
+            ]
+        };
+    }
+
+    function _getDetailJudgments(hexData) {
+        return {
+            '总断': (hexData.name || '') + '，' + (hexData.palace || '') + '宫卦。世在' + YAO_NAMES[hexData.shiIndex] +
+                '，应在' + YAO_NAMES[hexData.yingIndex] + '。' + _getSummaryText(hexData),
+            '运势': '整体运势平稳，有升有降。关键在于把握时机，顺势而为。近期宜守不宜攻，待机而动。',
+            '事业': '事业方面有发展空间，但需耐心等待。贵人运尚可，可寻求长辈或上级帮助。',
+            '财运': '财运中等，正财为主。投资宜谨慎，不可贪图暴利。节约开支，积少成多。',
+            '婚姻': '婚姻运势需关注双方沟通。已有伴侣者关系稳定，未婚者有机会遇到心仪对象。',
+            '恋爱': '恋爱运势良好，感情生活丰富多彩。但需注意不要过于冲动，理性对待感情问题。',
+            '健康': '健康方面无大碍，注意饮食作息规律。适当运动，保持身心健康。',
+            '出行': '出行顺利，但需提前做好准备。注意交通安全，避免前往偏远地区。',
+            '诉讼': '诉讼事宜宜和解为主。对簿公堂未必有利，退一步海阔天空。',
+            '失物': '失物有找回的可能。仔细回忆遗失地点，近期可能有意想不到的发现。',
+            '学业': '学业运势良好，用功读书必有收获。考试运佳，发挥正常水平即可取得好成绩。',
+            '家宅': '家宅平安，家庭和睦。近期可考虑家居调整，改善居住环境。'
+        };
+    }
+
+    // ==================== 页面4：AI智能分析 ====================
+    var _aiAnalyzing = false; // 防重锁
+    var _aiCountInfo = null;  // 次数信息缓存
+
+    function _getAuthHeaders() {
+        var token = localStorage.getItem('v2_token');
+        return { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + (token || '') };
+    }
+
+    function _isV2LoggedIn() {
+        return !!localStorage.getItem('v2_token');
+    }
+
+    async function _fetchAiCount() {
+        if (!_isV2LoggedIn()) {
+            _aiCountInfo = { used: 0, limit: 1, remaining: 1, is_vip: false };
+            return _aiCountInfo;
+        }
+        try {
+            var resp = await fetch('/api/liuyao/count', { headers: _getAuthHeaders() });
+            var json = await resp.json();
+            if (json.code === 200) {
+                _aiCountInfo = json.data;
+            }
+        } catch(e) {}
+        if (!_aiCountInfo) {
+            _aiCountInfo = { used: 0, limit: 1, remaining: 1, is_vip: false };
+        }
+        return _aiCountInfo;
+    }
+
+    function _renderPage4(hexData) {
+        var html = '<div class="ly-ai-section">';
+        html += '<div class="ly-ai-header">';
+        html += '<div class="ly-ai-title">🔮 AI智能分析</div>';
+        html += '<div class="ly-ai-count" id="lyAiCount">加载中...</div>';
+        html += '</div>';
+
+        // 次数提示
+        html += '<div class="ly-ai-tip" id="lyAiTip">普通用户累计1次免费分析，月度VIP每天5次</div>';
+
+        // 开始分析按钮
+        html += '<button class="ly-ai-btn" id="lyAiBtn" onclick="showWechatGuide()">开始AI分析</button>';
+
+        // 分析结果区域
+        html += '<div class="ly-ai-result" id="lyAiResult" style="display:none;"></div>';
+
+        // 合规声明
+        html += '<div class="ly-ai-disclaimer">本内容仅供传统民俗文化参考，非医疗及命运预测建议</div>';
+
+        html += '</div>';
+
+        // 异步加载次数
+        setTimeout(function() { _updateAiCountDisplay(); }, 100);
+
+        return html;
+    }
+
+    async function _updateAiCountDisplay() {
+        await _fetchAiCount();
+        var el = document.getElementById('lyAiCount');
+        if (el && _aiCountInfo) {
+            var vipLabel = _aiCountInfo.is_vip ? 'VIP' : '普通';
+            el.textContent = vipLabel + '用户：今日 ' + _aiCountInfo.used + '/' + _aiCountInfo.limit + ' 次';
+        }
+    }
+
+    async function _startAiAnalysis() {
+        if (_aiAnalyzing) return;
+        if (!_isV2LoggedIn()) {
+            if (typeof window.V2Member !== 'undefined') {
+                window.V2Member.showMemberModal('请先登录后再使用AI分析功能');
+            } else {
+                _showVipModal('请先登录后再使用AI分析功能');
+            }
+            return;
+        }
+        if (!_lastHexData) return;
+
+        // 使用新的会员系统检查AI次数
+        if (typeof window.V2Member !== 'undefined' && window.V2Member.checkAndUse) {
+            var checkResult = await window.V2Member.checkAndUse();
+            if (!checkResult.allowed) {
+                if (checkResult.data && checkResult.data.reason === 'daily_limit') {
+                    window.V2Member.showDailyLimitModal();
+                } else {
+                    window.V2Member.showMemberModal(checkResult.message);
+                }
+                return;
+            }
+        } else {
+            // 降级：使用旧的次数检查
+            await _fetchAiCount();
+            if (_aiCountInfo && _aiCountInfo.remaining <= 0) {
+                _showVipModal('今日AI分析次数已用完（' + _aiCountInfo.used + '/' + _aiCountInfo.limit + '），开通月度VIP可享受每天5次分析');
+                return;
+            }
+        }
+
+        // 防重锁
+        _aiAnalyzing = true;
+        var btn = document.getElementById('lyAiBtn');
+        if (btn) { btn.disabled = true; btn.textContent = 'AI分析中...'; btn.style.opacity = '0.6'; }
+
+        var resultEl = document.getElementById('lyAiResult');
+        if (resultEl) {
+            resultEl.style.display = 'block';
+            resultEl.innerHTML = '<div class="ly-ai-loading">⏳ 正在为您深度分析卦象，请稍候...</div>';
+        }
+
+        try {
+            var hexData = _lastHexData;
+            var resp = await fetch('/api/liuyao/ai-analyze', {
+                method: 'POST',
+                headers: _getAuthHeaders(),
+                body: JSON.stringify({
+                    hex_binary: hexData.original ? hexData.original.binary : '',
+                    hex_name: hexData.name || '',
+                    matter: hexData.matter || '',
+                    hex_data: hexData
+                })
+            });
+            var json = await resp.json();
+
+            if (json.code === 200) {
+                // 显示结果
+                if (resultEl) {
+                    var resultText = json.data.result || '';
+                    // 将Markdown格式转为HTML展示
+                    resultText = resultText
+                        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+                        .replace(/#{1,6}\s*(.+)/g, '<h4 style="color:var(--red-primary);margin:12px 0 6px;">$1</h4>')
+                        .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+                        .replace(/---/g, '<hr style="border:none;border-top:1px solid var(--border-color);margin:12px 0;">')
+                        .replace(/\n/g, '<br>');
+                    resultEl.innerHTML = '<div class="ly-ai-content">' + resultText + '</div>';
+                    if (json.data.cached) {
+                        resultEl.innerHTML += '<div style="text-align:center;color:#999;font-size:12px;margin-top:8px;">（缓存结果）</div>';
+                    }
+                }
+                // 更新次数
+                await _updateAiCountDisplay();
+                // 更新按钮
+                if (btn) { btn.textContent = '重新分析'; btn.style.opacity = '1'; }
+            } else if (json.code === 403) {
+                // 次数用完
+                _showVipModal(json.message);
+                if (resultEl) { resultEl.style.display = 'none'; }
+                await _updateAiCountDisplay();
+                if (btn) { btn.textContent = '开始AI分析'; btn.style.opacity = '1'; }
+            } else {
+                if (resultEl) { resultEl.innerHTML = '<div class="ly-ai-error">❌ ' + (json.message || '分析失败') + '</div>'; }
+                if (btn) { btn.textContent = '重新分析'; btn.style.opacity = '1'; }
+            }
+        } catch(err) {
+            if (resultEl) { resultEl.innerHTML = '<div class="ly-ai-error">❌ 网络错误，请稍后重试</div>'; }
+            if (btn) { btn.textContent = '重新分析'; btn.style.opacity = '1'; }
+        }
+
+        _aiAnalyzing = false;
+        if (btn) { btn.disabled = false; }
+    }
+
+    function _showVipModal(message) {
+        // 复用现有的toast或创建弹窗
+        var overlay = document.createElement('div');
+        overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:1000;display:flex;align-items:center;justify-content:center;';
+        overlay.innerHTML = '<div style="background:#fff;border-radius:12px;padding:24px;max-width:320px;width:85%;text-align:center;">' +
+            '<div style="font-size:40px;margin-bottom:12px;">👑</div>' +
+            '<div style="font-size:16px;font-weight:bold;margin-bottom:8px;color:#333;">VIP会员</div>' +
+            '<div style="font-size:14px;color:#666;margin-bottom:20px;line-height:1.6;">' + message + '</div>' +
+            '<div style="display:flex;gap:12px;">' +
+            '<button onclick="this.closest(\'div[style]\').remove()" style="flex:1;padding:10px;border:1px solid #ddd;border-radius:8px;background:#fff;font-size:14px;cursor:pointer;">取消</button>' +
+            '<a href="pay.html" onclick="this.closest(\'div[style]\').remove()" style="flex:1;padding:10px;border:none;border-radius:8px;background:var(--red-primary);color:#fff;font-size:14px;cursor:pointer;text-decoration:none;display:block;">开通VIP</a>' +
+            '</div></div>';
+        overlay.addEventListener('click', function(e) { if (e.target === overlay) overlay.remove(); });
+        document.body.appendChild(overlay);
+    }
+
+    // 暴露到全局作用域，供innerHTML中的onclick调用
+    window._startAiAnalysis = _startAiAnalysis;
+
+    // ==================== 经典文本Tab切换（事件委托） ====================
+    document.addEventListener('click', function(e) {
+        var tab = e.target;
+        if (tab && tab.classList.contains('ly-classic-tab') && tab.getAttribute('data-gua')) {
+            var type = tab.getAttribute('data-gua');
+            var tabs = tab.parentElement.querySelectorAll('.ly-classic-tab');
+            tabs.forEach(function(t) { t.classList.remove('active'); });
+            tab.classList.add('active');
+
+            var contentEl = $('lyClassicContent');
+            if (contentEl && _lastHexData) {
+                contentEl.innerHTML = _renderClassicContent(_lastHexData, type);
+            }
+        }
+    });
+
+    // ==================== 页面加载后初始化 ====================
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    } else {
+        init();
+    }
+
+})();
+</script>
+
+<!-- 微信引导弹窗 -->
+<div id="wechatGuideModal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.6);z-index:9999;align-items:center;justify-content:center;">
+  <div style="background:#fff;border-radius:16px;padding:32px 24px 24px;width:300px;max-width:90vw;text-align:center;box-shadow:0 8px 30px rgba(0,0,0,0.3);">
+    <div style="width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,#07C160,#06AD56);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
+      <svg width="36" height="36" viewBox="0 0 24 24" fill="white"><path d="M8.5 11a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3zm5-1.5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0zM20 12c0 2.2-1.8 4-4 4h-.5l-2.5 2 .5-2H16c2.2 0 4-1.8 4-4s-1.8-4-4-4H8c-2.2 0-4 1.8-4 4s1.8 4 4 4h1.5l.5 2-2.5-2H8C5.8 16 4 14.2 4 12s1.8-4 4-4h8c2.2 0 4 1.8 4 4z"/></svg>
+    </div>
+    <div style="font-size:18px;font-weight:bold;color:#333;margin-bottom:8px;">开通月度会员</div>
+    <div style="font-size:14px;color:#666;line-height:1.6;margin-bottom:16px;">添加站长微信办理，19.8元/月<br>开通后可享每日5次AI深度分析</div>
+    <div style="background:#f5f5f5;border-radius:8px;padding:12px;margin-bottom:16px;">
+      <div style="font-size:12px;color:#999;margin-bottom:6px;">微信号</div>
+      <div style="font-size:18px;font-weight:bold;color:#333;letter-spacing:1px;" id="wechatIdDisplay">DLing3313</div>
+      </div>
+      <img src="../images/wechat-qr.png" alt="站长微信二维码" style="width:200px;height:200px;margin:10px auto;display:block;border-radius:8px;">
+      <button onclick="document.getElementById('wechatGuideModal').style.display='none'" style="width:100%;padding:12px;background:linear-gradient(135deg,#07C160,#06AD56);color:#fff;border:none;border-radius:8px;font-size:16px;font-weight:bold;cursor:pointer;">我知道了</button>
+  </div>
+</div>
+<script>
+function showWechatGuide() {
+    document.getElementById('wechatGuideModal').style.display = 'flex';
+}
+</script>
+
+</body>
+</html>

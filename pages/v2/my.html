@@ -1,0 +1,1004 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>个人中心</title>
+    <style>
+    :root {
+        --bg-primary: #F5F0E8;
+        --bg-secondary: #FFF8EE;
+        --bg-card: #FFFCF5;
+        --border-color: #D4C5A0;
+        --border-dark: #B8A472;
+        --text-primary: #3D2B1F;
+        --text-secondary: #6B5B4E;
+        --text-light: #8C7B6B;
+        --red-primary: #A81216;
+        --red-dark: #8B1A1A;
+        --red-light: #E8D0D0;
+        --gold: #C8A84E;
+        --gold-light: #E8D48C;
+        --green: #4A7C59;
+        --shadow: rgba(61, 43, 31, 0.1);
+        --shadow-strong: rgba(61, 43, 31, 0.2);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+        font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+        background: var(--bg-primary);
+        color: var(--text-primary);
+        min-height: 100vh;
+        font-size: 14px;
+        line-height: 1.6;
+        padding-bottom: 30px;
+    }
+
+    /* ==================== 顶部标题栏 ==================== */
+    .header {
+        background: linear-gradient(135deg, var(--red-dark), var(--red-primary));
+        color: #FFF;
+        padding: 15px 20px;
+        text-align: center;
+        position: sticky;
+        top: 0;
+        z-index: 200;
+        box-shadow: 0 2px 8px var(--shadow-strong);
+    }
+    .header h1 {
+        font-size: 18px;
+        font-weight: 600;
+        letter-spacing: 3px;
+    }
+    .header .back-link {
+        position: absolute;
+        left: 15px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #FFF;
+        text-decoration: none;
+        font-size: 14px;
+        opacity: 0.9;
+    }
+    .header .back-link:hover { opacity: 1; }
+
+    /* ==================== 页面容器 ==================== */
+    .page-container {
+        padding: 12px;
+        max-width: 480px;
+        margin: 0 auto;
+    }
+
+    /* ==================== 账户信息卡片 ==================== */
+    .account-card {
+        background: #FFF;
+        border-radius: 12px;
+        padding: 20px 16px;
+        margin-bottom: 12px;
+        box-shadow: 0 2px 8px var(--shadow);
+        display: flex;
+        align-items: center;
+        gap: 14px;
+    }
+    .avatar {
+        width: 56px;
+        height: 56px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 22px;
+        font-weight: 700;
+        color: #FFF;
+        flex-shrink: 0;
+    }
+    .avatar.gray { background: #BFBFBF; }
+    .avatar.red { background: var(--red-primary); }
+    .account-info {
+        flex: 1;
+        min-width: 0;
+    }
+    .account-info .username {
+        font-size: 16px;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 4px;
+    }
+    .account-info .tip {
+        font-size: 12px;
+        color: var(--text-light);
+        margin-bottom: 2px;
+    }
+    .level-tag {
+        display: inline-block;
+        padding: 2px 8px;
+        border-radius: 10px;
+        font-size: 11px;
+        font-weight: 500;
+        margin-top: 4px;
+    }
+    .level-tag.normal {
+        background: #F0F0F0;
+        color: var(--text-secondary);
+    }
+    .level-tag.vip {
+        background: linear-gradient(135deg, var(--gold-light), var(--gold));
+        color: #FFF;
+    }
+    .account-actions {
+        display: flex;
+        gap: 8px;
+        margin-top: 12px;
+    }
+    .account-actions .btn {
+        flex: 1;
+        padding: 8px 0;
+        font-size: 13px;
+        letter-spacing: 1px;
+        height: auto;
+        line-height: 1.4;
+        text-align: center;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .btn {
+        display: block;
+        width: 100%;
+        padding: 12px 0;
+        border: none;
+        border-radius: 8px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        letter-spacing: 2px;
+        transition: all 0.2s;
+    }
+    .btn:active { transform: scale(0.98); }
+    .btn-primary {
+        background: linear-gradient(135deg, var(--red-dark), var(--red-primary));
+        color: #FFF;
+        box-shadow: 0 2px 6px rgba(168, 18, 22, 0.3);
+    }
+    .btn-outline {
+        background: transparent;
+        color: var(--red-primary);
+        border: 1px solid var(--red-primary);
+    }
+    .btn-outline:active { background: var(--red-light); }
+    .btn-sm {
+        padding: 6px 14px;
+        font-size: 13px;
+        letter-spacing: 1px;
+        width: auto;
+        height: auto;
+        line-height: 1.4;
+    }
+
+    /* ==================== 功能列表 ==================== */
+    .func-card {
+        background: #FFF;
+        border-radius: 12px;
+        margin-bottom: 12px;
+        box-shadow: 0 2px 8px var(--shadow);
+        overflow: hidden;
+    }
+    .func-item {
+        display: flex;
+        align-items: center;
+        height: 48px;
+        padding: 0 14px;
+        cursor: pointer;
+        transition: background 0.2s;
+        text-decoration: none;
+        color: var(--text-primary);
+        border-bottom: 1px solid #F5F0E8;
+    }
+    .func-item:last-child { border-bottom: none; }
+    .func-item:active { background: #FAF6EE; }
+    .func-item .icon {
+        font-size: 18px;
+        margin-right: 10px;
+        flex-shrink: 0;
+    }
+    .func-item .label {
+        flex: 1;
+        font-size: 14px;
+    }
+    .func-item .count {
+        font-size: 12px;
+        color: var(--text-light);
+        margin-right: 8px;
+    }
+    .func-item .arrow {
+        color: #CCC;
+        font-size: 14px;
+        flex-shrink: 0;
+    }
+
+    /* ==================== 姓名记录列表 ==================== */
+    .records-section {
+        background: #FFF;
+        border-radius: 12px;
+        margin-bottom: 12px;
+        box-shadow: 0 2px 8px var(--shadow);
+        overflow: hidden;
+    }
+    .records-tab-bar {
+        display: flex;
+        border-bottom: 1px solid var(--border-color);
+    }
+    .records-tab-item {
+        flex: 1;
+        text-align: center;
+        padding: 11px 8px;
+        font-size: 14px;
+        color: var(--text-light);
+        cursor: pointer;
+        transition: all 0.3s;
+        border-bottom: 3px solid transparent;
+        font-weight: 500;
+        user-select: none;
+    }
+    .records-tab-item.active {
+        color: var(--red-primary);
+        border-bottom-color: var(--red-primary);
+        font-weight: 600;
+    }
+    .records-list {
+        padding: 0;
+    }
+    .record-item {
+        padding: 12px 14px;
+        border-bottom: 1px solid #F5F0E8;
+        cursor: pointer;
+    }
+    .record-item:last-child { border-bottom: none; }
+    .record-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+    .record-left {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex: 1;
+        min-width: 0;
+    }
+    .record-type-tag {
+        display: inline-block;
+        padding: 1px 6px;
+        border-radius: 4px;
+        font-size: 11px;
+        font-weight: 500;
+        flex-shrink: 0;
+    }
+    .record-type-tag.evaluate {
+        background: #E8F5E9;
+        color: var(--green);
+    }
+    .record-type-tag.name {
+        background: #FFF3E0;
+        color: #E6A23C;
+    }
+    .record-name {
+        font-size: 14px;
+        font-weight: 500;
+        color: var(--text-primary);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    .record-meta {
+        font-size: 11px;
+        color: var(--text-light);
+        margin-top: 4px;
+        padding-left: 2px;
+    }
+    .record-detail {
+        display: none;
+        margin-top: 10px;
+        padding: 10px 12px;
+        background: var(--bg-secondary);
+        border-radius: 8px;
+        font-size: 13px;
+        color: var(--text-secondary);
+        line-height: 1.8;
+        white-space: pre-wrap;
+        word-break: break-all;
+        max-height: 300px;
+        overflow-y: auto;
+    }
+    .record-detail.expanded { display: block; }
+    .record-actions {
+        display: flex;
+        justify-content: flex-end;
+        margin-top: 8px;
+    }
+    .btn-delete {
+        padding: 4px 12px;
+        font-size: 12px;
+        color: var(--red-primary);
+        background: var(--red-light);
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .btn-delete:active { background: #D4A0A0; }
+    .empty-state {
+        text-align: center;
+        padding: 30px 16px;
+        color: var(--text-light);
+        font-size: 13px;
+    }
+
+    /* ==================== 退出登录 ==================== */
+    .logout-section {
+        text-align: center;
+        padding: 20px 0 10px;
+    }
+    .btn-logout {
+        display: inline-block;
+        padding: 10px 40px;
+        border: none;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        color: var(--red-primary);
+        background: transparent;
+        letter-spacing: 1px;
+        transition: all 0.2s;
+    }
+    .btn-logout:active { background: var(--red-light); }
+
+    /* ==================== 底部合规声明 ==================== */
+    .disclaimer {
+        text-align: center;
+        padding: 16px 20px 20px;
+        font-size: 11px;
+        color: var(--text-light);
+        line-height: 1.8;
+    }
+
+    /* ==================== 修改密码弹窗 ==================== */
+    .modal-overlay {
+        display: none;
+        position: fixed;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 1000;
+        align-items: center;
+        justify-content: center;
+    }
+    .modal-overlay.show { display: flex; }
+    .modal-box {
+        background: #FFF;
+        border-radius: 12px;
+        padding: 24px 20px 20px;
+        width: 320px;
+        max-width: 90vw;
+        box-shadow: 0 8px 30px rgba(0,0,0,0.2);
+    }
+    .modal-title {
+        font-size: 16px;
+        font-weight: 600;
+        text-align: center;
+        margin-bottom: 18px;
+        color: var(--text-primary);
+    }
+    .modal-box .form-group {
+        margin-bottom: 14px;
+    }
+    .modal-box .form-group label {
+        display: block;
+        font-size: 13px;
+        color: var(--text-secondary);
+        margin-bottom: 6px;
+        font-weight: 500;
+    }
+    .modal-box .form-group input {
+        width: 100%;
+        padding: 10px 12px;
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        background: var(--bg-secondary);
+        color: var(--text-primary);
+        font-size: 14px;
+    }
+    .modal-box .form-group input:focus {
+        outline: none;
+        border-color: var(--red-primary);
+        box-shadow: 0 0 0 2px rgba(168, 18, 22, 0.1);
+    }
+    .modal-actions {
+        display: flex;
+        gap: 10px;
+        margin-top: 18px;
+    }
+    .modal-actions .btn {
+        flex: 1;
+        padding: 10px 0;
+        font-size: 14px;
+        letter-spacing: 1px;
+        height: auto;
+        line-height: 1.4;
+    }
+
+    /* ==================== 动画 ==================== */
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(8px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    .fade-in { animation: fadeIn 0.3s ease-out; }
+
+    /* ==================== 响应式 ==================== */
+    @media (max-width: 480px) {
+        .page-container { padding: 10px; }
+        .account-card { padding: 16px 12px; }
+        .func-item { padding: 0 12px; }
+        .record-item { padding: 10px 12px; }
+    }
+    </style>
+</head>
+<body>
+
+<!-- 顶部标题栏 -->
+<header class="header">
+    <a class="back-link" href="index.html">&lt; 返回</a>
+    <h1>个人中心</h1>
+</header>
+
+<div class="page-container">
+
+    <!-- 账户信息卡片 -->
+    <div class="account-card fade-in" id="accountCard">
+        <!-- 由 JS 动态渲染 -->
+    </div>
+
+    <!-- 功能列表 -->
+    <div class="func-card fade-in">
+        <a class="func-item" id="funcPaipan" href="index.html">
+            <span class="icon">&#x1F4CB;</span>
+            <span class="label">排盘记录</span>
+            <span class="count" id="paipanCount">0 条</span>
+            <span class="arrow">&gt;</span>
+        </a>
+        <div class="func-item" id="funcEval">
+            <span class="icon">&#x270D;&#xFE0F;</span>
+            <span class="label">姓名评测记录</span>
+            <span class="count" id="evalCount">0 条</span>
+            <span class="arrow">&gt;</span>
+        </div>
+        <div class="func-item" id="funcName">
+            <span class="icon">&#x1F476;</span>
+            <span class="label">取名记录</span>
+            <span class="count" id="nameCount">0 条</span>
+            <span class="arrow">&gt;</span>
+        </div>
+        <a class="func-item" id="funcVip" href="index.html">
+            <span class="icon">&#x1F451;</span>
+            <span class="label">会员中心</span>
+            <span class="count" id="vipStatus">未开通</span>
+            <span class="arrow">&gt;</span>
+        </a>
+    </div>
+
+    <!-- 姓名记录列表 -->
+    <div class="records-section fade-in" id="recordsSection">
+        <div class="records-tab-bar">
+            <div class="records-tab-item active" data-tab="evaluate">评测记录</div>
+            <div class="records-tab-item" data-tab="name">取名记录</div>
+        </div>
+        <div class="records-list" id="recordsList">
+            <!-- 由 JS 动态渲染 -->
+        </div>
+    </div>
+
+    <!-- 退出登录 -->
+    <div class="logout-section" id="logoutSection" style="display:none;">
+        <button class="btn-logout" id="btnLogout">退出登录</button>
+    </div>
+
+    <!-- 底部合规声明 -->
+    <div class="disclaimer">
+        本内容仅供传统民俗文化参考，基于《三命通会》《渊海子平》等传统命理典籍整理，不构成命运判定、不做吉凶预测、不作为任何人生决策依据。
+    </div>
+</div>
+
+<!-- 修改密码弹窗 -->
+<div class="modal-overlay" id="pwdModal">
+    <div class="modal-box">
+        <div class="modal-title">修改密码</div>
+        <div class="form-group">
+            <label>旧密码</label>
+            <input type="password" id="pwdOld" placeholder="请输入旧密码" autocomplete="off">
+        </div>
+        <div class="form-group">
+            <label>新密码</label>
+            <input type="password" id="pwdNew" placeholder="请输入新密码（至少6位）" autocomplete="off">
+        </div>
+        <div class="form-group">
+            <label>确认新密码</label>
+            <input type="password" id="pwdConfirm" placeholder="请再次输入新密码" autocomplete="off">
+        </div>
+        <div class="modal-actions">
+            <button class="btn btn-outline" id="pwdCancel">取消</button>
+            <button class="btn btn-primary" id="pwdSubmit">确认修改</button>
+        </div>
+    </div>
+</div>
+
+<!-- 登录/注册弹窗 -->
+<div class="modal-overlay" id="loginModal">
+    <div class="modal-box">
+        <div class="modal-title" id="loginModalTitle">登录</div>
+        <div class="form-group">
+            <label>用户名</label>
+            <input type="text" id="loginModalUsername" placeholder="请输入用户名" maxlength="20" autocomplete="off">
+        </div>
+        <div class="form-group">
+            <label>密码</label>
+            <input type="password" id="loginModalPassword" placeholder="请输入密码" maxlength="30" autocomplete="off">
+        </div>
+        <div class="form-group" id="loginCaptchaGroup" style="display:none;">
+            <label>验证码</label>
+            <div style="display:flex;align-items:center;gap:10px;">
+                <input type="text" id="loginCaptchaInput" placeholder="请输入验证码" maxlength="4" style="flex:1;" autocomplete="off">
+                <img id="loginCaptchaImg" src="/api/captcha" alt="验证码" title="点击刷新验证码" style="cursor:pointer;height:40px;border-radius:4px;border:1px solid var(--border-color);flex-shrink:0;">
+            </div>
+        </div>
+        <div class="modal-actions">
+            <button class="btn btn-outline" id="loginModalCancel">取消</button>
+            <button class="btn btn-primary" id="loginModalSubmit">登录</button>
+        </div>
+        <div style="text-align:center;margin-top:12px;font-size:13px;color:var(--text-secondary);">
+            <span id="loginSwitchHint">没有账号？</span><a href="javascript:void(0)" id="loginSwitchLink" style="color:var(--red-primary);text-decoration:none;">去注册</a>
+        </div>
+    </div>
+</div>
+
+<script src="../../js/storage.js"></script>
+<script src="../../js/v2-api.js"></script>
+<script>
+(function () {
+    'use strict';
+
+    // ==================== 数据读取（V2 API版本） ====================
+
+    var user = V2API.getCurrentUser();
+    var currentUsername = user ? user.username : 'guest';
+    // 排盘记录从API获取（异步）
+    var baziRecords = [];
+    var baziRecordsLoaded = false;
+    // 姓名记录仍使用localStorage（NameRecordStore已改为双写模式）
+    var nameRecords = JSON.parse(localStorage.getItem('bazi_name_records') || '[]');
+    var myNameRecords = nameRecords.filter(function (r) {
+        return r.username === currentUsername;
+    });
+    var evalRecords = myNameRecords.filter(function (r) { return r.type === 'evaluate'; });
+    var nameGenRecords = myNameRecords.filter(function (r) { return r.type === 'name'; });
+
+    // 当前激活的记录 tab
+    var activeTab = 'evaluate';
+
+    // ==================== 渲染账户卡片 ====================
+
+    function renderAccountCard() {
+        var card = document.getElementById('accountCard');
+        if (!user) {
+            // 未登录
+            card.innerHTML =
+                '<div class="avatar gray">未</div>' +
+                '<div class="account-info">' +
+                    '<div class="username">未登录</div>' +
+                    '<div class="tip">登录后查看更多功能</div>' +
+                    '<div class="account-actions">' +
+                        '<button class="btn btn-primary" id="btnMyLogin">登录</button>' +
+                        '<button class="btn btn-outline" id="btnMyRegister">注册</button>' +
+                    '</div>' +
+                '</div>';
+            document.getElementById('logoutSection').style.display = 'none';
+            // 绑定登录/注册按钮 → 弹出登录弹窗
+            document.getElementById('btnMyLogin').addEventListener('click', function () {
+                openLoginModal('login');
+            });
+            document.getElementById('btnMyRegister').addEventListener('click', function () {
+                openLoginModal('register');
+            });
+        } else {
+            // 已登录
+            var firstChar = user.username.charAt(0).toUpperCase();
+            var membership = V2API.getUserMembership(user.username);
+            var isVip = membership && membership.isActive && (membership.plan === 'lifetime' || membership.expireDate >= new Date().toISOString().split('T')[0]);
+            var levelHtml = '';
+            if (isVip) {
+                var planLabel = membership.plan === 'lifetime' ? '终身会员' : '月度会员';
+                var expireText = membership.plan === 'lifetime' ? '永久有效' : '到期：' + membership.expireDate;
+                levelHtml =
+                    '<span class="level-tag vip">' + planLabel + '</span>' +
+                    '<div class="tip">' + expireText + '</div>';
+            } else {
+                levelHtml = '<span class="level-tag normal">普通用户</span>';
+            }
+            card.innerHTML =
+                '<div class="avatar red">' + firstChar + '</div>' +
+                '<div class="account-info">' +
+                    '<div class="username">' + escapeHtml(user.username) + '</div>' +
+                    levelHtml +
+                    '<div class="account-actions">' +
+                        '<button class="btn btn-outline btn-sm" id="btnChangePwd">修改密码</button>' +
+                    '</div>' +
+                '</div>';
+            document.getElementById('logoutSection').style.display = 'block';
+            // 绑定修改密码按钮
+            document.getElementById('btnChangePwd').addEventListener('click', function () {
+                openPwdModal();
+            });
+        }
+    }
+
+    // ==================== 异步加载排盘记录 ====================
+    async function loadPaipanRecords() {
+        if (!V2API.isLoggedIn()) {
+            baziRecords = [];
+            baziRecordsLoaded = true;
+            renderFuncCounts();
+            return;
+        }
+        try {
+            var data = await V2API.getPaipanRecords(1, 50);
+            baziRecords = data.list || [];
+        } catch (err) {
+            console.error('获取排盘记录失败:', err);
+            baziRecords = [];
+        }
+        baziRecordsLoaded = true;
+        renderFuncCounts();
+    }
+    loadPaipanRecords();
+
+    // ==================== 渲染功能列表计数 ====================
+
+    function renderFuncCounts() {
+        document.getElementById('paipanCount').textContent = baziRecords.length + ' 条';
+        document.getElementById('evalCount').textContent = evalRecords.length + ' 条';
+        document.getElementById('nameCount').textContent = nameGenRecords.length + ' 条';
+
+        // 会员状态
+        var vipEl = document.getElementById('vipStatus');
+        if (user) {
+            var m = V2API.getUserMembership(user.username);
+            if (m && m.isActive) {
+                var isExpired = m.plan !== 'lifetime' && m.expireDate < new Date().toISOString().split('T')[0];
+                vipEl.textContent = isExpired ? '已过期' : '已开通';
+                vipEl.style.color = isExpired ? 'var(--red-primary)' : 'var(--green)';
+            } else {
+                vipEl.textContent = '未开通';
+                vipEl.style.color = '';
+            }
+        } else {
+            vipEl.textContent = '未开通';
+            vipEl.style.color = '';
+        }
+    }
+
+    // ==================== 渲染姓名记录列表 ====================
+
+    function renderRecords() {
+        var list = document.getElementById('recordsList');
+        var records = activeTab === 'evaluate' ? evalRecords : nameGenRecords;
+
+        // 重新读取最新数据
+        nameRecords = JSON.parse(localStorage.getItem('bazi_name_records') || '[]');
+        myNameRecords = nameRecords.filter(function (r) {
+            return r.username === currentUsername;
+        });
+        evalRecords = myNameRecords.filter(function (r) { return r.type === 'evaluate'; });
+        nameGenRecords = myNameRecords.filter(function (r) { return r.type === 'name'; });
+        records = activeTab === 'evaluate' ? evalRecords : nameGenRecords;
+
+        if (records.length === 0) {
+            list.innerHTML = '<div class="empty-state">暂无记录</div>';
+            return;
+        }
+
+        var html = '';
+        records.forEach(function (r) {
+            var typeLabel = r.type === 'evaluate' ? '评测' : '取名';
+            var typeClass = r.type === 'evaluate' ? 'evaluate' : 'name';
+            var genderText = r.gender === '1' ? '男' : (r.gender === '0' ? '女' : (r.gender || '未知'));
+            var timeStr = formatTime(r.time);
+            var nameText = r.name || '未知';
+
+            html +=
+                '<div class="record-item" data-id="' + r.id + '">' +
+                    '<div class="record-header">' +
+                        '<div class="record-left">' +
+                            '<span class="record-type-tag ' + typeClass + '">' + typeLabel + '</span>' +
+                            '<span class="record-name">' + escapeHtml(nameText) + '</span>' +
+                        '</div>' +
+                    '</div>' +
+                    '<div class="record-meta">' + genderText + ' &middot; ' + timeStr + '</div>' +
+                    '<div class="record-detail" id="detail_' + r.id + '">' + escapeHtml(r.result || '') + '</div>' +
+                    '<div class="record-actions">' +
+                        '<button class="btn-delete" data-id="' + r.id + '">删除</button>' +
+                    '</div>' +
+                '</div>';
+        });
+
+        list.innerHTML = html;
+
+        // 绑定事件：点击展开/收起详情
+        list.querySelectorAll('.record-item').forEach(function (item) {
+            item.addEventListener('click', function (e) {
+                // 如果点击的是删除按钮，不触发展开
+                if (e.target.classList.contains('btn-delete')) return;
+                var id = item.getAttribute('data-id');
+                var detail = document.getElementById('detail_' + id);
+                if (detail) {
+                    detail.classList.toggle('expanded');
+                }
+            });
+        });
+
+        // 绑定事件：删除按钮
+        list.querySelectorAll('.btn-delete').forEach(function (btn) {
+            btn.addEventListener('click', function (e) {
+                e.stopPropagation();
+                var id = parseInt(btn.getAttribute('data-id'));
+                if (confirm('确定删除该记录？')) {
+                    deleteNameRecord(id);
+                }
+            });
+        });
+    }
+
+    // ==================== Tab 切换 ====================
+
+    document.querySelectorAll('.records-tab-item').forEach(function (tab) {
+        tab.addEventListener('click', function () {
+            document.querySelectorAll('.records-tab-item').forEach(function (t) {
+                t.classList.remove('active');
+            });
+            tab.classList.add('active');
+            activeTab = tab.getAttribute('data-tab');
+            renderRecords();
+        });
+    });
+
+    // ==================== 功能列表跳转 ====================
+
+    // 排盘记录：跳转主页并切换到排盘记录页
+    document.getElementById('funcPaipan').addEventListener('click', function (e) {
+        e.preventDefault();
+        window.location.href = 'index.html#records';
+    });
+
+    // 评测记录：滚动到记录列表并切换到评测 tab
+    document.getElementById('funcEval').addEventListener('click', function () {
+        activeTab = 'evaluate';
+        document.querySelectorAll('.records-tab-item').forEach(function (t) {
+            t.classList.remove('active');
+        });
+        document.querySelector('.records-tab-item[data-tab="evaluate"]').classList.add('active');
+        renderRecords();
+        document.getElementById('recordsSection').scrollIntoView({ behavior: 'smooth' });
+    });
+
+    // 取名记录：滚动到记录列表并切换到取名 tab
+    document.getElementById('funcName').addEventListener('click', function () {
+        activeTab = 'name';
+        document.querySelectorAll('.records-tab-item').forEach(function (t) {
+            t.classList.remove('active');
+        });
+        document.querySelector('.records-tab-item[data-tab="name"]').classList.add('active');
+        renderRecords();
+        document.getElementById('recordsSection').scrollIntoView({ behavior: 'smooth' });
+    });
+
+    // 会员中心：跳转主页并切换到VIP页面
+    document.getElementById('funcVip').addEventListener('click', function (e) {
+        e.preventDefault();
+        window.location.href = 'index.html#vip';
+    });
+
+    // ==================== 退出登录 ====================
+
+    document.getElementById('btnLogout').addEventListener('click', function () {
+        if (confirm('确定退出登录？')) {
+            V2API.logout();
+            Storage.logout();
+            window.location.reload();
+        }
+    });
+
+    // ==================== 修改密码弹窗 ====================
+
+    var pwdModal = document.getElementById('pwdModal');
+
+    function openPwdModal() {
+        document.getElementById('pwdOld').value = '';
+        document.getElementById('pwdNew').value = '';
+        document.getElementById('pwdConfirm').value = '';
+        pwdModal.classList.add('show');
+    }
+
+    function closePwdModal() {
+        pwdModal.classList.remove('show');
+    }
+
+    document.getElementById('pwdCancel').addEventListener('click', closePwdModal);
+
+    pwdModal.addEventListener('click', function (e) {
+        if (e.target === pwdModal) closePwdModal();
+    });
+
+    document.getElementById('pwdSubmit').addEventListener('click', async function () {
+        var oldPwd = document.getElementById('pwdOld').value;
+        var newPwd = document.getElementById('pwdNew').value;
+        var confirmPwd = document.getElementById('pwdConfirm').value;
+
+        if (!user) { alert('请先登录'); return; }
+        if (!oldPwd) { alert('请输入旧密码'); return; }
+        if (!newPwd) { alert('请输入新密码'); return; }
+        if (newPwd.length < 6) { alert('新密码至少6位'); return; }
+        if (newPwd !== confirmPwd) { alert('两次新密码不一致'); return; }
+
+        var result = await V2API.changePassword(oldPwd, newPwd);
+        if (result.success) {
+            alert('密码修改成功');
+            closePwdModal();
+        } else {
+            alert(result.message);
+        }
+    });
+
+    // ==================== 删除姓名记录 ====================
+
+    function deleteNameRecord(id) {
+        var records = JSON.parse(localStorage.getItem('bazi_name_records') || '[]');
+        records = records.filter(function (r) { return r.id !== id; });
+        localStorage.setItem('bazi_name_records', JSON.stringify(records));
+        renderRecords();
+        renderFuncCounts();
+    }
+
+    // ==================== 工具函数 ====================
+
+    function formatTime(timestamp) {
+        if (!timestamp) return '';
+        var d = new Date(timestamp);
+        var year = d.getFullYear();
+        var month = String(d.getMonth() + 1).padStart(2, '0');
+        var day = String(d.getDate()).padStart(2, '0');
+        var hour = String(d.getHours()).padStart(2, '0');
+        var min = String(d.getMinutes()).padStart(2, '0');
+        return year + '-' + month + '-' + day + ' ' + hour + ':' + min;
+    }
+
+    function escapeHtml(str) {
+        if (!str) return '';
+        var div = document.createElement('div');
+        div.appendChild(document.createTextNode(str));
+        return div.innerHTML;
+    }
+
+    // ==================== 登录/注册弹窗逻辑 ====================
+
+    var loginMode = 'login';
+
+    function openLoginModal(mode) {
+        loginMode = mode || 'login';
+        var modal = document.getElementById('loginModal');
+        var title = document.getElementById('loginModalTitle');
+        var submitBtn = document.getElementById('loginModalSubmit');
+        var switchHint = document.getElementById('loginSwitchHint');
+        var switchLink = document.getElementById('loginSwitchLink');
+        var captchaGroup = document.getElementById('loginCaptchaGroup');
+        var captchaInput = document.getElementById('loginCaptchaInput');
+        var captchaImg = document.getElementById('loginCaptchaImg');
+
+        document.getElementById('loginModalUsername').value = '';
+        document.getElementById('loginModalPassword').value = '';
+        if (captchaInput) captchaInput.value = '';
+
+        if (loginMode === 'register') {
+            title.textContent = '注册';
+            submitBtn.textContent = '注册';
+            switchHint.textContent = '已有账号？';
+            switchLink.textContent = '去登录';
+            if (captchaGroup) captchaGroup.style.display = '';
+            if (captchaImg) captchaImg.src = '/api/captcha?t=' + Date.now();
+        } else {
+            title.textContent = '登录';
+            submitBtn.textContent = '登录';
+            switchHint.textContent = '没有账号？';
+            switchLink.textContent = '去注册';
+            if (captchaGroup) captchaGroup.style.display = 'none';
+        }
+        modal.classList.add('show');
+    }
+
+    function closeLoginModal() {
+        document.getElementById('loginModal').classList.remove('show');
+    }
+
+    document.getElementById('loginModalCancel').addEventListener('click', closeLoginModal);
+    document.getElementById('loginModal').addEventListener('click', function (e) {
+        if (e.target === document.getElementById('loginModal')) closeLoginModal();
+    });
+
+    // 验证码图片点击刷新
+    var loginCaptchaImg = document.getElementById('loginCaptchaImg');
+    if (loginCaptchaImg) {
+        loginCaptchaImg.addEventListener('click', function () {
+            this.src = '/api/captcha?t=' + Date.now();
+        });
+    }
+
+    // 切换登录/注册
+    document.getElementById('loginSwitchLink').addEventListener('click', function () {
+        openLoginModal(loginMode === 'login' ? 'register' : 'login');
+    });
+
+    // 提交登录/注册
+    document.getElementById('loginModalSubmit').addEventListener('click', async function () {
+        var username = document.getElementById('loginModalUsername').value.trim();
+        var password = document.getElementById('loginModalPassword').value;
+
+        if (!username) { alert('请输入用户名'); return; }
+        if (!password) { alert('请输入密码'); return; }
+        if (password.length < 6) { alert('密码至少6位'); return; }
+
+        if (loginMode === 'register') {
+            var captchaInput = document.getElementById('loginCaptchaInput');
+            var captchaValue = captchaInput ? captchaInput.value.trim() : '';
+            if (!captchaValue) { alert('请输入验证码'); return; }
+
+            try {
+                var regResult = await V2API.register(username, password, captchaValue);
+                if (regResult && regResult.success) {
+                    alert('注册成功，请登录');
+                    openLoginModal('login');
+                } else {
+                    alert((regResult && regResult.message) || '注册失败');
+                    var img = document.getElementById('loginCaptchaImg');
+                    if (img) img.src = '/api/captcha?t=' + Date.now();
+                    if (captchaInput) captchaInput.value = '';
+                }
+            } catch (err) {
+                alert('注册失败，请检查网络');
+            }
+        } else {
+            try {
+                var loginResult = await V2API.login(username, password);
+                if (loginResult && loginResult.success) {
+                    alert('登录成功');
+                    closeLoginModal();
+                    window.location.reload();
+                } else {
+                    alert((loginResult && loginResult.message) || '登录失败');
+                }
+            } catch (err) {
+                alert('登录失败，请检查网络');
+            }
+        }
+    });
+
+    // ==================== 初始化 ====================
+
+    renderAccountCard();
+    renderFuncCounts();
+    renderRecords();
+
+})();
+</script>
+
+</body>
+</html>

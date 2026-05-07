@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>四柱八字排盘</title>
+    <link rel="stylesheet" href="css/style.css?v=4">
+</head>
+<body>
+
+<!-- 顶部标题栏 -->
+<header class="header">
+    <h1>四柱八字排盘</h1>
+    <div class="subtitle">传统命理 · 精准排盘</div>
+</header>
+
+<!-- 用户信息栏 -->
+<div class="user-bar" id="userBar">
+    <span class="user-info" id="userInfo"></span>
+    <button class="btn-logout" id="btnChangePwdEntry" style="display:none;font-size:12px;padding:2px 8px;">改密</button>
+    <button class="btn-logout" id="btnLogout" style="display:none">退出</button>
+</div>
+
+<!-- ==================== 排盘页 ==================== -->
+<div class="page active" id="pagePaipan">
+
+    <div class="form-section">
+    <!-- 姓名输入 -->
+    <div class="form-group">
+        <label>姓名</label>
+        <input type="text" id="inputName" placeholder="请输入姓名" maxlength="20">
+    </div>
+
+    <!-- 公历/农历切换 -->
+    <div class="calendar-switch" id="calendarSwitch">
+        <button class="switch-item active" data-type="solar">公历</button>
+        <button class="switch-item" data-type="lunar">农历</button>
+    </div>
+
+    <!-- 出生日期 -->
+    <div class="form-row" id="dateRow">
+        <div class="form-group">
+            <label>年</label>
+            <select id="selectYear"></select>
+        </div>
+        <div class="form-group">
+            <label>月</label>
+            <select id="selectMonth"></select>
+        </div>
+        <div class="form-group">
+            <label>日</label>
+            <select id="selectDay"></select>
+        </div>
+    </div>
+    <div class="form-row">
+        <div class="form-group">
+            <label>时</label>
+            <select id="selectHour"></select>
+        </div>
+        <div class="form-group">
+            <label>分</label>
+            <select id="selectMinute"></select>
+        </div>
+    </div>
+
+    <!-- 性别选择 -->
+    <div class="form-group">
+        <label>性别</label>
+        <div class="gender-switch" id="genderSwitch">
+            <div class="gender-item active" data-gender="1">男</div>
+            <div class="gender-item" data-gender="0">女</div>
+        </div>
+    </div>
+
+    <!-- 出生地 -->
+    <div class="form-group">
+        <label>出生地</label>
+        <div class="form-row">
+            <div class="form-group">
+                <select id="selectProvince">
+                    <option value="">请选择省份</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <select id="selectCity">
+                    <option value="">请选择城市</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <!-- 开始排盘按钮 -->
+    <button class="btn btn-primary" id="btnPaipan">开始排盘</button>
+    </div>
+
+    <button id="backToRecords" style="display:none; margin:8px 12px; padding:8px 16px; background:#8B4513; color:#fff; border:none; border-radius:6px; font-size:14px; cursor:pointer;">← 返回记录</button>
+
+    <!-- 排盘结果区域 -->
+    <div id="resultArea" style="display:none">
+        <!-- 基本信息栏 -->
+        <div class="result-card static-result-card">
+            <div class="result-title">八字排盘结果</div>
+            <div class="info-bar" id="infoBar"></div>
+
+            <!-- 四柱八字表格 -->
+            <table class="bazi-table" id="baziTable">
+                <thead>
+                    <tr>
+                        <th></th>
+                        <th>年柱</th>
+                        <th>月柱</th>
+                        <th>日柱</th>
+                        <th>时柱</th>
+                    </tr>
+                </thead>
+                <tbody id="baziTableBody"></tbody>
+            </table>
+
+            <!-- 五行统计 -->
+            <div class="wuxing-bar" id="wuxingBar"></div>
+
+        </div>
+    </div>
+</div>
+
+<!-- ==================== 记录页 ==================== -->
+<div class="page" id="pageRecords">
+    <div class="service-title">我的排盘记录</div>
+    <div class="record-list" id="recordList"></div>
+    <div class="empty-state" id="emptyState" style="display:none">
+        <div class="empty-icon">🔒</div>
+        <div>请先登录查看记录</div>
+        <div style="margin-top:8px;font-size:12px">排盘后自动保存，需要先登录</div>
+        <div style="margin-top:12px;display:flex;gap:10px;justify-content:center;">
+            <button class="btn btn-primary" id="btnEmptyLogin" style="padding:8px 24px;font-size:14px;">登录</button>
+            <button class="btn btn-primary" id="btnEmptyRegister" style="padding:8px 24px;font-size:14px;background:var(--gold);color:#fff;">注册</button>
+        </div>
+    </div>
+</div>
+
+<!-- ==================== 管理员后台页 ==================== -->
+<div class="page" id="pageAdmin">
+    <div class="service-title">管理员后台</div>
+    
+    <!-- 统计概览 -->
+    <div class="admin-stats" id="adminStats">
+        <div class="admin-stat-item">
+            <div class="admin-stat-num" id="statTotalUsers">0</div>
+            <div class="admin-stat-label">总用户数</div>
+        </div>
+        <div class="admin-stat-item">
+            <div class="admin-stat-num" id="statTotalRecords">0</div>
+            <div class="admin-stat-label">总排盘数</div>
+        </div>
+        <div class="admin-stat-item">
+            <div class="admin-stat-num" id="statTodayUsers">0</div>
+            <div class="admin-stat-label">今日新增</div>
+        </div>
+    </div>
+
+    <!-- 管理员功能选项卡 -->
+    <div class="admin-tabs" id="adminTabs">
+        <button class="admin-tab active" data-tab="tabUsers">用户管理</button>
+        <button class="admin-tab" data-tab="tabRecords">排盘记录</button>
+        <button class="admin-tab" data-tab="tabSettings">系统设置</button>
+        <button class="admin-tab" data-tab="tabMembership">会员管理</button>
+    </div>
+    <div style="padding:0 12px 8px;">
+        <a href="pages/admin/members.html" id="adminMembersLink" style="display:none;font-size:12px;color:var(--red-primary);text-decoration:none;">进入会员管理页面 &gt;&gt;</a>
+    </div>
+
+    <!-- 用户管理 -->
+    <div class="admin-panel active" id="tabUsers">
+        <div class="admin-list" id="adminUserList"></div>
+    </div>
+
+    <!-- 排盘记录管理 -->
+    <div class="admin-panel" id="tabRecords">
+        <div class="admin-list" id="adminRecordList"></div>
+    </div>
+
+    <!-- 系统设置 -->
+    <div class="admin-panel" id="tabSettings">
+        <div class="service-card">
+            <div class="service-name">修改管理员密码</div>
+            <div class="form-group">
+                <label>当前密码</label>
+                <input type="password" id="adminOldPwd" placeholder="请输入当前密码">
+            </div>
+            <div class="form-group">
+                <label>新密码</label>
+                <input type="password" id="adminNewPwd" placeholder="请输入新密码">
+            </div>
+            <div class="form-group">
+                <label>确认新密码</label>
+                <input type="password" id="adminConfirmPwd" placeholder="请再次输入新密码">
+            </div>
+            <button class="btn btn-primary" id="btnAdminChangePwd">修改密码</button>
+        </div>
+    </div>
+
+    <!-- 会员管理 -->
+    <div class="admin-panel" id="tabMembership">
+        <div style="margin-bottom:16px;display:flex;gap:10px;flex-wrap:wrap;">
+            <input type="text" id="vipUsername" placeholder="输入用户名" style="flex:1;padding:8px 12px;border:1px solid var(--border-color);border-radius:8px;font-size:14px;">
+            <select id="vipPlan" style="padding:8px 12px;border:1px solid var(--border-color);border-radius:8px;font-size:14px;">
+                <option value="trial">体验会员(1个月)</option>
+                <option value="yearly">年度会员(1年)</option>
+                <option value="lifetime">终身会员</option>
+            </select>
+            <button onclick="adminActivateVip()" style="padding:8px 16px;background:var(--red-primary);color:#fff;border:none;border-radius:8px;font-size:14px;cursor:pointer;">开通会员</button>
+        </div>
+        <div style="margin-bottom:16px;display:flex;gap:10px;flex-wrap:wrap;">
+            <input type="text" id="quotaUsername" placeholder="用户名" style="flex:1;padding:8px 12px;border:1px solid var(--border-color);border-radius:8px;font-size:14px;">
+            <input type="number" id="quotaNumber" placeholder="次数(-1为无限)" style="width:140px;padding:8px 12px;border:1px solid var(--border-color);border-radius:8px;font-size:14px;">
+            <button onclick="adminAdjustQuota()" style="padding:8px 16px;background:var(--gold);color:#fff;border:none;border-radius:8px;font-size:14px;cursor:pointer;">调整次数</button>
+        </div>
+        <div id="membershipList"></div>
+    </div>
+</div>
+
+<!-- 今日运势页面 -->
+<div id="pageToday" class="page">
+    <div id="todayContent">
+        <!-- 将由 app.js 动态渲染 -->
+    </div>
+</div>
+
+<!-- 会员充值套餐页面 -->
+<div id="pageVip" class="page">
+    <div id="vipContent"></div>
+</div>
+
+<!-- 六爻页面 -->
+<div id="pageLiuyao" class="page">
+    <div id="liuyaoInputPage" class="ly-input-page">
+        <!-- 将由 liuyao-ui.js 动态渲染 -->
+    </div>
+    <div id="liuyaoResultPage" class="ly-result-page" style="display:none;">
+        <!-- 将由 liuyao-ui.js 动态渲染 -->
+    </div>
+</div>
+
+<!-- 隐藏的管理员入口 -->
+<div style="text-align:center;padding:5px 0 2px;">
+    <a href="javascript:void(0)" id="adminEntry" style="font-size:10px;color:#ccc;text-decoration:none;">管理</a>
+</div>
+
+<!-- 底部三栏导航 -->
+<nav class="bottom-nav" id="bottomNav">
+    <button class="nav-item active" data-page="pagePaipan">☰ 排盘</button>
+    <button class="nav-item" data-page="pageRecords">📋 排盘记录</button>
+    <button class="nav-item" id="btnMore" onclick="toggleDrawer(event)">⋯ 更多</button>
+</nav>
+
+<!-- 更多-上拉抽屉菜单 -->
+<div class="drawer-overlay" id="drawerOverlay" onclick="closeDrawer()"></div>
+<div class="drawer-menu" id="drawerMenu">
+    <div class="drawer-handle"></div>
+    <div class="drawer-title">更多功能</div>
+    <a class="drawer-item" href="javascript:void(0)" onclick="closeDrawer();switchPage('pageToday')">📅 今日运势</a>
+    <a class="drawer-item" href="javascript:void(0)" onclick="closeDrawer();switchPage('pageLiuyao')">🔮 六爻排盘</a>
+    <a class="drawer-item" href="pages/jishi-biaowen.html" onclick="closeDrawer()">📜 民俗表文</a>
+    <a class="drawer-item" href="pages/name-generate.html" onclick="closeDrawer()">✍️ 姓名拟定</a>
+    <a class="drawer-item" href="pages/hepei.html" onclick="closeDrawer()">☯️ 八字合配</a>
+    <div class="drawer-divider"></div>
+    <a class="drawer-item" href="pages/my.html" onclick="closeDrawer()">👤 我的</a>
+</div>
+
+<!-- 抽屉菜单控制脚本（独立，不修改app.js） -->
+<script>
+function toggleDrawer(e) {
+    if (e) e.stopPropagation();
+    var overlay = document.getElementById('drawerOverlay');
+    var menu = document.getElementById('drawerMenu');
+    overlay.style.display = 'block';
+    menu.style.display = 'block';
+    requestAnimationFrame(function() {
+        overlay.classList.add('show');
+        menu.classList.add('show');
+    });
+}
+function closeDrawer() {
+    var overlay = document.getElementById('drawerOverlay');
+    var menu = document.getElementById('drawerMenu');
+    overlay.classList.remove('show');
+    menu.classList.remove('show');
+    setTimeout(function() {
+        overlay.style.display = 'none';
+        menu.style.display = 'none';
+    }, 300);
+}
+</script>
+
+<!-- ==================== 登录弹窗 ==================== -->
+<div class="modal-overlay" id="loginModal">
+    <div class="modal">
+        <h3 id="modalTitle">登录</h3>
+        <div class="form-group">
+            <label>用户名</label>
+            <input type="text" id="loginUsername" placeholder="请输入用户名" maxlength="20">
+        </div>
+        <div class="form-group">
+            <label>密码</label>
+            <input type="password" id="loginPassword" placeholder="请输入密码" maxlength="30">
+        </div>
+        <!-- 注册验证码（仅注册模式显示） -->
+        <div class="form-group" id="captchaGroup" style="display:none;">
+            <label>验证码</label>
+            <div style="display:flex;align-items:center;gap:10px;">
+                <input type="text" id="captchaInput" placeholder="请输入验证码" maxlength="4" style="flex:1;" autocomplete="off">
+                <img id="captchaImg" src="/api/captcha?t=1" alt="验证码" title="点击刷新验证码" style="cursor:pointer;height:40px;border-radius:4px;border:1px solid var(--border-color);flex-shrink:0;">
+            </div>
+        </div>
+        <button class="btn btn-primary" id="btnLogin">登录</button>
+        <div class="switch-link" id="switchLink">
+            没有账号？<a id="switchToRegister">去注册</a>
+        </div>
+    </div>
+</div>
+
+<!-- 修改密码弹窗 -->
+<div class="modal-overlay" id="changePwdModal">
+    <div class="modal">
+        <h3>修改密码</h3>
+        <div class="form-group">
+            <label>原密码</label>
+            <input type="password" id="oldPassword" placeholder="请输入原密码" maxlength="30">
+        </div>
+        <div class="form-group">
+            <label>新密码</label>
+            <input type="password" id="newPassword" placeholder="请输入新密码" maxlength="30">
+        </div>
+        <div class="form-group">
+            <label>确认新密码</label>
+            <input type="password" id="confirmPassword" placeholder="请再次输入新密码" maxlength="30">
+        </div>
+        <button class="btn btn-primary" id="btnChangePwd">确认修改</button>
+        <div class="switch-link">
+            <a id="cancelChangePwd">取消</a>
+        </div>
+    </div>
+</div>
+
+<!-- 管理员登录弹窗 -->
+<div class="modal-overlay" id="adminLoginModal">
+    <div class="modal">
+        <h3>管理员登录</h3>
+        <div class="form-group">
+            <label>管理员账号</label>
+            <input type="text" id="adminUsername" placeholder="请输入管理员账号" maxlength="20">
+        </div>
+        <div class="form-group">
+            <label>密码</label>
+            <input type="password" id="adminPassword" placeholder="请输入密码" maxlength="30">
+        </div>
+        <button class="btn btn-primary" id="btnAdminLogin">登录</button>
+        <div class="switch-link">
+            <a id="cancelAdminLogin">取消</a>
+        </div>
+    </div>
+</div>
+
+<!-- Toast提示 -->
+<div class="toast" id="toast"></div>
+
+<!-- 按顺序引入JS模块 -->
+<script src="js/solar_terms.js?v=20"></script>
+<script src="js/lunar.js?v=20"></script>
+<script src="js/solar-time.js"></script>
+<script src="js/city-data.js"></script>
+<script src="js/bazi.js?v=20"></script>
+<script src="js/utils/bazi_strength_stable.js"></script>
+<script src="js/bazi-analyzer.js"></script>
+<script src="js/storage.js"></script>
+<script src="js/app.js?v=20"></script>
+<script src="js/liuyao.js"></script>
+<script src="js/liuyao-ui.js"></script>
+<script>
+// switchTab 桥接函数：将 tab 名称映射到 pageId 并调用 switchPage
+function switchTab(tabName) {
+    var pageMap = {
+        'liuyao': 'pageLiuyao'
+    };
+    var pageId = pageMap[tabName];
+    if (pageId && typeof switchPage === 'function') {
+        switchPage(pageId);
+        // 切换到六爻页面时，调用 LiuYaoUI.showPage() 初始化界面
+        if (tabName === 'liuyao' && typeof LiuYaoUI !== 'undefined' && typeof LiuYaoUI.showPage === 'function') {
+            LiuYaoUI.showPage();
+        }
+    }
+}
+</script>
+
+<!-- 微信引导弹窗 -->
+<div id="wechatGuideModal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.6);z-index:9999;align-items:center;justify-content:center;">
+  <div style="background:#fff;border-radius:16px;padding:32px 24px 24px;width:300px;max-width:90vw;text-align:center;box-shadow:0 8px 30px rgba(0,0,0,0.3);">
+    <div style="width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,#07C160,#06AD56);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
+      <svg width="36" height="36" viewBox="0 0 24 24" fill="white"><path d="M8.5 11a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3zm5-1.5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0zM20 12c0 2.2-1.8 4-4 4h-.5l-2.5 2 .5-2H16c2.2 0 4-1.8 4-4s-1.8-4-4-4H8c-2.2 0-4 1.8-4 4s1.8 4 4 4h1.5l.5 2-2.5-2H8C5.8 16 4 14.2 4 12s1.8-4 4-4h8c2.2 0 4 1.8 4 4z"/></svg>
+    </div>
+    <div style="font-size:18px;font-weight:bold;color:#333;margin-bottom:8px;">开通月度会员</div>
+    <div style="font-size:14px;color:#666;line-height:1.6;margin-bottom:16px;">添加站长微信办理，19.8元/月<br>开通后可享每日5次AI深度分析</div>
+    <div style="background:#f5f5f5;border-radius:8px;padding:12px;margin-bottom:16px;">
+      <div style="font-size:12px;color:#999;margin-bottom:6px;">微信号</div>
+      <div style="font-size:18px;font-weight:bold;color:#333;letter-spacing:1px;" id="wechatIdDisplay">DLing3313</div>
+    </div>
+    <img src="images/wechat-qr.png" alt="站长微信二维码" style="width:200px;height:200px;margin:10px auto;display:block;border-radius:8px;">
+    <button onclick="document.getElementById('wechatGuideModal').style.display='none'" style="width:100%;padding:12px;background:linear-gradient(135deg,#07C160,#06AD56);color:#fff;border:none;border-radius:8px;font-size:16px;font-weight:bold;cursor:pointer;margin-top:12px;">我知道了</button>
+  </div>
+</div>
+<script>
+function showWechatGuide() {
+    document.getElementById('wechatGuideModal').style.display = 'flex';
+}
+</script>
+
+</body>
+</html>

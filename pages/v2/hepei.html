@@ -1,0 +1,1338 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>传统民俗八字合配参考</title>
+    <style>
+    /* ==================== CSS变量 ==================== */
+    :root {
+        --bg-primary: #F5F0E8;
+        --bg-secondary: #FFF8EE;
+        --bg-card: #FFFCF5;
+        --border-color: #D4C5A0;
+        --border-dark: #B8A472;
+        --text-primary: #3D2B1F;
+        --text-secondary: #6B5B4E;
+        --text-light: #8C7B6B;
+        --red-primary: #A81216;
+        --red-dark: #8B0E11;
+        --red-light: #E8D0D0;
+        --gold: #C8A84E;
+        --gold-light: #E8D48C;
+        --green: #4A7C59;
+        --blue: #4A6B8A;
+        --blue-light: #D0DCE8;
+        --shadow: rgba(61, 43, 31, 0.1);
+        --shadow-strong: rgba(61, 43, 31, 0.2);
+        --wx-wood: #2E8B57;
+        --wx-fire: #DC143C;
+        --wx-earth: #8B4513;
+        --wx-metal: #DAA520;
+        --wx-water: #4169E1;
+    }
+
+    /* ==================== 全局重置 ==================== */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+        font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+        background: var(--bg-primary);
+        color: var(--text-primary);
+        min-height: 100vh;
+        font-size: 14px;
+        line-height: 1.6;
+        padding-bottom: 20px;
+    }
+
+    /* ==================== 顶部标题栏 ==================== */
+    .header {
+        background: linear-gradient(135deg, #8B1A1A, #A81216);
+        color: #FFF;
+        padding: 15px 20px;
+        text-align: center;
+        position: sticky;
+        top: 0;
+        z-index: 200;
+        box-shadow: 0 2px 8px var(--shadow-strong);
+    }
+    .header h1 {
+        font-size: 20px;
+        font-weight: 600;
+        letter-spacing: 3px;
+    }
+    .header .back-link {
+        position: absolute;
+        left: 15px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #FFF;
+        text-decoration: none;
+        font-size: 14px;
+        opacity: 0.9;
+    }
+    .header .back-link:hover { opacity: 1; }
+
+    /* ==================== 页面容器 ==================== */
+    .page-container {
+        padding: 12px;
+        max-width: 600px;
+        margin: 0 auto;
+    }
+
+    /* ==================== 双方信息表单 ==================== */
+    .form-section-title {
+        font-size: 16px;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin: 16px 0 10px;
+        padding-left: 10px;
+        border-left: 4px solid var(--red-primary);
+    }
+    .form-section-title.party-b {
+        border-left-color: var(--blue);
+    }
+
+    .party-form {
+        background: var(--bg-card);
+        border-radius: 12px;
+        padding: 15px;
+        margin-bottom: 12px;
+        box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+    }
+    .party-form.party-a {
+        border: 2px solid var(--red-primary);
+    }
+    .party-form.party-b {
+        border: 2px solid var(--blue);
+    }
+
+    .form-group {
+        margin-bottom: 12px;
+    }
+    .form-group:last-child {
+        margin-bottom: 0;
+    }
+    .form-group label {
+        display: block;
+        font-size: 13px;
+        color: var(--text-secondary);
+        margin-bottom: 5px;
+        font-weight: 500;
+    }
+    .form-group input,
+    .form-group select {
+        width: 100%;
+        padding: 9px 10px;
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        font-size: 14px;
+        background: var(--bg-secondary);
+        color: var(--text-primary);
+        outline: none;
+        transition: border-color 0.3s;
+    }
+    .form-group input:focus,
+    .form-group select:focus {
+        border-color: var(--red-primary);
+        box-shadow: 0 0 0 2px rgba(168, 18, 22, 0.1);
+    }
+
+    .form-row {
+        display: flex;
+        gap: 8px;
+    }
+    .form-row .form-group {
+        flex: 1;
+        min-width: 0;
+    }
+
+    /* 性别选择 */
+    .gender-switch {
+        display: flex;
+        gap: 8px;
+    }
+    .gender-switch .gender-item {
+        flex: 1;
+        padding: 8px;
+        text-align: center;
+        border: 2px solid var(--border-color);
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 14px;
+        transition: all 0.3s;
+        background: var(--bg-secondary);
+        user-select: none;
+    }
+    .gender-switch .gender-item.active {
+        border-color: var(--red-primary);
+        background: var(--red-light);
+        color: var(--red-primary);
+        font-weight: 600;
+    }
+
+    /* 提交按钮 */
+    .btn-submit {
+        display: block;
+        width: 100%;
+        padding: 14px;
+        border: none;
+        border-radius: 10px;
+        font-size: 17px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s;
+        letter-spacing: 3px;
+        background: linear-gradient(135deg, #A81216, #C41A1A);
+        color: #FFF;
+        box-shadow: 0 3px 10px rgba(168, 18, 22, 0.3);
+        margin-top: 16px;
+    }
+    .btn-submit:active {
+        transform: scale(0.98);
+        box-shadow: 0 1px 5px rgba(168, 18, 22, 0.3);
+    }
+    .btn-submit:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+
+    /* ==================== 命局卡片 ==================== */
+    .result-area {
+        margin-top: 16px;
+    }
+
+    .bazi-card {
+        background: var(--bg-card);
+        border-radius: 12px;
+        padding: 15px;
+        margin-bottom: 12px;
+        box-shadow: 0 2px 8px var(--shadow);
+        animation: fadeIn 0.3s ease-out;
+    }
+    .bazi-card.party-a {
+        border: 2px solid var(--red-primary);
+    }
+    .bazi-card.party-b {
+        border: 2px solid var(--blue);
+    }
+
+    .bazi-card-title {
+        text-align: center;
+        font-size: 16px;
+        font-weight: 600;
+        margin-bottom: 12px;
+        padding-bottom: 8px;
+        border-bottom: 1px solid var(--border-color);
+        letter-spacing: 2px;
+    }
+    .bazi-card.party-a .bazi-card-title {
+        color: var(--red-primary);
+    }
+    .bazi-card.party-b .bazi-card-title {
+        color: var(--blue);
+    }
+
+    /* 四柱表格 */
+    .bazi-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 8px 0;
+        text-align: center;
+    }
+    .bazi-table th {
+        background: var(--red-primary);
+        color: #FFF;
+        padding: 7px 4px;
+        font-size: 12px;
+        font-weight: 500;
+        letter-spacing: 1px;
+    }
+    .bazi-table th:first-child { border-radius: 6px 0 0 0; }
+    .bazi-table th:last-child { border-radius: 0 6px 0 0; }
+    .bazi-table td {
+        padding: 5px 4px;
+        border: none;
+        font-size: 13px;
+        background: var(--bg-card);
+        vertical-align: middle;
+    }
+    .bazi-table .gan-cell {
+        font-size: 20px;
+        font-weight: 700;
+        padding: 8px 4px;
+    }
+    .bazi-table .zhi-cell {
+        font-size: 20px;
+        font-weight: 700;
+        padding: 8px 4px;
+    }
+    .bazi-table .shishen-cell {
+        font-size: 11px;
+        color: var(--red-primary);
+        font-weight: 500;
+    }
+    .bazi-table .canggan-cell {
+        font-size: 11px;
+        color: var(--text-secondary);
+        line-height: 1.4;
+        padding: 3px 2px;
+        text-align: center;
+        vertical-align: top;
+    }
+    .canggan-item { padding: 1px 0; white-space: nowrap; }
+    .canggan-ss { font-size: 9px; color: var(--text-light); margin-left: 1px; }
+    .bazi-table .nayin-cell { font-size: 10px; color: var(--gold); }
+    .label-cell {
+        font-size: 11px;
+        color: var(--text-light);
+        white-space: nowrap;
+        padding: 4px 5px;
+        text-align: center;
+        font-weight: 500;
+        width: 42px;
+    }
+    .bazi-bg-light td { background: #FAF6F0; }
+    .bazi-bg-dark td { background: #EDE8E0; }
+
+    /* 五行统计 */
+    .wuxing-bar {
+        display: flex;
+        justify-content: space-around;
+        padding: 10px 0;
+        margin-top: 8px;
+        border-top: 1px solid var(--border-color);
+    }
+    .wuxing-item { text-align: center; }
+    .wuxing-item .wx-name { font-size: 15px; font-weight: 700; margin-bottom: 2px; }
+    .wuxing-item .wx-count { font-size: 11px; color: var(--text-light); }
+    .wx-jin { color: #DAA520; }
+    .wx-mu { color: #2E8B57; }
+    .wx-shui { color: #4169E1; }
+    .wx-huo { color: #DC143C; }
+    .wx-tu { color: #8B4513; }
+
+    /* 日主信息 */
+    .rizhu-info {
+        display: flex;
+        justify-content: space-around;
+        padding: 8px 0;
+        margin-top: 8px;
+        border-top: 1px solid var(--border-color);
+        font-size: 13px;
+    }
+    .rizhu-info .rizhu-item {
+        text-align: center;
+    }
+    .rizhu-info .rizhu-label {
+        color: var(--text-light);
+        font-size: 11px;
+    }
+    .rizhu-info .rizhu-value {
+        font-weight: 600;
+        margin-top: 2px;
+    }
+    .rizhu-info .rizhu-value.strong { color: var(--red-primary); }
+    .rizhu-info .rizhu-value.weak { color: var(--blue); }
+
+    /* ==================== AI合配分析区 ==================== */
+    .ai-analysis-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 15px;
+        margin-top: 12px;
+        box-shadow: 0 2px 8px var(--shadow);
+        animation: fadeIn 0.3s ease-out;
+    }
+    .ai-analysis-title {
+        text-align: center;
+        font-size: 16px;
+        font-weight: 600;
+        color: var(--red-primary);
+        margin-bottom: 12px;
+        padding-bottom: 8px;
+        border-bottom: 1px solid var(--border-color);
+        letter-spacing: 2px;
+    }
+
+    /* 加载动画 */
+    .loading-area {
+        text-align: center;
+        padding: 30px 10px;
+    }
+    .loading-spinner {
+        display: inline-block;
+        width: 36px;
+        height: 36px;
+        border: 3px solid var(--border-color);
+        border-top-color: var(--red-primary);
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+        margin-bottom: 10px;
+    }
+    .loading-text {
+        font-size: 13px;
+        color: var(--text-light);
+    }
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+
+    /* AI结果内容 */
+    .ai-result-content {
+        font-size: 14px;
+        color: var(--text-secondary);
+        line-height: 1.8;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+    }
+    .ai-result-content .section-title {
+        font-size: 15px;
+        font-weight: 600;
+        color: var(--red-primary);
+        margin: 12px 0 6px;
+    }
+    .ai-result-content .section-title:first-child {
+        margin-top: 0;
+    }
+
+    /* ==================== 底部合规声明 ==================== */
+    .disclaimer-bar {
+        text-align: center;
+        padding: 16px 20px;
+        margin-top: 24px;
+        font-size: 12px;
+        color: var(--text-light);
+        line-height: 1.6;
+        border-top: 1px solid var(--border-color);
+    }
+
+    /* ==================== 动画 ==================== */
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ==================== 滚动条美化 ==================== */
+    ::-webkit-scrollbar { width: 4px; height: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 2px; }
+
+    /* ==================== 响应式 ==================== */
+    @media (min-width: 481px) {
+        .page-container { padding: 20px; }
+        .header h1 { font-size: 22px; }
+        .bazi-table .gan-cell,
+        .bazi-table .zhi-cell { font-size: 24px; }
+    }
+
+    @media (max-width: 420px) {
+        .page-container { padding: 10px; }
+        .bazi-card { padding: 12px 10px; border-radius: 8px; }
+        .bazi-card-title { font-size: 15px; }
+        .bazi-table .gan-cell,
+        .bazi-table .zhi-cell { font-size: 18px; padding: 6px 2px; }
+        .bazi-table th { font-size: 11px; padding: 6px 2px; }
+        .bazi-table td { padding: 4px 2px; font-size: 12px; }
+        .header h1 { font-size: 18px; }
+        .form-row { flex-wrap: wrap; }
+        .form-row .form-group { min-width: 0; }
+    }
+    </style>
+</head>
+<body>
+
+<!-- 顶部标题栏 -->
+<header class="header">
+    <a class="back-link" href="index.html">&larr; 主页</a>
+    <h1>传统民俗八字合配参考</h1>
+</header>
+
+<!-- 页面容器 -->
+<div class="page-container" id="appContainer">
+
+    <!-- 甲方信息 -->
+    <div class="form-section-title">甲方信息</div>
+    <div class="party-form party-a">
+        <div class="form-group">
+            <label>选择我的排盘记录</label>
+            <select id="recordSelectA" onchange="fillFromRecord('A')">
+                <option value="">-- 手动输入或选择记录 --</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>姓名</label>
+            <input type="text" id="nameA" placeholder="请输入甲方姓名" maxlength="10">
+        </div>
+        <div class="form-group">
+            <label>性别</label>
+            <div class="gender-switch" id="genderA">
+                <div class="gender-item active" data-value="1">男</div>
+                <div class="gender-item" data-value="0">女</div>
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label>出生年</label>
+                <select id="yearA"></select>
+            </div>
+            <div class="form-group">
+                <label>出生月</label>
+                <select id="monthA"></select>
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label>出生日</label>
+                <select id="dayA"></select>
+            </div>
+            <div class="form-group">
+                <label>出生时</label>
+                <select id="hourA"></select>
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label>出生省份</label>
+                <select id="provinceA" onchange="onProvinceChange('A')">
+                    <option value="">请选择省份</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>出生城市</label>
+                <select id="cityA">
+                    <option value="">请先选择省份</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <!-- 乙方信息 -->
+    <div class="form-section-title party-b">乙方信息</div>
+    <div class="party-form party-b">
+        <div class="form-group">
+            <label>选择我的排盘记录</label>
+            <select id="recordSelectB" onchange="fillFromRecord('B')">
+                <option value="">-- 手动输入或选择记录 --</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>姓名</label>
+            <input type="text" id="nameB" placeholder="请输入乙方姓名" maxlength="10">
+        </div>
+        <div class="form-group">
+            <label>性别</label>
+            <div class="gender-switch" id="genderB">
+                <div class="gender-item active" data-value="1">男</div>
+                <div class="gender-item" data-value="0">女</div>
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label>出生年</label>
+                <select id="yearB"></select>
+            </div>
+            <div class="form-group">
+                <label>出生月</label>
+                <select id="monthB"></select>
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label>出生日</label>
+                <select id="dayB"></select>
+            </div>
+            <div class="form-group">
+                <label>出生时</label>
+                <select id="hourB"></select>
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label>出生省份</label>
+                <select id="provinceB" onchange="onProvinceChange('B')">
+                    <option value="">请选择省份</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>出生城市</label>
+                <select id="cityB">
+                    <option value="">请先选择省份</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <!-- 新增「开始合配排盘」按钮 -->
+    <button class="btn-submit" id="btnPaipan" onclick="startPaipan()" style="background:linear-gradient(135deg, #4A6B8A, #5A8BAA);">开始合配排盘</button>
+
+    <!-- 原有「开始合配分析」按钮 - 暂时隐藏，排盘后显示 -->
+    <button class="btn-submit" id="btnAnalyze" onclick="checkMemberAndAnalyze()" style="display:none;">开始合配分析</button>
+
+    <!-- 结果展示区 -->
+    <div class="result-area" id="resultArea"></div>
+
+    <!-- 底部合规声明 -->
+    <div class="disclaimer-bar">
+        本内容仅供传统民俗文化参考，基于《三命通会》《渊海子平》等传统命理典籍整理，不构成命运判定、不做吉凶预测、不作为任何人生决策依据。
+    </div>
+</div>
+
+<!-- 引入配置和JS模块（只读复用） -->
+<script src="../../config.js"></script>
+<script src="../../js/solar_terms.js"></script>
+<script src="../../js/lunar.js"></script>
+<script src="../../js/solar-time.js"></script>
+<script src="../../js/bazi.js"></script>
+<script src="../../js/storage.js"></script>
+<script src="../../js/city-data.js"></script>
+<script src="../../js/utils/bazi_strength_stable.js"></script>
+<script src="../../js/v2-api.js"></script>
+<script src="../../js/v2-app-override.js"></script>
+
+<script>
+(function() {
+    'use strict';
+
+    // ==================== 状态变量 ====================
+    var genderA = 1; // 1=男 0=女
+    var genderB = 1;
+
+    // ==================== 工具函数 ====================
+    function padZero(n) { return n < 10 ? '0' + n : '' + n; }
+
+    function getGanColor(ganIdx) {
+        var wx = Lunar.wuXingGan[ganIdx];
+        var colors = { '金': '#DAA520', '木': '#2E8B57', '水': '#4169E1', '火': '#DC143C', '土': '#8B4513' };
+        return colors[wx] || '#333';
+    }
+
+    function getZhiColor(zhiIdx) {
+        var wx = Lunar.wuXingZhi[zhiIdx];
+        var colors = { '金': '#DAA520', '木': '#2E8B57', '水': '#4169E1', '火': '#DC143C', '土': '#8B4513' };
+        return colors[wx] || '#333';
+    }
+
+    function getDaysInMonth(year, month) {
+        return new Date(year, month, 0).getDate();
+    }
+
+    // ==================== 初始化选择器 ====================
+    function initSelectors() {
+        // 年份范围 1940-2030
+        var years = ['yearA', 'yearB'];
+        years.forEach(function(id) {
+            var sel = document.getElementById(id);
+            for (var y = 1940; y <= 2030; y++) {
+                var opt = document.createElement('option');
+                opt.value = y;
+                opt.textContent = y + '年';
+                if (y === 1990) opt.selected = true;
+                sel.appendChild(opt);
+            }
+        });
+
+        // 月份 1-12
+        var months = ['monthA', 'monthB'];
+        months.forEach(function(id) {
+            var sel = document.getElementById(id);
+            for (var m = 1; m <= 12; m++) {
+                var opt = document.createElement('option');
+                opt.value = m;
+                opt.textContent = padZero(m) + '月';
+                if (m === 1) opt.selected = true;
+                sel.appendChild(opt);
+            }
+        });
+
+        // 日期 1-31
+        var days = ['dayA', 'dayB'];
+        days.forEach(function(id) {
+            var sel = document.getElementById(id);
+            for (var d = 1; d <= 31; d++) {
+                var opt = document.createElement('option');
+                opt.value = d;
+                opt.textContent = padZero(d) + '日';
+                if (d === 1) opt.selected = true;
+                sel.appendChild(opt);
+            }
+        });
+
+        // 时辰 0-23
+        var hours = ['hourA', 'hourB'];
+        var shiChenNames = ['子时(23-1)', '丑时(1-3)', '寅时(3-5)', '卯时(5-7)', '辰时(7-9)', '巳时(9-11)', '午时(11-13)', '未时(13-15)', '申时(15-17)', '酉时(17-19)', '戌时(19-21)', '亥时(21-23)'];
+        hours.forEach(function(id) {
+            var sel = document.getElementById(id);
+            for (var h = 0; h < 24; h++) {
+                var opt = document.createElement('option');
+                opt.value = h;
+                // 以偶数小时为主
+                if (h % 2 === 0 || h === 23) {
+                    var scIdx = Math.floor(h / 2);
+                    if (h === 23) scIdx = 0;
+                    opt.textContent = h + '时 ' + shiChenNames[scIdx];
+                } else {
+                    opt.textContent = h + '时';
+                }
+                if (h === 8) opt.selected = true;
+                sel.appendChild(opt);
+            }
+        });
+    }
+
+    // ==================== 性别切换 ====================
+    function initGenderSwitch() {
+        var switchA = document.getElementById('genderA');
+        var switchB = document.getElementById('genderB');
+
+        switchA.addEventListener('click', function(e) {
+            var item = e.target.closest('.gender-item');
+            if (!item) return;
+            switchA.querySelectorAll('.gender-item').forEach(function(el) { el.classList.remove('active'); });
+            item.classList.add('active');
+            genderA = parseInt(item.getAttribute('data-value'));
+        });
+
+        switchB.addEventListener('click', function(e) {
+            var item = e.target.closest('.gender-item');
+            if (!item) return;
+            switchB.querySelectorAll('.gender-item').forEach(function(el) { el.classList.remove('active'); });
+            item.classList.add('active');
+            genderB = parseInt(item.getAttribute('data-value'));
+        });
+    }
+
+    // ==================== 渲染命局卡片 ====================
+    function renderBaziCard(name, gender, result, partyClass) {
+        if (!result) return '';
+        var p = result.pillars;
+        var wx = result.wuXing || {};
+        var pillarKeys = ['year', 'month', 'day', 'hour'];
+        var pillarLabels = ['年柱', '月柱', '日柱', '时柱'];
+        var genderLabel = gender === 1 ? '男命' : '女命';
+
+        var html = '<div class="bazi-card ' + partyClass + '">';
+        html += '<div class="bazi-card-title">' + name + ' 命局</div>';
+
+        // 四柱表格
+        html += '<div style="overflow-x:auto;-webkit-overflow-scrolling:touch;"><table class="bazi-table"><thead><tr><th></th>';
+        pillarLabels.forEach(function(l) { html += '<th>' + l + '</th>'; });
+        html += '</tr></thead><tbody>';
+
+        // 十神行
+        html += '<tr>';
+        html += '<td class="label-cell">十神</td>';
+        pillarKeys.forEach(function(key) {
+            var ss = p[key].shiShen;
+            if (ss === '日主') ss = genderLabel;
+            html += '<td class="shishen-cell">' + ss + '</td>';
+        });
+        html += '</tr>';
+
+        // 天干行
+        html += '<tr class="bazi-bg-dark">';
+        html += '<td class="label-cell">天干</td>';
+        pillarKeys.forEach(function(key) {
+            html += '<td class="gan-cell" style="color:' + getGanColor(p[key].ganIndex) + '">' + p[key].gan + '</td>';
+        });
+        html += '</tr>';
+
+        // 地支行
+        html += '<tr>';
+        html += '<td class="label-cell">地支</td>';
+        pillarKeys.forEach(function(key) {
+            html += '<td class="zhi-cell" style="color:' + getZhiColor(p[key].zhiIndex) + '">' + p[key].zhi + '</td>';
+        });
+        html += '</tr>';
+
+        // 藏干行
+        html += '<tr class="bazi-bg-dark">';
+        html += '<td class="label-cell">藏干</td>';
+        pillarKeys.forEach(function(key) {
+            var cgHtml = p[key].cangGan.map(function(cg) {
+                var cgIdx = Lunar.tianGan.indexOf(cg.gan);
+                var ssName = Lunar.getShiShen(p.day.ganIndex, cgIdx);
+                return '<div class="canggan-item"><span style="color:' + getGanColor(cgIdx) + '">' + cg.gan + '</span><span class="canggan-ss">(' + ssName + ')</span></div>';
+            }).join('');
+            html += '<td class="canggan-cell">' + cgHtml + '</td>';
+        });
+        html += '</tr>';
+
+        // 纳音行
+        html += '<tr class="bazi-bg-light">';
+        html += '<td class="label-cell">纳音</td>';
+        pillarKeys.forEach(function(key) {
+            html += '<td class="nayin-cell">' + p[key].naiYin + '</td>';
+        });
+        html += '</tr>';
+
+        html += '</tbody></table></div>';
+
+        // 五行统计
+        html += '<div class="wuxing-bar">';
+        var wxClassMap = { '金': 'wx-jin', '木': 'wx-mu', '水': 'wx-shui', '火': 'wx-huo', '土': 'wx-tu' };
+        ['木', '火', '土', '金', '水'].forEach(function(name) {
+            var count = wx[name] || 0;
+            html += '<div class="wuxing-item">';
+            html += '<div class="wx-name ' + wxClassMap[name] + '">' + name + '</div>';
+            html += '<div class="wx-count">' + count + '</div>';
+            html += '</div>';
+        });
+        html += '</div>';
+
+        // 日主信息
+        var riZhuGan = p.day.gan;
+        var riZhuWx = Lunar.wuXingGan[p.day.ganIndex];
+        var totalWx = 0;
+        ['木', '火', '土', '金', '水'].forEach(function(n) { totalWx += (wx[n] || 0); });
+        var riZhuCount = wx[riZhuWx] || 0;
+        var strength = riZhuCount >= Math.ceil(totalWx / 5) + 1 ? '偏强' : (riZhuCount <= Math.floor(totalWx / 5) - 1 ? '偏弱' : '中和');
+        var strengthClass = strength === '偏强' ? 'strong' : (strength === '偏弱' ? 'weak' : '');
+
+        html += '<div class="rizhu-info">';
+        html += '<div class="rizhu-item"><div class="rizhu-label">日主</div><div class="rizhu-value">' + riZhuGan + '（' + riZhuWx + '）</div></div>';
+        html += '<div class="rizhu-item"><div class="rizhu-label">日主强弱</div><div class="rizhu-value ' + strengthClass + '">' + strength + '</div></div>';
+        html += '</div>';
+
+        html += '</div>';
+        return html;
+    }
+
+    // ==================== 构建用户消息 ====================
+    function buildUserMessage(nameA, genderA, resultA, nameB, genderB, resultB) {
+        var pA = resultA.pillars;
+        var pB = resultB.pillars;
+        var wxA = resultA.wuXing || {};
+        var wxB = resultB.wuXing || {};
+
+        // 计算日主强弱
+        function getStrength(pillars, wuXing) {
+            var riZhuWx = Lunar.wuXingGan[pillars.day.ganIndex];
+            var total = 0;
+            ['木', '火', '土', '金', '水'].forEach(function(n) { total += (wuXing[n] || 0); });
+            var count = wuXing[riZhuWx] || 0;
+            if (count >= Math.ceil(total / 5) + 1) return '偏强';
+            if (count <= Math.floor(total / 5) - 1) return '偏弱';
+            return '中和';
+        }
+
+        var strengthA = getStrength(pA, wxA);
+        var strengthB = getStrength(pB, wxB);
+
+        // 四柱八字
+        var baziA = pA.year.gan + pA.year.zhi + ' ' + pA.month.gan + pA.month.zhi + ' ' + pA.day.gan + pA.day.zhi + ' ' + pA.hour.gan + pA.hour.zhi;
+        var baziB = pB.year.gan + pB.year.zhi + ' ' + pB.month.gan + pB.month.zhi + ' ' + pB.day.gan + pB.day.zhi + ' ' + pB.hour.gan + pB.hour.zhi;
+
+        // 五行分布
+        var wxStrA = '金' + (wxA['金'] || 0) + '、木' + (wxA['木'] || 0) + '、水' + (wxA['水'] || 0) + '、火' + (wxA['火'] || 0) + '、土' + (wxA['土'] || 0);
+        var wxStrB = '金' + (wxB['金'] || 0) + '、木' + (wxB['木'] || 0) + '、水' + (wxB['水'] || 0) + '、火' + (wxB['火'] || 0) + '、土' + (wxB['土'] || 0);
+
+        var genderLabelA = genderA === 1 ? '男' : '女';
+        var genderLabelB = genderB === 1 ? '男' : '女';
+
+        var msg = '';
+        msg += '甲方信息：\n';
+        msg += '姓名：' + nameA + '\n';
+        msg += '性别：' + genderLabelA + '\n';
+        msg += '四柱八字：' + baziA + '\n';
+        msg += '日主：' + pA.day.gan + '（' + Lunar.wuXingGan[pA.day.ganIndex] + '），生于' + pA.month.zhi + '月，日主' + strengthA + '\n';
+        msg += '五行分布：' + wxStrA + '\n';
+        msg += '年柱纳音：' + pA.year.naiYin + '，月柱纳音：' + pA.month.naiYin + '，日柱纳音：' + pA.day.naiYin + '，时柱纳音：' + pA.hour.naiYin + '\n\n';
+
+        msg += '乙方信息：\n';
+        msg += '姓名：' + nameB + '\n';
+        msg += '性别：' + genderLabelB + '\n';
+        msg += '四柱八字：' + baziB + '\n';
+        msg += '日主：' + pB.day.gan + '（' + Lunar.wuXingGan[pB.day.ganIndex] + '），生于' + pB.month.zhi + '月，日主' + strengthB + '\n';
+        msg += '五行分布：' + wxStrB + '\n';
+        msg += '年柱纳音：' + pB.year.naiYin + '，月柱纳音：' + pB.month.naiYin + '，日柱纳音：' + pB.day.naiYin + '，时柱纳音：' + pB.hour.naiYin + '\n\n';
+
+        msg += '请按照系统提示词要求的格式和流程，为双方进行传统民俗八字合配参考分析。';
+
+        return msg;
+    }
+
+    // ==================== 系统提示词 ====================
+    var SYSTEM_PROMPT = '你是一位严谨的传统命理文化研究者，严格依据《三命通会》《渊海子平》正统子平命理理论，为用户提供传统民俗八字合配参考。\n\n### 合规铁律（必须严格遵守）\n1. 绝不出现：吉凶、祸福、旺衰定论、必定、必然、改运、转运等词语\n2. 所有结论必须加上："本方案仅为传统民俗姓名文化参考，不涉及运势判定"\n3. 语言专业、克制、客观，不夸大、不套路\n4. 不做任何绝对化断言，仅供文化学习与参考\n\n### 分析流程（必须严格执行）\n1. 双方命局基础分析\n   - 分别分析男女双方的日主强弱、五行分布、格局特点\n   - 确定双方的用神、喜神、忌神\n\n2. 合配维度分析\n   - 五行互补性：分析双方五行是否能够相互补益，达到平衡\n   - 干支关系：分析年柱、月柱、日柱、时柱的生克合冲关系\n   - 格局搭配：分析双方格局是否能够相互配合，相得益彰\n   - 十神配合：分析男命正财、女命正官的旺衰及相互关系\n\n3. 输出格式\n【甲方命局分析】\n日主：XXX，生于 XXX 月，日主 [强 / 弱]\n五行分布：金 X、木 X、水 X、火 X、土 X\n用神：XXX  喜神：XXX  忌神：XXX\n\n【乙方命局分析】\n日主：XXX，生于 XXX 月，日主 [强 / 弱]\n五行分布：金 X、木 X、水 X、火 X、土 X\n用神：XXX  喜神：XXX  忌神：XXX\n\n【合配分析】\n一、五行互补性：...\n二、干支关系：...\n三、格局搭配：...\n四、十神配合：...\n五、综合参考：...\n\n本分析仅为传统民俗文化参考，不涉及命运判定。';
+
+    // ==================== 调用大模型（通过后端代理） ====================
+    async function callDeepSeek(userMessage) {
+        var response = await fetch(AI_CONFIG.proxyUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                provider: AI_CONFIG.deepseek,
+                messages: [
+                    { role: 'system', content: SYSTEM_PROMPT },
+                    { role: 'user', content: userMessage }
+                ],
+                temperature: 0.7,
+                max_tokens: 3000
+            })
+        });
+
+        if (!response.ok) {
+            throw new Error('请求失败：' + response.status);
+        }
+
+        var data = await response.json();
+        if (data.choices && data.choices.length > 0) {
+            return data.choices[0].message.content;
+        }
+        throw new Error('返回数据格式异常');
+    }
+
+    // ==================== 格式化AI输出 ====================
+    function formatAIContent(text) {
+        // 将【】标题加粗显示
+        var html = text
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/【([^】]+)】/g, '<div class="section-title">$1</div>')
+            .replace(/\n/g, '<br>');
+        return html;
+    }
+
+    // ==================== 日元强弱分析渲染（复用V1逻辑） ====================
+
+    function renderStrengthAnalysis(name, baziResult, partyClass) {
+        if (typeof BaziStrengthStable === 'undefined') return '';
+        var analysis = BaziStrengthStable.analyze(baziResult);
+        if (!analysis) return '';
+
+        var borderColor = partyClass === 'party-a' ? 'var(--red-primary)' : 'var(--blue)';
+        var titleColor = partyClass === 'party-a' ? 'var(--red-primary)' : 'var(--blue)';
+
+        var html = '<div class="bazi-card" style="border:2px solid ' + borderColor + ';">';
+        html += '<div class="bazi-card-title" style="color:' + titleColor + ';">' + name + ' 日元强弱分析</div>';
+
+        html += '<div style="padding:8px 0;border-bottom:1px solid var(--border-color);">';
+        html += '<div style="display:flex;justify-content:space-between;align-items:center;">';
+        html += '<span style="font-weight:600;">得令</span>';
+        html += '<span style="color:' + (analysis.deLing ? 'var(--green)' : 'var(--red-primary)') + ';font-weight:600;">' + (analysis.deLing ? '✓ 得令' : '✗ 不得令') + '</span>';
+        html += '</div>';
+        html += '<div style="font-size:12px;color:var(--text-light);margin-top:4px;">' + analysis.deLingDetail + '</div>';
+        html += '</div>';
+
+        html += '<div style="padding:8px 0;border-bottom:1px solid var(--border-color);">';
+        html += '<div style="display:flex;justify-content:space-between;align-items:center;">';
+        html += '<span style="font-weight:600;">得地</span>';
+        html += '<span style="color:' + (analysis.deDi ? 'var(--green)' : 'var(--red-primary)') + ';font-weight:600;">' + (analysis.deDi ? '✓ 得地' : '✗ 不得地') + '</span>';
+        html += '</div>';
+        html += '<div style="font-size:12px;color:var(--text-light);margin-top:4px;">' + analysis.deDiDetail + '</div>';
+        html += '</div>';
+
+        html += '<div style="padding:8px 0;border-bottom:1px solid var(--border-color);">';
+        html += '<div style="display:flex;justify-content:space-between;align-items:center;">';
+        html += '<span style="font-weight:600;">得势</span>';
+        html += '<span style="color:' + (analysis.deShi ? 'var(--green)' : 'var(--red-primary)') + ';font-weight:600;">' + (analysis.deShi ? '✓ 得势' : '✗ 不得势') + '</span>';
+        html += '</div>';
+        html += '<div style="font-size:12px;color:var(--text-light);margin-top:4px;">' + analysis.deShiDetail + '</div>';
+        html += '</div>';
+
+        var levelColorMap = {
+            '从强': '#DC143C', '强': '#DC143C', '偏强': '#E87040',
+            '均衡': '#C8A84E', '偏弱': '#4A6B8A', '弱': '#4169E1', '从弱': '#4169E1'
+        };
+        var levelColor = levelColorMap[analysis.level] || 'var(--text-primary)';
+        html += '<div style="padding:10px 0;text-align:center;">';
+        html += '<div style="font-size:13px;color:var(--text-light);margin-bottom:4px;">综合得分：' + analysis.score + ' / 6</div>';
+        html += '<div style="font-size:20px;font-weight:700;color:' + levelColor + ';letter-spacing:3px;">' + analysis.level + '</div>';
+        html += '<div style="font-size:12px;color:var(--text-secondary);margin-top:4px;">' + analysis.levelDetail + '</div>';
+        html += '</div>';
+
+        html += '</div>';
+        return html;
+    }
+
+    // ==================== 开始合配排盘（全局函数） ====================
+
+    window.startPaipan = function() {
+        var nameAVal = document.getElementById('nameA').value.trim();
+        var nameBVal = document.getElementById('nameB').value.trim();
+
+        if (!nameAVal || !nameBVal) {
+            alert('请输入双方姓名');
+            return;
+        }
+
+        var yearA = parseInt(document.getElementById('yearA').value);
+        var monthA = parseInt(document.getElementById('monthA').value);
+        var dayA = parseInt(document.getElementById('dayA').value);
+        var hourA = parseInt(document.getElementById('hourA').value);
+
+        var yearB = parseInt(document.getElementById('yearB').value);
+        var monthB = parseInt(document.getElementById('monthB').value);
+        var dayB = parseInt(document.getElementById('dayB').value);
+        var hourB = parseInt(document.getElementById('hourB').value);
+
+        if (dayA > getDaysInMonth(yearA, monthA)) {
+            alert('甲方出生日期不合法');
+            return;
+        }
+        if (dayB > getDaysInMonth(yearB, monthB)) {
+            alert('乙方出生日期不合法');
+            return;
+        }
+
+        var btn = document.getElementById('btnPaipan');
+        btn.disabled = true;
+        btn.textContent = '排盘中...';
+
+        var resultArea = document.getElementById('resultArea');
+
+        // 获取经度（省市联动）
+        var lngA = getCityLongitude('A');
+        var lngB = getCityLongitude('B');
+
+        // 生成双方排盘
+        var resultA = Bazi.generate(yearA, monthA, dayA, hourA, 0, genderA, lngA);
+        var resultB = Bazi.generate(yearB, monthB, dayB, hourB, 0, genderB, lngB);
+
+        if (!resultA || !resultB) {
+            alert('排盘失败，请检查输入的日期是否正确');
+            btn.disabled = false;
+            btn.textContent = '开始合配排盘';
+            return;
+        }
+
+        // 渲染双方命局卡片
+        var html = '';
+        html += renderBaziCard(nameAVal, genderA, resultA, 'party-a');
+        html += renderBaziCard(nameBVal, genderB, resultB, 'party-b');
+
+        // 日元强弱分析
+        html += renderStrengthAnalysis(nameAVal, resultA, 'party-a');
+        html += renderStrengthAnalysis(nameBVal, resultB, 'party-b');
+
+        resultArea.innerHTML = html;
+        resultArea.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+        btn.disabled = false;
+        btn.textContent = '开始合配排盘';
+
+        // 显示「开始合配分析」按钮
+        var btnAnalyze = document.getElementById('btnAnalyze');
+        if (btnAnalyze) {
+            btnAnalyze.style.display = 'block';
+        }
+    };
+
+    // ==================== 开始分析（全局函数） ====================
+    window.startAnalysis = async function() {
+        var nameA = document.getElementById('nameA').value.trim();
+        var nameB = document.getElementById('nameB').value.trim();
+
+        if (!nameA || !nameB) {
+            alert('请输入双方姓名');
+            return;
+        }
+
+        // 检查AI次数限制（使用统一的会员系统）
+        if (typeof window.V2Member !== 'undefined' && window.V2Member.checkAndUse) {
+            var token = localStorage.getItem('v2_token');
+            if (!token) {
+                // 未登录用户：弹出会员弹窗提示登录
+                window.V2Member.showMemberModal('请先登录后再使用八字合配分析功能');
+                return;
+            }
+            var checkResult = await window.V2Member.checkAndUse();
+            if (!checkResult.allowed) {
+                if (checkResult.data && checkResult.data.reason === 'daily_limit') {
+                    window.V2Member.showDailyLimitModal();
+                } else {
+                    window.V2Member.showMemberModal(checkResult.message);
+                }
+                return;
+            }
+        }
+
+        var yearA = parseInt(document.getElementById('yearA').value);
+        var monthA = parseInt(document.getElementById('monthA').value);
+        var dayA = parseInt(document.getElementById('dayA').value);
+        var hourA = parseInt(document.getElementById('hourA').value);
+
+        var yearB = parseInt(document.getElementById('yearB').value);
+        var monthB = parseInt(document.getElementById('monthB').value);
+        var dayB = parseInt(document.getElementById('dayB').value);
+        var hourB = parseInt(document.getElementById('hourB').value);
+
+        // 验证日期
+        if (dayA > getDaysInMonth(yearA, monthA)) {
+            alert('甲方出生日期不合法');
+            return;
+        }
+        if (dayB > getDaysInMonth(yearB, monthB)) {
+            alert('乙方出生日期不合法');
+            return;
+        }
+
+        var btn = document.getElementById('btnAnalyze');
+        btn.disabled = true;
+        btn.textContent = '分析中...';
+
+        var resultArea = document.getElementById('resultArea');
+
+        // 获取经度（省市联动）
+        var lngA = getCityLongitude('A');
+        var lngB = getCityLongitude('B');
+
+        // 生成双方排盘
+        var resultA = Bazi.generate(yearA, monthA, dayA, hourA, 0, genderA, lngA);
+        var resultB = Bazi.generate(yearB, monthB, dayB, hourB, 0, genderB, lngB);
+
+        if (!resultA || !resultB) {
+            alert('排盘失败，请检查输入的日期是否正确');
+            btn.disabled = false;
+            btn.textContent = '开始合配分析';
+            return;
+        }
+
+        // 渲染双方命局卡片
+        var html = '';
+        html += renderBaziCard(nameA, genderA, resultA, 'party-a');
+        html += renderBaziCard(nameB, genderB, resultB, 'party-b');
+
+        // AI分析卡片（带加载动画）
+        html += '<div class="ai-analysis-card" id="aiCard">';
+        html += '<div class="ai-analysis-title">大模型合配分析</div>';
+        html += '<div class="loading-area" id="aiLoading">';
+        html += '<div class="loading-spinner"></div>';
+        html += '<div class="loading-text">正在分析中，请稍候...</div>';
+        html += '</div>';
+        html += '<div class="ai-result-content" id="aiResult" style="display:none;"></div>';
+        html += '</div>';
+
+        resultArea.innerHTML = html;
+
+        // 滚动到结果区域
+        resultArea.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+        // 调用大模型
+        try {
+            var userMessage = buildUserMessage(nameA, genderA, resultA, nameB, genderB, resultB);
+            var aiContent = await callDeepSeek(userMessage);
+
+            document.getElementById('aiLoading').style.display = 'none';
+            var aiResultEl = document.getElementById('aiResult');
+            aiResultEl.innerHTML = formatAIContent(aiContent);
+            aiResultEl.style.display = 'block';
+        } catch (err) {
+            document.getElementById('aiLoading').style.display = 'none';
+            var aiResultEl = document.getElementById('aiResult');
+            aiResultEl.innerHTML = '<div style="color:var(--red-primary);text-align:center;padding:10px;">分析请求失败：' + err.message + '</div>';
+            aiResultEl.style.display = 'block';
+        }
+
+        btn.disabled = false;
+        btn.textContent = '开始合配分析';
+    };
+
+    // ==================== 省市联动功能（复用V1逻辑） ====================
+
+    function initProvinceDropdowns() {
+        ['A', 'B'].forEach(function(party) {
+            var sel = document.getElementById('province' + party);
+            if (!sel) return;
+            try {
+                var provinces = CityData.provinces;
+                provinces.forEach(function(p) {
+                    var opt = document.createElement('option');
+                    opt.value = p.name;
+                    opt.textContent = p.name;
+                    sel.appendChild(opt);
+                });
+            } catch(e) {
+                console.log('加载省份数据失败:', e);
+            }
+        });
+    }
+
+    // 全局函数：省份变化时联动城市
+    window.onProvinceChange = function(party) {
+        var provSel = document.getElementById('province' + party);
+        var citySel = document.getElementById('city' + party);
+        if (!provSel || !citySel) return;
+        citySel.innerHTML = '<option value="">请选择城市</option>';
+        if (!provSel.value) return;
+        try {
+            var cities = CityData.getCities(provSel.value);
+            if (cities && cities.length > 0) {
+                cities.forEach(function(c) {
+                    var opt = document.createElement('option');
+                    opt.value = c.name;
+                    opt.textContent = c.name;
+                    opt.dataset.longitude = c.longitude;
+                    opt.dataset.latitude = c.latitude;
+                    citySel.appendChild(opt);
+                });
+            }
+        } catch(e) {
+            console.log('加载城市数据失败:', e);
+        }
+    };
+
+    // 获取选中城市的经度
+    function getCityLongitude(party) {
+        var citySel = document.getElementById('city' + party);
+        if (citySel && citySel.selectedOptions[0] && citySel.selectedOptions[0].dataset.longitude) {
+            return parseFloat(citySel.selectedOptions[0].dataset.longitude);
+        }
+        return 116.4; // 默认北京经度
+    }
+
+    // ==================== 排盘记录下拉功能（复用V1逻辑） ====================
+
+    function initRecordDropdowns() {
+        loadRecordOptions('A');
+        loadRecordOptions('B');
+        ['A', 'B'].forEach(function(party) {
+            var sel = document.getElementById('recordSelect' + party);
+            if (sel) {
+                sel.addEventListener('focus', function() {
+                    loadRecordOptions(party);
+                });
+            }
+        });
+    }
+
+    function loadRecordOptions(party) {
+        var sel = document.getElementById('recordSelect' + party);
+        if (!sel) return;
+        var currentValue = sel.value;
+        sel.innerHTML = '<option value="">-- 手动输入或选择记录 --</option>';
+        try {
+            var records = Storage.getRecords();
+            if (records && records.length > 0) {
+                records.forEach(function(r) {
+                    var opt = document.createElement('option');
+                    var genderLabel = r.gender === 1 || r.gender === '男' ? '男' : (r.gender === 0 || r.gender === '女' ? '女' : '未知');
+                    opt.value = r.id || '';
+                    opt.textContent = (r.name || '未命名') + ' (' + genderLabel + ')';
+                    opt.dataset.record = JSON.stringify(r);
+                    sel.appendChild(opt);
+                });
+                if (currentValue) sel.value = currentValue;
+            }
+        } catch(e) {
+            console.log('读取排盘记录失败:', e);
+        }
+    }
+
+    // 全局函数：选中记录后自动填充
+    window.fillFromRecord = function(party) {
+        var sel = document.getElementById('recordSelect' + party);
+        if (!sel || !sel.value) return;
+        var opt = sel.selectedOptions[0];
+        if (!opt || !opt.dataset.record) return;
+        try {
+            var record = JSON.parse(opt.dataset.record);
+            // 填充姓名
+            var nameInput = document.getElementById('name' + party);
+            if (nameInput && record.name) nameInput.value = record.name;
+            // 填充性别
+            if (record.gender !== undefined) {
+                var genderSwitch = document.getElementById('gender' + party);
+                if (genderSwitch) {
+                    var genderNum = record.gender === 1 || record.gender === '男' ? 1 : (record.gender === 0 || record.gender === '女' ? 0 : -1);
+                    genderSwitch.querySelectorAll('.gender-item').forEach(function(el) {
+                        el.classList.remove('active');
+                        if (parseInt(el.getAttribute('data-value')) === genderNum) {
+                            el.classList.add('active');
+                        }
+                    });
+                    if (party === 'A') genderA = genderNum;
+                    else genderB = genderNum;
+                }
+            }
+            // 填充出生日期
+            if (record.solarDate) {
+                var parts = record.solarDate.split('-');
+                if (parts.length === 3) {
+                    var yearSel = document.getElementById('year' + party);
+                    var monthSel = document.getElementById('month' + party);
+                    var daySel = document.getElementById('day' + party);
+                    if (yearSel) yearSel.value = parseInt(parts[0]);
+                    if (monthSel) monthSel.value = parseInt(parts[1]);
+                    if (daySel) daySel.value = parseInt(parts[2]);
+                }
+            }
+            // 填充出生时间
+            if (record.birthHour !== undefined && record.birthHour !== null) {
+                var hourSel = document.getElementById('hour' + party);
+                if (hourSel) hourSel.value = record.birthHour;
+            }
+            // 填充省市（兼容新旧数据格式）
+            var formData = record.formData || record;
+            if (formData.province) {
+                var provSel = document.getElementById('province' + party);
+                if (provSel) {
+                    provSel.value = formData.province;
+                    // 触发城市联动
+                    window.onProvinceChange(party);
+                    // 延迟设置城市（等联动加载完）
+                    if (formData.city) {
+                        setTimeout(function() {
+                            var citySel = document.getElementById('city' + party);
+                            if (citySel) citySel.value = formData.city;
+                        }, 200);
+                    }
+                }
+            }
+        } catch(e) {
+            console.log('填充记录失败:', e);
+        }
+    };
+
+    // ==================== 初始化 ====================
+
+    function init() {
+        initSelectors();
+        initGenderSwitch();
+        initProvinceDropdowns();
+        initRecordDropdowns();
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    } else {
+        init();
+    }
+})();
+</script>
+
+<!-- 微信引导弹窗 -->
+<div id="wechatGuideModal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.6);z-index:9999;align-items:center;justify-content:center;">
+  <div style="background:#fff;border-radius:16px;padding:32px 24px 24px;width:300px;max-width:90vw;text-align:center;box-shadow:0 8px 30px rgba(0,0,0,0.3);">
+    <div style="width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,#07C160,#06AD56);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
+      <svg width="36" height="36" viewBox="0 0 24 24" fill="white"><path d="M8.5 11a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3zm5-1.5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0zM20 12c0 2.2-1.8 4-4 4h-.5l-2.5 2 .5-2H16c2.2 0 4-1.8 4-4s-1.8-4-4-4H8c-2.2 0-4 1.8-4 4s1.8 4 4 4h1.5l.5 2-2.5-2H8C5.8 16 4 14.2 4 12s1.8-4 4-4h8c2.2 0 4 1.8 4 4z"/></svg>
+    </div>
+    <div style="font-size:18px;font-weight:bold;color:#333;margin-bottom:8px;">开通月度会员</div>
+    <div style="font-size:14px;color:#666;line-height:1.6;margin-bottom:16px;">添加站长微信办理，19.8元/月<br>开通后可享每日5次AI深度分析</div>
+    <div style="background:#f5f5f5;border-radius:8px;padding:12px;margin-bottom:16px;">
+      <div style="font-size:12px;color:#999;margin-bottom:6px;">微信号</div>
+      <div style="font-size:18px;font-weight:bold;color:#333;letter-spacing:1px;" id="wechatIdDisplay">DLing3313</div>
+      </div>
+      <img src="../images/wechat-qr.png" alt="站长微信二维码" style="width:200px;height:200px;margin:10px auto;display:block;border-radius:8px;">
+      <button onclick="document.getElementById('wechatGuideModal').style.display='none'" style="width:100%;padding:12px;background:linear-gradient(135deg,#07C160,#06AD56);color:#fff;border:none;border-radius:8px;font-size:16px;font-weight:bold;cursor:pointer;">我知道了</button>
+  </div>
+</div>
+<script>
+function showWechatGuide() {
+    document.getElementById('wechatGuideModal').style.display = 'flex';
+}
+function checkMemberAndAnalyze() {
+    var v2User = JSON.parse(localStorage.getItem('v2_user') || '{}');
+    if (v2User.member_level === 1 || v2User.level === 'vip') {
+        startAnalysis();
+    } else {
+        showWechatGuide();
+    }
+}
+</script>
+
+</body>
+</html>
