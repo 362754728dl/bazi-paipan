@@ -766,6 +766,16 @@
         });
         html += '</tr>';
 
+        // 神煞行
+        var shenShaResult = Lunar.getShenSha(p.year.ganIndex, p.year.zhiIndex, p.month.ganIndex, p.month.zhiIndex, p.day.ganIndex, p.day.zhiIndex, p.hour.ganIndex, p.hour.zhiIndex);
+        html += '<tr class="bazi-bg-light">';
+        html += '<td class="label-cell">神煞</td>';
+        pillarKeys.forEach(function(key) {
+            var ssList = shenShaResult[key] || [];
+            html += '<td class="nayin-cell" style="font-size:10px;line-height:1.4;">' + ssList.join(' ') + '</td>';
+        });
+        html += '</tr>';
+
         html += '</tbody></table></div>';
 
         // 五行统计

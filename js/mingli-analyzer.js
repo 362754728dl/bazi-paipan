@@ -435,161 +435,523 @@ var MingliAnalyzer = (function() {
         if (!bazi || !bazi.pillars) return { list: [] };
 
         var p = bazi.pillars;
-        var dayGanIdx = p.day.ganIndex;
+        var yearGanIdx = p.year.ganIndex;
         var yearZhiIdx = p.year.zhiIndex;
+        var monthGanIdx = p.month.ganIndex;
         var monthZhiIdx = p.month.zhiIndex;
+        var dayGanIdx = p.day.ganIndex;
+        var dayZhiIdx = p.day.zhiIndex;
+        var hourGanIdx = p.hour.ganIndex;
+        var hourZhiIdx = p.hour.zhiIndex;
+
+        var allGan = [p.year.gan, p.month.gan, p.day.gan, p.hour.gan];
+        var allZhi = [p.year.zhi, p.month.zhi, p.day.zhi, p.hour.zhi];
+        var allGanIdx = [yearGanIdx, monthGanIdx, dayGanIdx, hourGanIdx];
+        var allZhiIdx = [yearZhiIdx, monthZhiIdx, dayZhiIdx, hourZhiIdx];
+
         var list = [];
+        var addedNames = {}; // 去重用
 
-        // --- 天乙贵人（以日干查） ---
+        // 辅助函数：添加神煞（去重）
+        function addSS(name, value, source) {
+            if (!addedNames[name]) {
+                addedNames[name] = true;
+                list.push({ name: name, value: value, source: source });
+            }
+        }
+
+        // 辅助函数：检查地支是否在四柱地支中
+        function hasZhi(zhiIdx) {
+            return allZhiIdx.indexOf(zhiIdx) !== -1;
+        }
+
+        // 辅助函数：检查天干是否在四柱天干中
+        function hasGan(ganIdx) {
+            return allGanIdx.indexOf(ganIdx) !== -1;
+        }
+
+        // 辅助函数：检查天干名是否在四柱天干中
+        function hasGanName(ganName) {
+            return allGan.indexOf(ganName) !== -1;
+        }
+
+        // 辅助函数：检查地支名是否在四柱地支中
+        function hasZhiName(zhiName) {
+            return allZhi.indexOf(zhiName) !== -1;
+        }
+
+        // 辅助函数：根据天干查地支，返回命中的地支名数组
+        function findZhiByGan(zhiIdxMap, ganIdx) {
+            var targets = zhiIdxMap[ganIdx];
+            if (!targets) return [];
+            var found = [];
+            for (var i = 0; i < targets.length; i++) {
+                if (hasZhi(targets[i])) found.push(DZ[targets[i]]);
+            }
+            return found;
+        }
+
+        // 辅助函数：根据地支三合局查地支
+        function findZhiBySanHe(sanHeMap, zhiIdx) {
+            var target = sanHeMap[zhiIdx];
+            if (target === undefined) return null;
+            return hasZhi(target) ? DZ[target] : null;
+        }
+
+        // ===================== 天干查神煞的映射表 =====================
+
+        // 天乙贵人：甲戊→丑未[1,7]，乙己→子申[0,8]，丙丁→亥酉[11,9]，庚辛→午寅[6,2]，壬癸→卯巳[3,5]
         var tianYiMap = {
-            0: ['丑','未'], // 甲戊庚牛羊
-            4: ['丑','未'],
-            6: ['丑','未'],
-            1: ['子','申'], // 乙己鼠猴乡
-            5: ['子','申'],
-            2: ['亥','酉'], // 丙丁猪鸡位
-            3: ['亥','酉'],
-            8: ['卯','巳'], // 壬癸兔蛇藏
-            9: ['卯','巳'],
-            7: ['午','寅']  // 六辛逢马虎
+            0: [1,7], 4: [1,7],           // 甲戊→丑未
+            1: [0,8], 5: [0,8],           // 乙己→子申
+            2: [11,9], 3: [11,9],         // 丙丁→亥酉
+            6: [6,2], 7: [6,2],           // 庚辛→午寅
+            8: [3,5], 9: [3,5]            // 壬癸→卯巳
         };
-        var tianYiZhi = tianYiMap[dayGanIdx];
-        if (tianYiZhi) {
-            var tianYiFound = [];
-            var allZhi = [p.year.zhi, p.month.zhi, p.day.zhi, p.hour.zhi];
-            tianYiZhi.forEach(function(z) {
-                if (allZhi.indexOf(z) !== -1) tianYiFound.push(z);
-            });
-            if (tianYiFound.length > 0) {
-                list.push({ name: '天乙贵人', value: tianYiFound.join('、'), source: '日干' + TG[dayGanIdx] + '查' });
-            }
-        }
 
-        // --- 文昌（以日干查） ---
+        // 文昌贵人
         var wenChangMap = {
-            0: ['巳','午'], // 甲己巳午（注：传统口诀中甲己不同，此处按常见版本）
-            5: ['巳','午'],
-            1: ['申','子'], // 乙己申子（乙）
-            2: ['寅','辰'], // 丙戊寅辰
-            4: ['寅','辰'],
-            3: ['酉','亥'], // 丁酉亥
-            6: ['丑','未'], // 庚丑未
-            7: ['寅','午'], // 辛寅午
-            8: ['卯','巳'], // 壬卯巳
-            9: ['辰','午']  // 癸辰午
+            0: [5], 1: [6], 2: [8], 3: [9],
+            4: [8], 5: [9], 6: [11], 7: [0],
+            8: [2], 9: [3]
         };
-        var wenChangZhi = wenChangMap[dayGanIdx];
-        if (wenChangZhi) {
-            var wenChangFound = [];
-            var allZhi2 = [p.year.zhi, p.month.zhi, p.day.zhi, p.hour.zhi];
-            wenChangZhi.forEach(function(z) {
-                if (allZhi2.indexOf(z) !== -1) wenChangFound.push(z);
-            });
-            if (wenChangFound.length > 0) {
-                list.push({ name: '文昌', value: wenChangFound.join('、'), source: '日干' + TG[dayGanIdx] + '查' });
-            }
+
+        // 太极贵人
+        var taiJiMap = {
+            0: [0,6], 1: [0,6],           // 甲乙→子午
+            2: [3,9], 3: [3,9],           // 丙丁→卯酉
+            4: [4,10,1,7], 5: [4,10,1,7], // 戊己→辰戌丑未
+            6: [2,11], 7: [2,11],         // 庚辛→寅亥
+            8: [5,8], 9: [5,8]            // 壬癸→巳申
+        };
+
+        // 金舆
+        var jinYuMap = {
+            0: [4], 1: [5], 2: [7], 3: [8],
+            4: [7], 5: [8], 6: [10], 7: [11],
+            8: [1], 9: [2]
+        };
+
+        // 禄神
+        var luShenMap = {
+            0: [2], 1: [3], 2: [5], 3: [6],
+            4: [5], 5: [6], 6: [8], 7: [9],
+            8: [11], 9: [0]
+        };
+
+        // 学堂
+        var xueTangMap = {
+            0: [11], 1: [6], 2: [2], 3: [9],
+            4: [2], 5: [9], 6: [5], 7: [0],
+            8: [8], 9: [3]
+        };
+
+        // 羊刃（仅日干查）
+        var yangRenMap = {
+            0: [3], 1: [4], 2: [6], 3: [5],
+            4: [6], 5: [5], 6: [9], 7: [8],
+            8: [0], 9: [0]
+        };
+
+        // 福星贵人（仅日干查）
+        var fuXingMap = {
+            0: [2], 1: [1], 2: [0], 3: [9],
+            4: [8], 5: [7], 6: [6], 7: [5],
+            8: [4], 9: [3]
+        };
+
+        // 红艳（仅日干查）
+        var hongYanMap = {
+            0: [6], 1: [8], 2: [2], 3: [7],
+            4: [4], 5: [4], 6: [10], 7: [9],
+            8: [0], 9: [8]
+        };
+
+        // ===================== 地支三合局查神煞的映射表 =====================
+
+        // 桃花：申子辰[8,0,4]→酉[9]，亥卯未[11,3,7]→子[0]，寅午戌[2,6,10]→卯[3]，巳酉丑[5,9,1]→午[6]
+        var taoHuaSanHe = {
+            8: 9, 0: 9, 4: 9,
+            11: 0, 3: 0, 7: 0,
+            2: 3, 6: 3, 10: 3,
+            5: 6, 9: 6, 1: 6
+        };
+
+        // 驿马：申子辰→寅[2]，亥卯未→巳[5]，寅午戌→申[8]，巳酉丑→亥[11]
+        var yiMaSanHe = {
+            8: 2, 0: 2, 4: 2,
+            11: 5, 3: 5, 7: 5,
+            2: 8, 6: 8, 10: 8,
+            5: 11, 9: 11, 1: 11
+        };
+
+        // 华盖：申子辰→辰[4]，亥卯未→未[7]，寅午戌→戌[10]，巳酉丑→丑[1]
+        var huaGaiSanHe = {
+            8: 4, 0: 4, 4: 4,
+            11: 7, 3: 7, 7: 7,
+            2: 10, 6: 10, 10: 10,
+            5: 1, 9: 1, 1: 1
+        };
+
+        // 将星：申子辰→子[0]，亥卯未→卯[3]，寅午戌→午[6]，巳酉丑→酉[9]
+        var jiangXingSanHe = {
+            8: 0, 0: 0, 4: 0,
+            11: 3, 3: 3, 7: 3,
+            2: 6, 6: 6, 10: 6,
+            5: 9, 9: 9, 1: 9
+        };
+
+        // 亡神：申子辰→亥[11]，寅午戌→巳[5]，巳酉丑→申[8]，亥卯未→寅[2]
+        var wangShenSanHe = {
+            8: 11, 0: 11, 4: 11,
+            2: 5, 6: 5, 10: 5,
+            5: 8, 9: 8, 1: 8,
+            11: 2, 3: 2, 7: 2
+        };
+
+        // 劫煞：申子辰→巳[5]，寅午戌→亥[11]，巳酉丑→寅[2]，亥卯未→申[8]
+        var jieShaSanHe = {
+            8: 5, 0: 5, 4: 5,
+            2: 11, 6: 11, 10: 11,
+            5: 2, 9: 2, 1: 2,
+            11: 8, 3: 8, 7: 8
+        };
+
+        // 灾煞：申子辰→午[6]，寅午戌→子[0]，巳酉丑→卯[3]，亥卯未→酉[9]
+        var zaiShaSanHe = {
+            8: 6, 0: 6, 4: 6,
+            2: 0, 6: 0, 10: 0,
+            5: 3, 9: 3, 1: 3,
+            11: 9, 3: 9, 7: 9
+        };
+
+        // 孤辰
+        var guChenMap = {
+            5: 4, 6: 5, 7: 6, 8: 7,
+            9: 8, 10: 9, 11: 10, 0: 11,
+            1: 0, 2: 1, 3: 2, 4: 3
+        };
+
+        // 寡宿：申子辰→戌[10]，寅午戌→辰[4]，巳酉丑→卯[3]，亥卯未→丑[1]
+        var guaSuSanHe = {
+            8: 10, 0: 10, 4: 10,
+            2: 4, 6: 4, 10: 4,
+            5: 3, 9: 3, 1: 3,
+            11: 1, 3: 1, 7: 1
+        };
+
+        // 红鸾
+        var hongLuanMap = {
+            0: 3, 1: 2, 2: 1, 3: 0,
+            4: 11, 5: 10, 6: 9, 7: 8,
+            8: 7, 9: 6, 10: 5, 11: 4
+        };
+
+        // 天喜
+        var tianXiMap = {
+            0: 9, 1: 8, 2: 7, 3: 6,
+            4: 5, 5: 4, 6: 3, 7: 2,
+            8: 1, 9: 0, 10: 11, 11: 10
+        };
+
+        // 吊客
+        var diaoKeMap = {
+            0: 6, 1: 7, 2: 8, 3: 9,
+            4: 10, 5: 11, 6: 0, 7: 1,
+            8: 2, 9: 3, 10: 4, 11: 5
+        };
+
+        // 丧门
+        var sangMenMap = {
+            0: 2, 1: 3, 2: 4, 3: 5,
+            4: 6, 5: 7, 6: 8, 7: 9,
+            8: 10, 9: 11, 10: 0, 11: 1
+        };
+
+        // 天医
+        var tianYiYiMap = {
+            2: 1, 3: 2, 4: 3, 5: 4,
+            6: 5, 7: 6, 8: 7, 9: 8,
+            10: 9, 11: 10, 0: 11, 1: 0
+        };
+
+        // ===================== 维度1：以年干查 =====================
+        var yGan = yearGanIdx;
+        var yGanSrc = '年干' + TG[yGan] + '查';
+
+        // 天乙贵人
+        var v = findZhiByGan(tianYiMap, yGan);
+        if (v.length > 0) addSS('天乙', v.join('、'), yGanSrc);
+
+        // 文昌
+        v = findZhiByGan(wenChangMap, yGan);
+        if (v.length > 0) addSS('文昌', v.join('、'), yGanSrc);
+
+        // 太极贵人
+        v = findZhiByGan(taiJiMap, yGan);
+        if (v.length > 0) addSS('太极', v.join('、'), yGanSrc);
+
+        // 金舆
+        v = findZhiByGan(jinYuMap, yGan);
+        if (v.length > 0) addSS('金舆', v.join('、'), yGanSrc);
+
+        // 禄神
+        v = findZhiByGan(luShenMap, yGan);
+        if (v.length > 0) addSS('禄神', v.join('、'), yGanSrc);
+
+        // 学堂
+        v = findZhiByGan(xueTangMap, yGan);
+        if (v.length > 0) addSS('学堂', v.join('、'), yGanSrc);
+
+        // ===================== 维度2：以日干查 =====================
+        var dGan = dayGanIdx;
+        var dGanSrc = '日干' + TG[dGan] + '查';
+
+        // 天乙贵人
+        v = findZhiByGan(tianYiMap, dGan);
+        if (v.length > 0) addSS('天乙', v.join('、'), dGanSrc);
+
+        // 文昌
+        v = findZhiByGan(wenChangMap, dGan);
+        if (v.length > 0) addSS('文昌', v.join('、'), dGanSrc);
+
+        // 太极贵人
+        v = findZhiByGan(taiJiMap, dGan);
+        if (v.length > 0) addSS('太极', v.join('、'), dGanSrc);
+
+        // 金舆
+        v = findZhiByGan(jinYuMap, dGan);
+        if (v.length > 0) addSS('金舆', v.join('、'), dGanSrc);
+
+        // 禄神
+        v = findZhiByGan(luShenMap, dGan);
+        if (v.length > 0) addSS('禄神', v.join('、'), dGanSrc);
+
+        // 学堂
+        v = findZhiByGan(xueTangMap, dGan);
+        if (v.length > 0) addSS('学堂', v.join('、'), dGanSrc);
+
+        // 羊刃
+        v = findZhiByGan(yangRenMap, dGan);
+        if (v.length > 0) addSS('羊刃', v.join('、'), dGanSrc);
+
+        // 福星贵人
+        v = findZhiByGan(fuXingMap, dGan);
+        if (v.length > 0) addSS('福星', v.join('、'), dGanSrc);
+
+        // 红艳
+        v = findZhiByGan(hongYanMap, dGan);
+        if (v.length > 0) addSS('红艳', v.join('、'), dGanSrc);
+
+        // ===================== 维度3：以年支查 =====================
+        var yZhi = yearZhiIdx;
+        var yZhiSrc = '年支' + DZ[yZhi] + '查';
+
+        // 桃花
+        v = findZhiBySanHe(taoHuaSanHe, yZhi);
+        if (v) addSS('桃花', v, yZhiSrc);
+
+        // 驿马
+        v = findZhiBySanHe(yiMaSanHe, yZhi);
+        if (v) addSS('驿马', v, yZhiSrc);
+
+        // 华盖
+        v = findZhiBySanHe(huaGaiSanHe, yZhi);
+        if (v) addSS('华盖', v, yZhiSrc);
+
+        // 将星
+        v = findZhiBySanHe(jiangXingSanHe, yZhi);
+        if (v) addSS('将星', v, yZhiSrc);
+
+        // 亡神
+        v = findZhiBySanHe(wangShenSanHe, yZhi);
+        if (v) addSS('亡神', v, yZhiSrc);
+
+        // 劫煞
+        v = findZhiBySanHe(jieShaSanHe, yZhi);
+        if (v) addSS('劫煞', v, yZhiSrc);
+
+        // 灾煞
+        v = findZhiBySanHe(zaiShaSanHe, yZhi);
+        if (v) addSS('灾煞', v, yZhiSrc);
+
+        // 孤辰
+        var guChenTarget = guChenMap[yZhi];
+        if (guChenTarget !== undefined && hasZhi(guChenTarget)) {
+            addSS('孤辰', DZ[guChenTarget], yZhiSrc);
         }
 
-        // --- 禄神（以日干查） ---
-        var luMap = {
-            0: '寅', 1: '卯', 2: '巳', 3: '午',
-            4: '巳', 5: '午', 6: '申', 7: '酉',
-            8: '亥', 9: '子'
-        };
-        var luZhiName = luMap[dayGanIdx];
-        if (luZhiName) {
-            var allZhi3 = [p.year.zhi, p.month.zhi, p.day.zhi, p.hour.zhi];
-            if (allZhi3.indexOf(luZhiName) !== -1) {
-                list.push({ name: '禄神', value: luZhiName, source: '日干' + TG[dayGanIdx] + '查' });
-            }
+        // 寡宿
+        v = findZhiBySanHe(guaSuSanHe, yZhi);
+        if (v) addSS('寡宿', v, yZhiSrc);
+
+        // 元辰：取 (yearZhiIdx + 9) % 12 和 (yearZhiIdx + 3) % 12
+        var yuanChen1 = (yZhi + 9) % 12;
+        var yuanChen2 = (yZhi + 3) % 12;
+        var yuanChenFound = [];
+        if (hasZhi(yuanChen1)) yuanChenFound.push(DZ[yuanChen1]);
+        if (hasZhi(yuanChen2)) yuanChenFound.push(DZ[yuanChen2]);
+        if (yuanChenFound.length > 0) addSS('元辰', yuanChenFound.join('、'), yZhiSrc);
+
+        // 天罗地网：辰[4]或戌[10]
+        if (yZhi === 4 || yZhi === 10) {
+            addSS('天罗地网', DZ[yZhi], yZhiSrc);
         }
 
-        // --- 桃花（以年支查） ---
-        var taoHuaGroups = {
-            2: '卯', 6: '卯', 10: '卯',  // 寅午戌见卯
-            5: '午', 9: '午', 1: '午',   // 巳酉丑见午
-            8: '酉', 0: '酉', 4: '酉',   // 申子辰见酉
-            11: '子', 3: '子', 7: '子'   // 亥卯未见子
-        };
-        var taoHuaZhi = taoHuaGroups[yearZhiIdx];
-        if (taoHuaZhi) {
-            var allZhi4 = [p.year.zhi, p.month.zhi, p.day.zhi, p.hour.zhi];
-            if (allZhi4.indexOf(taoHuaZhi) !== -1) {
-                list.push({ name: '桃花', value: taoHuaZhi, source: '年支' + DZ[yearZhiIdx] + '查' });
-            }
+        // 红鸾
+        var hongLuanTarget = hongLuanMap[yZhi];
+        if (hongLuanTarget !== undefined && hasZhi(hongLuanTarget)) {
+            addSS('红鸾', DZ[hongLuanTarget], yZhiSrc);
         }
 
-        // --- 驿马（以年支查） ---
-        var yiMaGroups = {
-            2: '申', 6: '申', 10: '申',  // 寅午戌见申
-            5: '亥', 9: '亥', 1: '亥',   // 巳酉丑见亥
-            8: '寅', 0: '寅', 4: '寅',   // 申子辰见寅
-            11: '巳', 3: '巳', 7: '巳'   // 亥卯未见巳
-        };
-        var yiMaZhi = yiMaGroups[yearZhiIdx];
-        if (yiMaZhi) {
-            var allZhi5 = [p.year.zhi, p.month.zhi, p.day.zhi, p.hour.zhi];
-            if (allZhi5.indexOf(yiMaZhi) !== -1) {
-                list.push({ name: '驿马', value: yiMaZhi, source: '年支' + DZ[yearZhiIdx] + '查' });
-            }
+        // 天喜
+        var tianXiTarget = tianXiMap[yZhi];
+        if (tianXiTarget !== undefined && hasZhi(tianXiTarget)) {
+            addSS('天喜', DZ[tianXiTarget], yZhiSrc);
         }
 
-        // --- 华盖（以年支查） ---
-        var huaGaiGroups = {
-            2: '戌', 6: '戌', 10: '戌',  // 寅午戌见戌
-            5: '丑', 9: '丑', 1: '丑',   // 巳酉丑见丑
-            8: '辰', 0: '辰', 4: '辰',   // 申子辰见辰
-            11: '未', 3: '未', 7: '未'   // 亥卯未见未
-        };
-        var huaGaiZhi = huaGaiGroups[yearZhiIdx];
-        if (huaGaiZhi) {
-            var allZhi6 = [p.year.zhi, p.month.zhi, p.day.zhi, p.hour.zhi];
-            if (allZhi6.indexOf(huaGaiZhi) !== -1) {
-                list.push({ name: '华盖', value: huaGaiZhi, source: '年支' + DZ[yearZhiIdx] + '查' });
-            }
+        // 吊客
+        var diaoKeTarget = diaoKeMap[yZhi];
+        if (diaoKeTarget !== undefined && hasZhi(diaoKeTarget)) {
+            addSS('吊客', DZ[diaoKeTarget], yZhiSrc);
         }
 
-        // --- 将星（以年支查） ---
-        var jiangXingGroups = {
-            2: '午', 6: '午', 10: '午',  // 寅午戌见午
-            5: '酉', 9: '酉', 1: '酉',   // 巳酉丑见酉
-            8: '子', 0: '子', 4: '子',   // 申子辰见子
-            11: '卯', 3: '卯', 7: '卯'   // 亥卯未见卯
-        };
-        var jiangXingZhi = jiangXingGroups[yearZhiIdx];
-        if (jiangXingZhi) {
-            var allZhi7 = [p.year.zhi, p.month.zhi, p.day.zhi, p.hour.zhi];
-            if (allZhi7.indexOf(jiangXingZhi) !== -1) {
-                list.push({ name: '将星', value: jiangXingZhi, source: '年支' + DZ[yearZhiIdx] + '查' });
-            }
+        // 丧门
+        var sangMenTarget = sangMenMap[yZhi];
+        if (sangMenTarget !== undefined && hasZhi(sangMenTarget)) {
+            addSS('丧门', DZ[sangMenTarget], yZhiSrc);
         }
 
-        // --- 天德（以月支查） ---
-        var tianDeMap = {
-            2: '丁', 3: '申', 4: '壬', 5: '辛',
-            6: '亥', 7: '甲', 8: '癸', 9: '寅',
-            10: '丙', 11: '乙', 0: '巳', 1: '庚'
-        };
-        var tianDeGan = tianDeMap[monthZhiIdx];
-        if (tianDeGan) {
-            var allGan = [p.year.gan, p.month.gan, p.day.gan, p.hour.gan];
-            if (allGan.indexOf(tianDeGan) !== -1) {
-                list.push({ name: '天德', value: tianDeGan, source: '月支' + DZ[monthZhiIdx] + '查' });
-            }
+        // ===================== 维度4：以日支查 =====================
+        var dZhi = dayZhiIdx;
+        var dZhiSrc = '日支' + DZ[dZhi] + '查';
+
+        // 桃花
+        v = findZhiBySanHe(taoHuaSanHe, dZhi);
+        if (v) addSS('桃花', v, dZhiSrc);
+
+        // 驿马
+        v = findZhiBySanHe(yiMaSanHe, dZhi);
+        if (v) addSS('驿马', v, dZhiSrc);
+
+        // 华盖
+        v = findZhiBySanHe(huaGaiSanHe, dZhi);
+        if (v) addSS('华盖', v, dZhiSrc);
+
+        // 将星
+        v = findZhiBySanHe(jiangXingSanHe, dZhi);
+        if (v) addSS('将星', v, dZhiSrc);
+
+        // 亡神
+        v = findZhiBySanHe(wangShenSanHe, dZhi);
+        if (v) addSS('亡神', v, dZhiSrc);
+
+        // 劫煞
+        v = findZhiBySanHe(jieShaSanHe, dZhi);
+        if (v) addSS('劫煞', v, dZhiSrc);
+
+        // 灾煞
+        v = findZhiBySanHe(zaiShaSanHe, dZhi);
+        if (v) addSS('灾煞', v, dZhiSrc);
+
+        // 孤辰
+        var guChenTarget2 = guChenMap[dZhi];
+        if (guChenTarget2 !== undefined && hasZhi(guChenTarget2)) {
+            addSS('孤辰', DZ[guChenTarget2], dZhiSrc);
         }
 
-        // --- 月德（以月支查） ---
-        var yueDeMap = {
-            2: '丙', 3: '甲', 4: '壬', 5: '庚',
-            6: '丁', 7: '乙', 8: '丙', 9: '甲',
-            10: '壬', 11: '丁', 0: '乙', 1: '庚'
+        // 寡宿
+        v = findZhiBySanHe(guaSuSanHe, dZhi);
+        if (v) addSS('寡宿', v, dZhiSrc);
+
+        // ===================== 维度5：以月支查 =====================
+        var mZhi = monthZhiIdx;
+        var mZhiSrc = '月支' + DZ[mZhi] + '查';
+
+        // 天德贵人：月支→天干或地支
+        var tianDeLookup = {
+            2: { type: 'gan', idx: 3 },   // 寅→丁(gan3)
+            3: { type: 'zhi', idx: 8 },   // 卯→申(zhi8)
+            4: { type: 'gan', idx: 8 },   // 辰→壬(gan8)
+            5: { type: 'gan', idx: 7 },   // 巳→辛(gan7)
+            6: { type: 'zhi', idx: 11 },  // 午→亥(zhi11)
+            7: { type: 'gan', idx: 0 },   // 未→甲(gan0)
+            8: { type: 'gan', idx: 9 },   // 申→癸(gan9)
+            9: { type: 'zhi', idx: 2 },   // 酉→寅(zhi2)
+            10: { type: 'gan', idx: 2 },  // 戌→丙(gan2)
+            11: { type: 'gan', idx: 1 },  // 亥→乙(gan1)
+            0: { type: 'zhi', idx: 5 },   // 子→巳(zhi5)
+            1: { type: 'gan', idx: 6 }    // 丑→庚(gan6)
         };
-        var yueDeGan = yueDeMap[monthZhiIdx];
-        if (yueDeGan) {
-            var allGan2 = [p.year.gan, p.month.gan, p.day.gan, p.hour.gan];
-            if (allGan2.indexOf(yueDeGan) !== -1) {
-                list.push({ name: '月德', value: yueDeGan, source: '月支' + DZ[monthZhiIdx] + '查' });
+        var tianDeEntry = tianDeLookup[mZhi];
+        var tianDeHit = false;
+        if (tianDeEntry) {
+            if (tianDeEntry.type === 'gan') {
+                tianDeHit = hasGan(tianDeEntry.idx);
+            } else {
+                tianDeHit = hasZhi(tianDeEntry.idx);
             }
+        }
+        if (tianDeHit) {
+            var tianDeVal = tianDeEntry.type === 'gan' ? TG[tianDeEntry.idx] : DZ[tianDeEntry.idx];
+            addSS('天德', tianDeVal, mZhiSrc);
+        }
+
+        // 月德贵人：寅午戌→丙(gan2)，亥卯未→甲(gan0)，申子辰→壬(gan8)，巳酉丑→庚(gan6)
+        var yueDeSanHe = {
+            2: 2, 6: 2, 10: 2,
+            11: 0, 3: 0, 7: 0,
+            8: 8, 0: 8, 4: 8,
+            5: 6, 9: 6, 1: 6
+        };
+        var yueDeTarget = yueDeSanHe[mZhi];
+        if (yueDeTarget !== undefined && hasGan(yueDeTarget)) {
+            addSS('月德', TG[yueDeTarget], mZhiSrc);
+        }
+
+        // 德秀贵人：天德和月德都命中时添加
+        if (tianDeHit && yueDeTarget !== undefined && hasGan(yueDeTarget)) {
+            addSS('德秀贵人', '天德月德并见', mZhiSrc);
+        }
+
+        // 天医
+        var tianYiYiTarget = tianYiYiMap[mZhi];
+        if (tianYiYiTarget !== undefined && hasZhi(tianYiYiTarget)) {
+            addSS('天医', DZ[tianYiYiTarget], mZhiSrc);
+        }
+
+        // ===================== 命定神煞（仅日柱） =====================
+        var riGanZhi = TG[dayGanIdx] + DZ[dayZhiIdx];
+        var riSrc = '日柱' + riGanZhi + '定';
+
+        // 魁罡：庚辰[6,4]、庚戌[6,10]、壬辰[8,4]、戊戌[4,10]
+        var kuiGangList = ['6,4', '6,10', '8,4', '4,10'];
+        if (kuiGangList.indexOf(dayGanIdx + ',' + dayZhiIdx) !== -1) {
+            addSS('魁罡', riGanZhi, riSrc);
+        }
+
+        // 十恶大败：甲辰[0,4]、乙巳[1,5]、丙申[2,8]、丁亥[3,11]、戊戌[4,10]、己丑[5,1]、庚辰[6,4]、辛巳[7,5]、壬申[8,8]、癸亥[9,11]
+        var shiEDaBaiList = ['0,4', '1,5', '2,8', '3,11', '4,10', '5,1', '6,4', '7,5', '8,8', '9,11'];
+        if (shiEDaBaiList.indexOf(dayGanIdx + ',' + dayZhiIdx) !== -1) {
+            addSS('十恶大败', riGanZhi, riSrc);
+        }
+
+        // 天赦：春季(寅卯辰月[2,3,4])日支寅[2]，夏季(巳午未月[5,6,7])日支午[6]，秋季(申酉戌月[8,9,10])日支申[8]，冬季(亥子丑月[11,0,1])日支子[0]
+        var tianSheMap = {
+            2: 2, 3: 2, 4: 2,
+            5: 6, 6: 6, 7: 6,
+            8: 8, 9: 8, 10: 8,
+            11: 0, 0: 0, 1: 0
+        };
+        var tianSheTarget = tianSheMap[mZhi];
+        if (tianSheTarget !== undefined && dayZhiIdx === tianSheTarget) {
+            addSS('天赦', DZ[dayZhiIdx], riSrc);
+        }
+
+        // 阴阳差错：丙子[2,0]、丁丑[3,1]、戊寅[4,2]、辛卯[7,3]、壬辰[8,4]、癸巳[9,5]、丙午[2,6]、丁未[3,7]、戊申[4,8]、辛酉[7,9]、壬戌[8,10]、癸亥[9,11]
+        var yinYangChaList = ['2,0', '3,1', '4,2', '7,3', '8,4', '9,5', '2,6', '3,7', '4,8', '7,9', '8,10', '9,11'];
+        if (yinYangChaList.indexOf(dayGanIdx + ',' + dayZhiIdx) !== -1) {
+            addSS('阴阳差错', riGanZhi, riSrc);
         }
 
         return { list: list };
