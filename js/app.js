@@ -804,7 +804,7 @@ const App = (function () {
      */
     function renderResult(result) {
         // 清理之前动态插入的分析模块（按类名精确清理）
-        document.querySelectorAll('.yuanju-analysis, .chenggu-card, .today-fortune, .liuhe-table-card, .realtime-shensha-card, .dayun-liunian-card, .fortune-layout-wrapper, .ai-eval-card, .dayun-flow-table, .gan-relations-card, .zhi-relations-card, .dyt-container, .mingju-analysis-card').forEach(function(el) { el.remove(); });
+        document.querySelectorAll('.yuanju-analysis, .chenggu-card, .today-fortune, .liuhe-table-card, .realtime-shensha-card, .dayun-liunian-card, .fortune-layout-wrapper, .ai-eval-card, .dayun-flow-table, .gan-relations-card, .zhi-relations-card, .dyt-container, .mingju-analysis-card, .mingli-analysis-card').forEach(function(el) { el.remove(); });
         // 清理动态添加的result-card（保留静态的static-result-card）
         document.querySelectorAll('.result-card:not(.static-result-card)').forEach(function(el) { el.remove(); });
         // 强制清空resultArea中所有非static-result-card的子节点，防止表格叠加
@@ -841,6 +841,9 @@ const App = (function () {
 
         // 7. 命局基础分析（日元强弱+五行统计+命理提示）
         renderMingJuAnalysis(result);
+
+        // 7.5 命理专业评测（格局/强弱喜忌/调候/神煞/综合评述）
+        renderMingLiAnalysis(result);
 
         // 8. 专业命理评测按钮
         renderAIEvalButton();
@@ -2595,6 +2598,26 @@ const App = (function () {
             var div = document.createElement('div');
             div.innerHTML = html;
             ra.appendChild(div);
+        }
+    }
+
+    // ==================== 命理专业评测（格局/强弱喜忌/调候/神煞/综合评述） ====================
+
+    function renderMingLiAnalysis(result) {
+        if (typeof MingliAnalyzer === 'undefined') return;
+
+        try {
+            var mlResult = MingliAnalyzer.analyze(result);
+            if (!mlResult || !mlResult.html) return;
+
+            var ra = $('resultArea');
+            if (ra) {
+                var div = document.createElement('div');
+                div.innerHTML = mlResult.html;
+                ra.appendChild(div);
+            }
+        } catch(e) {
+            console.warn('命理专业评测渲染异常:', e);
         }
     }
 

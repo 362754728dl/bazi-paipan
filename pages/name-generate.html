@@ -852,6 +852,7 @@
 <script src="../js/storage.js"></script>
 <script src="../config.js"></script>
 <script src="../js/relation-analyzer.js"></script>
+<script src="../js/mingli-analyzer.js"></script>
 
 <script>
 (function() {
@@ -1607,13 +1608,22 @@
         // 天干地支关系分析
         var relationHtml = renderRelationAnalysis(baziResult);
 
+        // 命理专业评测（格局/强弱喜忌/调候/神煞/综合评述）
+        var mingliHtml = '';
+        if (typeof MingliAnalyzer !== 'undefined') {
+            try {
+                var mlResult = MingliAnalyzer.analyze(baziResult);
+                mingliHtml = mlResult ? mlResult.html : '';
+            } catch(e) { console.warn('命理评测异常:', e); }
+        }
+
         // 专业评测引导按钮
         var proHtml = '<div style="text-align:center;margin-top:16px;">' +
             '<button onclick="showProEvalModal()" style="padding:12px 32px;background:linear-gradient(135deg,#07C160,#06AD56);color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;letter-spacing:1px;">专业姓名评测</button>' +
             '<div style="font-size:12px;color:var(--text-light);margin-top:8px;">由专业命理师一对一深度分析</div>' +
             '</div>';
 
-        resultArea.innerHTML = baziHtml + analysisHtml + relationHtml + proHtml;
+        resultArea.innerHTML = baziHtml + analysisHtml + relationHtml + mingliHtml + proHtml;
         resultArea.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
@@ -1640,6 +1650,15 @@
 
         // 天干地支关系分析
         var relationHtml = renderRelationAnalysis(baziResult);
+
+        // 命理专业评测（格局/强弱喜忌/调候/神煞/综合评述）
+        var mingliHtml = '';
+        if (typeof MingliAnalyzer !== 'undefined') {
+            try {
+                var mlResult = MingliAnalyzer.analyze(baziResult);
+                mingliHtml = mlResult ? mlResult.html : '';
+            } catch(e) { console.warn('命理评测异常:', e); }
+        }
 
         // 生成信息汇总文本
         var p = baziResult.pillars;
@@ -1681,7 +1700,7 @@
         copyHtml += '</div>';
         copyHtml += '</div>';
 
-        resultArea.innerHTML = baziHtml + analysisHtml + relationHtml + copyHtml;
+        resultArea.innerHTML = baziHtml + analysisHtml + relationHtml + mingliHtml + copyHtml;
         resultArea.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 

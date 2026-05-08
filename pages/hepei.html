@@ -588,6 +588,7 @@
 <script src="../js/city-data.js"></script>
 <script src="../js/utils/bazi_strength_stable.js"></script>
 <script src="../js/relation-analyzer.js"></script>
+<script src="../js/hepei-analyzer.js"></script>
 
 <script>
 (function() {
@@ -1048,6 +1049,11 @@
         // 日元强弱分析模块（增量修改4）
         html += renderStrengthAnalysis(nameAVal, resultA, 'party-a');
         html += renderStrengthAnalysis(nameBVal, resultB, 'party-b');
+
+        // 合配专业分析（七大维度）
+        if (typeof HepeiAnalyzer !== 'undefined' && HepeiAnalyzer.renderFullAnalysis) {
+            html += HepeiAnalyzer.renderFullAnalysis(resultA, resultB, nameAVal, nameBVal);
+        }
 
         // 生成双方八字信息汇总文本
         var pA = resultA.pillars;
