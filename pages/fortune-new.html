@@ -473,6 +473,74 @@
         .header h1 { font-size: 18px; }
         .today-page-selector-row { flex-wrap: wrap; }
         .today-page-select { min-width: 0; flex: 1; }
+        .huangli-section-title { font-size: 13px; }
+        .huangli-label { width: 36px; font-size: 12px; }
+        .huangli-content { font-size: 12px; }
+    }
+
+    /* ==================== 黄历模块样式 ==================== */
+    .huangli-card {
+        border-left: 4px solid var(--gold) !important;
+    }
+    .huangli-section {
+        margin-bottom: 12px;
+    }
+    .huangli-section:last-of-type {
+        margin-bottom: 8px;
+    }
+    .huangli-section-title {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 6px;
+        padding-left: 10px;
+        border-left: 3px solid var(--gold);
+    }
+    .huangli-box {
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        padding: 10px 12px;
+    }
+    .huangli-yi-row,
+    .huangli-ji-row,
+    .huangli-star-row,
+    .huangli-desc-row {
+        display: flex;
+        align-items: flex-start;
+        padding: 4px 0;
+    }
+    .huangli-label {
+        display: inline-block;
+        width: 40px;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--text-secondary);
+        flex-shrink: 0;
+    }
+    .huangli-label-yi {
+        color: #2E8B57 !important;
+    }
+    .huangli-label-ji {
+        color: #DC143C !important;
+    }
+    .huangli-content {
+        font-size: 13px;
+        color: var(--text-primary);
+        line-height: 1.6;
+    }
+    .huangli-star-name {
+        display: inline-block;
+        padding: 2px 10px;
+        border-radius: 4px;
+        font-weight: 600;
+    }
+    .huangli-disclaimer {
+        text-align: center;
+        padding: 10px 8px 2px;
+        font-size: 11px;
+        color: var(--text-light);
+        line-height: 1.6;
     }
     </style>
 </head>
@@ -520,6 +588,7 @@
 <script src="../js/solar-time.js"></script>
 <script src="../js/bazi.js"></script>
 <script src="../js/relation-analyzer.js"></script>
+<script src="../js/huangli.js"></script>
 
 <script>
 (function() {
@@ -845,6 +914,14 @@
             }
             dzHtml += '<div style="padding:6px 0;font-size:11px;color:#bbb;">以上为传统命理文化推演，仅供了解参考，不构成任何人生决策依据。</div></div>';
             html += dzHtml;
+        }
+
+        // ===== 黄历（宜忌、大黄道、小黄道） =====
+        if (typeof HuangliAnalyzer !== 'undefined') {
+            var huangliHtml = HuangliAnalyzer.render(result);
+            if (huangliHtml) {
+                html += huangliHtml;
+            }
         }
 
         // 返回顶部按钮

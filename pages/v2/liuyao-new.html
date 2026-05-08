@@ -1039,10 +1039,64 @@
 
         _lastHexData = hexData;
 
+        // 自动保存六爻记录（需登录，静默跳过未登录用户）
+        _autoSaveLiuyaoRecord(hexData);
+
         // 切换到结果页
         $('lyInputPage').classList.add('hidden');
         $('lyResultPage').classList.remove('hidden');
         _switchResultTab(0);
+    }
+
+    // ==================== 自动保存六爻记录 ====================
+    function _autoSaveLiuyaoRecord(hexData) {
+        // 未登录则静默跳过
+        if (!_isV2LoggedIn()) return;
+        if (!hexData) return;
+
+        var saveData = {
+            gua_name: hexData.name || hexData.shortName || '未知',
+            matter: hexData.matter || '',
+            hex_data: {
+                name: hexData.name || '',
+                shortName: hexData.shortName || '',
+                palace: hexData.palace || '',
+                changedName: hexData.changedName || '',
+                changedPalace: hexData.changedPalace || '',
+                shiIndex: hexData.shiIndex,
+                yingIndex: hexData.yingIndex,
+                fuShen: hexData.fuShen || '',
+                lines: (hexData.lines || []).map(function(l) {
+                    return {
+                        yaoType: l.yaoType || '',
+                        isYang: l.isYang,
+                        isDong: l.isDong,
+                        gan: l.gan || '',
+                        zhi: l.zhi || '',
+                        wuXing: l.wuXing || '',
+                        liuQin: l.liuQin || '',
+                        liuShen: l.liuShen || ''
+                    };
+                })
+            },
+            gua_time: hexData.guaTime ? hexData.guaTime.toISOString() : null
+        };
+
+        fetch('/api/liuyao/save', {
+            method: 'POST',
+            headers: _getAuthHeaders(),
+            body: JSON.stringify(saveData)
+        })
+        .then(function(res) { return res.json(); })
+        .then(function(data) {
+            if (data.code === 200) {
+                showToast('六爻记录已自动保存');
+            }
+            // 保存失败不提示，不打扰用户
+        })
+        .catch(function() {
+            // 网络错误静默跳过
+        });
     }
 
     // ==================== 辅助函数 ====================

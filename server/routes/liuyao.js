@@ -340,4 +340,51 @@ router.get('/records', authMiddleware, async (req, res) => {
   }
 });
 
+// POST /api/liuyao/save - 保存六爻摇卦记录（需登录）
+router.post('/save', authMiddleware, async (req, res) => {
+  try {
+    const { gua_name, matter, hex_data, gua_time } = req.body;
+    const db = getDb();
+
+    if (!gua_name) {
+      return res.json({ code: 400, message: '卦名不能为空' });
+    }
+
+    await db.prepare(
+      'INSERT INTO liuyao_records (user_id, gua_name, matter, hex_data, gua_time) VALUES (?, ?, ?, ?, ?)'
+    ).run(req.user_id, gua_name || '', matter || '', hex_data ? JSON.stringify(hex_data) : '', gua_time || null);
+
+    res.json({ code: 200, message: '保存成功' });
+  } catch (err) {
+    console.error('保存六爻记录失败:', err);
+    res.json({ code: 500, message: '保存失败' });
+  }
+});
+
+// GET /api/liuyao/list - 获取六爻摇卦记录列表（需登录）
+router.get('/list', authMiddleware, async (req, res) => {
+  try {
+    const db = getDb();
+    const page = Math.max(1, parseInt(req.query.page) || 1);
+    const pageSize = Math.min(50, Math.max(1, parseInt(req.query.pageSize) || 20));
+    const offset = (page - 1) * pageSize;
+
+    const total = (await db.prepare('SELECT COUNT(*) as count FROM liuyao_records WHERE user_id = ?')
+      .get(req.user_id)).count;
+
+    const records = await db.prepare(
+      'SELECT id, gua_name, matter, hex_data, gua_time, created_at FROM liuyao_records WHERE user_id = ? ORDER BY id DESC LIMIT ? OFFSET ?'
+    ).all(req.user_id, pageSize, offset);
+
+    res.json({
+      code: 200,
+      data: { list: records, total, page, pageSize, totalPages: Math.ceil(total / pageSize) },
+      message: 'success'
+    });
+  } catch (err) {
+    console.error('获取六爻记录列表失败:', err);
+    res.json({ code: 500, message: '获取记录失败' });
+  }
+});
+
 module.exports = router;

@@ -431,16 +431,21 @@
     <div class="service-card">
         <div class="service-card-title">传统民俗祭祀路引表文代写服务</div>
         <p class="service-card-desc">
-            表文是传统民俗祭祀文化的重要组成部分，是后人缅怀先祖、表达敬意的庄重方式，也是中华孝道文化与民俗礼仪的传承载体。
+            在中国传统祭祀文化中，路引表文是先人与后人之间的庄重仪式文书。<br>
+            它承载着后人对先人的追思与敬意，是中华孝道文化的重要组成部分。
         </p>
-        <div class="service-card-price">
-            <span class="price-amount">19.9</span>
-            <span class="price-unit">元/份</span>
-            <span class="price-detail">含20份表文，全国包邮</span>
-        </div>
-        <p class="service-card-desc" style="text-align:center;color:var(--red-primary);font-weight:500;">
-            祭祀路引表文，寓意为先人指引归途，寄托后人思念。
+        <p class="service-card-desc" style="font-weight:600;color:var(--text-primary);">
+            为什么要写路引表文？
         </p>
+        <p class="service-card-desc">
+            古人认为，祭祀如同远行，需有明确的地址与凭信。<br>
+            一份规范的路引表文，如同寄快递时的收件信息——<br>
+            有了它，心意才能准确送达。缺失路引，犹如寄件不写地址。
+        </p>
+        <ul class="service-card-features">
+            <li>格式规范，庄重得体，严格遵循传统民俗仪轨</li>
+            <li>本服务仅为传统民俗文化传承</li>
+        </ul>
     </div>
 
     <!-- 下单表单 -->
@@ -457,16 +462,6 @@
                     <div class="gender-item active" data-value="男" onclick="selectGender(this)">男</div>
                     <div class="gender-item" data-value="女" onclick="selectGender(this)">女</div>
                 </div>
-            </div>
-            <div class="form-group">
-                <label>祭祀类型<span class="required">*</span></label>
-                <select id="ritualType" required>
-                    <option value="">请选择祭祀类型</option>
-                    <option value="祭祀表文">祭祀表文</option>
-                    <option value="祈福表文">祈福表文</option>
-                    <option value="超度表文">超度表文</option>
-                    <option value="其他">其他</option>
-                </select>
             </div>
             <div class="form-group">
                 <label>安葬地址</label>
@@ -526,7 +521,6 @@
     // 提交订单
     window.submitOrder = function() {
         var deceasedName = document.getElementById('deceasedName').value.trim();
-        var ritualType = document.getElementById('ritualType').value;
         var burialAddress = document.getElementById('burialAddress').value.trim();
         var familyName = document.getElementById('familyName').value.trim();
         var familyRank = document.getElementById('familyRank').value.trim();
@@ -536,11 +530,6 @@
         if (!deceasedName) {
             alert('请输入逝者姓名');
             document.getElementById('deceasedName').focus();
-            return;
-        }
-        if (!ritualType) {
-            alert('请选择祭祀类型');
-            document.getElementById('ritualType').focus();
             return;
         }
         if (!familyName) {
@@ -553,7 +542,7 @@
         var summaryText = '【祭祀路引表文订单信息】\n\n';
         summaryText += '逝者姓名：' + deceasedName + '\n';
         summaryText += '逝者性别：' + selectedGender + '\n';
-        summaryText += '祭祀类型：' + ritualType + '\n';
+        summaryText += '祭祀类型：祭祀路引表文\n';
         summaryText += '安葬地址：' + (burialAddress || '未填写') + '\n';
         summaryText += '烧化家属姓名：' + familyName + '\n';
         summaryText += '家属排行：' + (familyRank || '未填写') + '\n';

@@ -160,6 +160,20 @@ async function initPg() {
   `);
   await query(`CREATE INDEX IF NOT EXISTS idx_liuyao_ai_records_user ON liuyao_ai_records(user_id);`);
 
+  // liuyao_records 表（六爻摇卦记录保存）
+  await query(`
+    CREATE TABLE IF NOT EXISTS liuyao_records (
+      id SERIAL PRIMARY KEY,
+      user_id INTEGER NOT NULL,
+      gua_name TEXT DEFAULT '',
+      matter TEXT DEFAULT '',
+      hex_data TEXT DEFAULT '',
+      gua_time TIMESTAMP DEFAULT NOW(),
+      created_at TIMESTAMP DEFAULT NOW()
+    );
+  `);
+  await query(`CREATE INDEX IF NOT EXISTS idx_liuyao_records_user ON liuyao_records(user_id);`);
+
   // name_evaluation_cache 表
   await query(`
     CREATE TABLE IF NOT EXISTS name_evaluation_cache (

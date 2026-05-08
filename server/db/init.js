@@ -312,6 +312,18 @@ async function initSqlite() {
   )`);
   compatDb.exec(`CREATE INDEX IF NOT EXISTS idx_liuyao_ai_records_user ON liuyao_ai_records(user_id)`);
 
+  compatDb.exec(`CREATE TABLE IF NOT EXISTS liuyao_records (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    gua_name TEXT DEFAULT '',
+    matter TEXT DEFAULT '',
+    hex_data TEXT DEFAULT '',
+    gua_time TEXT DEFAULT (datetime('now','localtime')),
+    created_at TEXT DEFAULT (datetime('now','localtime')),
+    FOREIGN KEY (user_id) REFERENCES users(id)
+  )`);
+  compatDb.exec(`CREATE INDEX IF NOT EXISTS idx_liuyao_records_user ON liuyao_records(user_id)`);
+
   compatDb.exec(`CREATE TABLE IF NOT EXISTS name_evaluation_cache (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER NOT NULL,

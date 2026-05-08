@@ -491,6 +491,14 @@
             <span class="count" id="hepeiCount">0 条</span>
             <span class="arrow" id="hepeiArrow">&gt;</span>
         </div>
+
+        <!-- 六爻记录 -->
+        <div class="func-item" id="funcLiuyao">
+            <span class="icon">&#x1F52E;</span>
+            <span class="label">六爻记录</span>
+            <span class="count" id="liuyaoCount">0 条</span>
+            <span class="arrow" id="liuyaoArrow">&gt;</span>
+        </div>
     </div>
 
     <!-- 记录展开面板 -->
@@ -671,6 +679,24 @@
             var hepeiRecords = JSON.parse(localStorage.getItem(hepeiKey) || '[]');
             hepeiCountEl.textContent = hepeiRecords.length + ' 条';
         }
+
+        // 六爻记录计数（异步从后端加载）
+        var liuyaoCountEl = document.getElementById('liuyaoCount');
+        if (liuyaoCountEl && user) {
+            var token = localStorage.getItem('v2_token');
+            if (token) {
+                fetch('/api/liuyao/list?pageSize=1', {
+                    headers: { 'Authorization': 'Bearer ' + token }
+                })
+                .then(function(res) { return res.json(); })
+                .then(function(data) {
+                    if (data.code === 200 && data.data) {
+                        liuyaoCountEl.textContent = data.data.total + ' 条';
+                    }
+                })
+                .catch(function() {});
+            }
+        }
     }
 
     // ==================== 渲染姓名记录列表 ====================
@@ -790,6 +816,14 @@
         });
     }
 
+    // 六爻记录
+    var funcLiuyao = document.getElementById('funcLiuyao');
+    if (funcLiuyao) {
+        funcLiuyao.addEventListener('click', function() {
+            toggleRecordPanel('liuyao');
+        });
+    }
+
     // ==================== 记录展开面板逻辑 ====================
 
     // 当前展开的面板类型
@@ -817,7 +851,7 @@
         updateArrows(type);
         
         // 设置标题
-        var titles = { evaluate: '姓名评测记录', name: '取名记录', hepei: '合配记录' };
+        var titles = { evaluate: '姓名评测记录', name: '取名记录', hepei: '合配记录', liuyao: '六爻记录' };
         title.textContent = titles[type] || '记录详情';
         
         // 加载数据
@@ -826,11 +860,11 @@
 
     // 更新箭头方向
     function updateArrows(activeType) {
-        ['evalArrow', 'nameArrow', 'hepeiArrow'].forEach(function(id) {
+        ['evalArrow', 'nameArrow', 'hepeiArrow', 'liuyaoArrow'].forEach(function(id) {
             var el = document.getElementById(id);
             if (el) el.textContent = '>';
         });
-        var arrowMap = { evaluate: 'evalArrow', name: 'nameArrow', hepei: 'hepeiArrow' };
+        var arrowMap = { evaluate: 'evalArrow', name: 'nameArrow', hepei: 'hepeiArrow', liuyao: 'liuyaoArrow' };
         if (activeType && arrowMap[activeType]) {
             var activeArrow = document.getElementById(arrowMap[activeType]);
             if (activeArrow) activeArrow.textContent = '\u2228';
@@ -862,6 +896,9 @@
             var key = 'bazi_hepei_records_' + username;
             var records = JSON.parse(localStorage.getItem(key) || '[]');
             renderRecordList(content, records, '暂无合配记录');
+        } else if (type === 'liuyao') {
+            // 六爻记录 - 从后端API加载
+            _loadLiuyaoRecords(content);
         }
     }
 
@@ -890,6 +927,76 @@
         });
         
         container.innerHTML = html;
+    }
+
+    // 加载六爻记录（从后端API）
+    function _loadLiuyaoRecords(container) {
+        var token = localStorage.getItem('v2_token');
+        if (!token || !user) {
+            container.innerHTML = '<div style="text-align:center;color:#999;padding:30px 0;">请先登录后查看六爻记录</div>';
+            return;
+        }
+
+        fetch('/api/liuyao/list?pageSize=50', {
+            headers: { 'Authorization': 'Bearer ' + token }
+        })
+        .then(function(res) { return res.json(); })
+        .then(function(data) {
+            if (data.code === 200 && data.data && data.data.list) {
+                var records = data.data.list;
+                if (records.length === 0) {
+                    container.innerHTML = '<div style="text-align:center;color:#999;padding:30px 0;">暂无六爻记录</div>';
+                    return;
+                }
+
+                var html = '';
+                records.forEach(function(r, i) {
+                    var date = r.gua_time ? new Date(r.gua_time).toLocaleString('zh-CN') : (r.created_at ? new Date(r.created_at).toLocaleString('zh-CN') : '未知时间');
+                    var guaName = r.gua_name || '未知卦';
+                    var matter = r.matter || '未指定事项';
+
+                    // 解析六爻详情
+                    var detailHtml = '';
+                    if (r.hex_data) {
+                        try {
+                            var hexData = typeof r.hex_data === 'string' ? JSON.parse(r.hex_data) : r.hex_data;
+                            if (hexData.lines && hexData.lines.length > 0) {
+                                var yaoNames = ['初爻', '二爻', '三爻', '四爻', '五爻', '上爻'];
+                                detailHtml += '<div style="margin-top:8px;font-size:12px;color:#888;line-height:1.8;">';
+                                for (var j = 0; j < hexData.lines.length; j++) {
+                                    var l = hexData.lines[j];
+                                    var tag = '';
+                                    if (hexData.shiIndex === j) tag += ' [世]';
+                                    if (hexData.yingIndex === j) tag += ' [应]';
+                                    if (l.isDong) tag += ' [动]';
+                                    detailHtml += yaoNames[j] + ': ' + (l.yaoType || '') + ' ' + (l.gan || '') + (l.zhi || '') + '(' + (l.wuXing || '') + ') ' + (l.liuQin || '') + tag + '<br>';
+                                }
+                                if (hexData.fuShen) {
+                                    detailHtml += '伏神: ' + hexData.fuShen + '<br>';
+                                }
+                                detailHtml += '</div>';
+                            }
+                        } catch(e) {}
+                    }
+
+                    html += '<div style="padding:12px 0;border-bottom:1px solid #f0f0f0;' + (i === 0 ? 'border-top:none;' : '') + '">';
+                    html += '<div style="display:flex;justify-content:space-between;align-items:center;">';
+                    html += '<span style="font-weight:bold;color:#333;">' + escapeHtml(guaName) + '</span>';
+                    html += '<span style="font-size:12px;color:#999;">' + date + '</span>';
+                    html += '</div>';
+                    html += '<div style="margin-top:4px;font-size:13px;color:#666;">事项: ' + escapeHtml(matter) + '</div>';
+                    html += detailHtml;
+                    html += '</div>';
+                });
+
+                container.innerHTML = html;
+            } else {
+                container.innerHTML = '<div style="text-align:center;color:#999;padding:30px 0;">加载六爻记录失败</div>';
+            }
+        })
+        .catch(function() {
+            container.innerHTML = '<div style="text-align:center;color:#999;padding:30px 0;">网络错误，请稍后重试</div>';
+        });
     }
 
     // 关闭面板按钮
