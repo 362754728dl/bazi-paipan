@@ -123,7 +123,10 @@
         background: #F0F0F0;
         color: var(--text-secondary);
     }
-    
+    .level-tag.vip {
+        background: linear-gradient(135deg, var(--gold-light), var(--gold));
+        color: #FFF;
+    }
     .account-actions {
         display: flex;
         gap: 8px;
@@ -466,21 +469,22 @@
             <span class="label">排盘记录</span>
             <span class="count" id="paipanCount">0 条</span>
         </div>
-        <!-- 姓名评测记录：点击展开 -->
+        <!-- 姓名评测记录 -->
         <div class="func-item" id="funcEval">
             <span class="icon">&#x270D;&#xFE0F;</span>
             <span class="label">姓名评测记录</span>
             <span class="count" id="evalCount">0 条</span>
             <span class="arrow" id="evalArrow">&gt;</span>
         </div>
-        <!-- 取名记录：点击展开 -->
+        <!-- 取名记录 -->
         <div class="func-item" id="funcName">
             <span class="icon">&#x1F476;</span>
             <span class="label">取名记录</span>
             <span class="count" id="nameCount">0 条</span>
             <span class="arrow" id="nameArrow">&gt;</span>
         </div>
-        <!-- 合配记录：点击展开 -->
+
+        <!-- 合配记录 -->
         <div class="func-item" id="funcHepei">
             <span class="icon">&#x1F48D;</span>
             <span class="label">合配记录</span>
@@ -595,9 +599,8 @@
     // ==================== 数据读取 ====================
 
     var user = Storage.getCurrentUser();
-    var baziRecords = Storage.getRecords();
-
-     =====
+    var currentUsername = user ? user.username : '';
+    var baziRecords = []; // 异步加载，初始化为空
 
     var nameRecords = JSON.parse(localStorage.getItem('bazi_name_records') || '[]');
     var myNameRecords = nameRecords.filter(function (r) {
@@ -608,6 +611,67 @@
 
     // 当前激活的记录 tab
     var activeTab = 'evaluate';
+
+    // ==================== 渲染账户卡片 ====================
+
+    function renderAccountCard() {
+        var card = document.getElementById('accountCard');
+        if (!user) {
+            // 未登录
+            card.innerHTML =
+                '<div class="avatar gray">未</div>' +
+                '<div class="account-info">' +
+                    '<div class="username">未登录</div>' +
+                    '<div class="tip">登录后查看更多功能</div>' +
+                    '<div class="account-actions">' +
+                        '<button class="btn btn-primary" id="btnMyLogin">登录</button>' +
+                        '<button class="btn btn-outline" id="btnMyRegister">注册</button>' +
+                    '</div>' +
+                '</div>';
+            document.getElementById('logoutSection').style.display = 'none';
+            // 绑定登录/注册按钮 → 弹出登录弹窗
+            document.getElementById('btnMyLogin').addEventListener('click', function () {
+                openLoginModal('login');
+            });
+            document.getElementById('btnMyRegister').addEventListener('click', function () {
+                openLoginModal('register');
+            });
+        } else {
+            // 已登录
+            var firstChar = user.username.charAt(0).toUpperCase();
+            var levelHtml = '<span class="level-tag normal">注册用户</span>';
+            card.innerHTML =
+                '<div class="avatar red">' + firstChar + '</div>' +
+                '<div class="account-info">' +
+                    '<div class="username">' + escapeHtml(user.username) + '</div>' +
+                    levelHtml +
+                    '<div class="account-actions">' +
+                        '<button class="btn btn-outline btn-sm" id="btnChangePwd">修改密码</button>' +
+                    '</div>' +
+                '</div>';
+            document.getElementById('logoutSection').style.display = 'block';
+            // 绑定修改密码按钮
+            document.getElementById('btnChangePwd').addEventListener('click', function () {
+                openPwdModal();
+            });
+        }
+    }
+
+    // ==================== 渲染功能列表计数 ====================
+
+    function renderFuncCounts() {
+        document.getElementById('paipanCount').textContent = baziRecords.length + ' 条';
+        document.getElementById('evalCount').textContent = evalRecords.length + ' 条';
+        document.getElementById('nameCount').textContent = nameGenRecords.length + ' 条';
+
+        // 合配记录计数
+        var hepeiCountEl = document.getElementById('hepeiCount');
+        if (hepeiCountEl && user) {
+            var hepeiKey = 'bazi_hepei_records_' + user.username;
+            var hepeiRecords = JSON.parse(localStorage.getItem(hepeiKey) || '[]');
+            hepeiCountEl.textContent = hepeiRecords.length + ' 条';
+        }
+    }
 
     // ==================== 渲染姓名记录列表 ====================
 
@@ -702,12 +766,75 @@
         funcPaipan.style.opacity = '0.8';
     }
 
-    // 姓名评测记录：点击展开
+    // 姓名评测记录
     var funcEval = document.getElementById('funcEval');
     if (funcEval) {
         funcEval.addEventListener('click', function() {
             toggleRecordPanel('evaluate');
         });
+    }
+
+    // 取名记录
+    var funcName = document.getElementById('funcName');
+    if (funcName) {
+        funcName.addEventListener('click', function() {
+            toggleRecordPanel('name');
+        });
+    }
+
+    // 合配记录
+    var funcHepei = document.getElementById('funcHepei');
+    if (funcHepei) {
+        funcHepei.addEventListener('click', function() {
+            toggleRecordPanel('hepei');
+        });
+    }
+
+    // ==================== 记录展开面板逻辑 ====================
+
+    // 当前展开的面板类型
+    var currentPanelType = null;
+
+    // 切换记录面板
+    function toggleRecordPanel(type) {
+        var panel = document.getElementById('recordPanel');
+        var title = document.getElementById('recordPanelTitle');
+        var content = document.getElementById('recordPanelContent');
+        
+        if (!panel) return;
+        
+        // 如果点击的是当前已展开的面板，则关闭
+        if (currentPanelType === type && panel.style.display !== 'none') {
+            panel.style.display = 'none';
+            currentPanelType = null;
+            // 恢复箭头方向
+            updateArrows(null);
+            return;
+        }
+        
+        currentPanelType = type;
+        panel.style.display = 'block';
+        updateArrows(type);
+        
+        // 设置标题
+        var titles = { evaluate: '姓名评测记录', name: '取名记录', hepei: '合配记录' };
+        title.textContent = titles[type] || '记录详情';
+        
+        // 加载数据
+        loadRecordData(type);
+    }
+
+    // 更新箭头方向
+    function updateArrows(activeType) {
+        ['evalArrow', 'nameArrow', 'hepeiArrow'].forEach(function(id) {
+            var el = document.getElementById(id);
+            if (el) el.textContent = '>';
+        });
+        var arrowMap = { evaluate: 'evalArrow', name: 'nameArrow', hepei: 'hepeiArrow' };
+        if (activeType && arrowMap[activeType]) {
+            var activeArrow = document.getElementById(arrowMap[activeType]);
+            if (activeArrow) activeArrow.textContent = '\u2228';
+        }
     }
 
     // 加载记录数据
@@ -963,11 +1090,7 @@
                             localStorage.setItem('v2_token', loginData.data.token);
                             localStorage.setItem('v2_user', JSON.stringify({
                                 username: loginData.data.username || username,
-                                level: loginData.data.level || 'normal',
-                                role: loginData.data.role || '',
-                                
-                                member_expire_time: loginData.data.member_expire_time || 0,
-                                vip_expire_time: loginData.data.vip_expire_time || ''
+                                role: loginData.data.role || ''
                             }));
                             // 保存V1登录凭证
                             localStorage.setItem('bazi_current_user', JSON.stringify({
@@ -1011,11 +1134,7 @@
                     localStorage.setItem('v2_token', data.data.token);
                     localStorage.setItem('v2_user', JSON.stringify({
                         username: data.data.username || username,
-                        level: data.data.level || 'normal',
-                        role: data.data.role || '',
-                        
-                        member_expire_time: data.data.member_expire_time || 0,
-                        vip_expire_time: data.data.vip_expire_time || ''
+                        role: data.data.role || ''
                     }));
                     // 保存V1登录凭证
                     localStorage.setItem('bazi_current_user', JSON.stringify({
@@ -1035,11 +1154,19 @@
         }
     });
 
-    // ==================== 初始化 ====================
+    // ==================== 初始化（异步加载排盘记录） ====================
 
     renderAccountCard();
     renderFuncCounts();
     renderRecords();
+
+    // 异步加载排盘记录（后端API）
+    (async function() {
+        if (Storage.isLoggedIn()) {
+            baziRecords = await Storage.getRecords();
+            document.getElementById('paipanCount').textContent = baziRecords.length + ' 条';
+        }
+    })();
 
     // ==================== 管理员入口 ====================
 
@@ -1048,16 +1175,7 @@
         adminEntry.style.display = 'block';
     }
 
-    // ==================== 合配记录计数 ====================
 
-    var hepeiCountEl = document.getElementById('hepeiCount');
-    if (hepeiCountEl && user) {
-        var hepeiKey = 'bazi_hepei_records_' + user.username;
-        var hepeiRecords = JSON.parse(localStorage.getItem(hepeiKey) || '[]');
-        hepeiCountEl.textContent = hepeiRecords.length + ' 条';
-    }
-
-    // 页面加载完成
 
 })();
 </script>

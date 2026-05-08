@@ -2945,7 +2945,7 @@ const App = (function () {
                 day: sd.day,
                 hour: sd.hour,
                 minute: sd.minute,
-                gender: gender,
+                gender: result.gender,
                 calendarType: calendarType,
                 name: name,
                 province: $('selectProvince').value,
