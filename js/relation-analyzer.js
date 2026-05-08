@@ -159,8 +159,28 @@ const RelationAnalyzer = (function() {
         const results = [];
         const positions = ['年', '月', '日', '时'];
 
-        // 用集合去重：重复地支只算一个
+        // 用集合去重：重复地支只算一个（用于三合三会等组合判断）
         const zhiSet = [...new Set(zhiList)];
+
+        // 0. 检查自刑（同一地支出现2次及以上）
+        const zhiCount = {};
+        zhiList.forEach(function(z) { zhiCount[z] = (zhiCount[z] || 0) + 1; });
+        const selfXingZhi = ['辰', '酉', '午', '亥']; // 四个自刑地支
+        selfXingZhi.forEach(function(z) {
+            if (zhiCount[z] >= 2) {
+                const posArr = [];
+                zhiList.forEach(function(zz, idx) { if (zz === z) posArr.push(positions[idx]); });
+                results.push({
+                    type: 'zixing',
+                    name: z + z + '自刑',
+                    display: '[自刑] ' + z + z + '自刑',
+                    zhi: [z],
+                    positions: posArr,
+                    category: '自刑',
+                    strength: 8
+                });
+            }
+        });
 
         // 1. 检查三刑（力量最大）
         for (let xing of diZhiSanXing) {
