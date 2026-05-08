@@ -827,11 +827,11 @@ const App = (function () {
         // 2. 四柱核心表格（十神、天干、地支、藏干、纳音、空亡、神煞）
         renderBaziTable(pillars, result.shenSha, result.kongWang);
 
-        // 3. 天干留意
-        renderGanZhiRelations(result, 'gan');
+        // 3. 天干留意（统一分析器）
+        renderGanZhiRelationsUnified(result);
 
-        // 4. 地支留意
-        renderGanZhiRelations(result, 'zhi');
+        // 4. 地支留意（统一分析器）
+        // 已在 renderGanZhiRelationsUnified 中一并渲染
 
         // 5. 五行统计
         renderWuXing(result);
@@ -1077,6 +1077,53 @@ const App = (function () {
         if (ra) {
             var div = document.createElement('div');
             div.innerHTML = html;
+            ra.appendChild(div);
+        }
+    }
+
+    /**
+     * 渲染天干地支关系（统一分析器）
+     */
+    function renderGanZhiRelationsUnified(result) {
+        if (!result || !result.pillars) return;
+        var p = result.pillars;
+        var baziForAnalyze = {
+            year: { gan: p.year.gan, zhi: p.year.zhi },
+            month: { gan: p.month.gan, zhi: p.month.zhi },
+            day: { gan: p.day.gan, zhi: p.day.zhi },
+            hour: { gan: p.hour.gan, zhi: p.hour.zhi }
+        };
+        var analysis = RelationAnalyzer.analyzeRelations(baziForAnalyze);
+
+        // 天干留意
+        var tgHtml = '<div class="result-card gan-relations-card"><div class="result-title">天干留意</div>';
+        if (analysis.tianGanRelations.length > 0) {
+            analysis.tianGanRelations.forEach(function(r) {
+                var color = r.category === '冲' ? '#DC143C' : '#2E8B57';
+                tgHtml += '<div style="padding:6px 0;font-size:13px;"><span style="color:' + color + ';font-weight:bold;">' + r.name + '</span> <span style="color:#999;">（' + r.pos1 + '柱' + r.gan1 + ' ↔ ' + r.pos2 + '柱' + r.gan2 + '）</span></div>';
+            });
+        } else {
+            tgHtml += '<div style="padding:6px 0;font-size:13px;color:#999;">天干无冲合关系</div>';
+        }
+        tgHtml += '</div>';
+
+        // 地支留意
+        var dzHtml = '<div class="result-card zhi-relations-card"><div class="result-title">地支留意</div>';
+        if (analysis.diZhiRelations.length > 0) {
+            analysis.diZhiRelations.forEach(function(r) {
+                var colors = { '刑': '#8B0000', '冲': '#DC143C', '害': '#FF6347', '破': '#FF8C00', '合': '#2E8B57', '会': '#4169E1' };
+                var color = colors[r.category] || '#333';
+                dzHtml += '<div style="padding:6px 0;font-size:13px;"><span style="color:' + color + ';font-weight:bold;">[' + r.category + '] ' + r.display + '</span></div>';
+            });
+        } else {
+            dzHtml += '<div style="padding:6px 0;font-size:13px;color:#999;">地支无特殊关系</div>';
+        }
+        dzHtml += '<div style="padding:6px 0;font-size:11px;color:#bbb;">以上为传统命理文化推演，仅供了解参考，不构成任何人生决策依据。</div></div>';
+
+        var ra = $('resultArea');
+        if (ra) {
+            var div = document.createElement('div');
+            div.innerHTML = tgHtml + dzHtml;
             ra.appendChild(div);
         }
     }

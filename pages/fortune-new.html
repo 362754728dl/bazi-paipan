@@ -519,6 +519,7 @@
 <script src="../js/lunar.js"></script>
 <script src="../js/solar-time.js"></script>
 <script src="../js/bazi.js"></script>
+<script src="../js/relation-analyzer.js"></script>
 
 <script>
 (function() {
@@ -808,38 +809,43 @@
         });
         html += '</div></div>';
 
-        // 天干留意
-        var ganIndices = [p.year.ganIndex, p.month.ganIndex, p.day.ganIndex, p.hour.ganIndex];
-        var zhiIndices = [p.year.zhiIndex, p.month.zhiIndex, p.day.zhiIndex, p.hour.zhiIndex];
-        var pillarNames = ['年柱', '月柱', '日柱', '时柱'];
-        var tgRelations = [];
-        for (var i = 0; i < ganIndices.length; i++) {
-            for (var j = i + 1; j < ganIndices.length; j++) {
-                var he = Lunar.getTianGanHe(ganIndices[i], ganIndices[j]);
-                if (he) tgRelations.push(pillarNames[i] + pillarNames[j] + '：' + he);
-            }
-        }
-        html += '<div class="result-card">';
-        html += '<div class="result-title">天干留意</div>';
-        html += '<div class="paipan-desc">';
-        html += tgRelations.length > 0 ? tgRelations.join('；') : '无';
-        html += '</div></div>';
+        // ===== 天干留意（统一分析器） =====
+        if (result && result.pillars) {
+            var baziForAnalyze = {
+                year: { gan: result.pillars.year.ganZhi[0], zhi: result.pillars.year.ganZhi[1] },
+                month: { gan: result.pillars.month.ganZhi[0], zhi: result.pillars.month.ganZhi[1] },
+                day: { gan: result.pillars.day.ganZhi[0], zhi: result.pillars.day.ganZhi[1] },
+                hour: { gan: result.pillars.hour.ganZhi[0], zhi: result.pillars.hour.ganZhi[1] }
+            };
+            var analysis = RelationAnalyzer.analyzeRelations(baziForAnalyze);
 
-        // 地支留意
-        var dzRelations = [];
-        for (var i = 0; i < zhiIndices.length; i++) {
-            for (var j = i + 1; j < zhiIndices.length; j++) {
-                var chong = Lunar.getDiZhiChong(zhiIndices[i], zhiIndices[j]);
-                if (chong) dzRelations.push(pillarNames[i] + pillarNames[j] + '：' + chong);
-                var po = Lunar.getDiZhiPo(zhiIndices[i], zhiIndices[j]);
-                if (po) dzRelations.push(pillarNames[i] + pillarNames[j] + '：' + po);
+            // 天干留意
+            var tgHtml = '<div class="result-card"><div class="result-title">天干留意</div>';
+            if (analysis.tianGanRelations.length > 0) {
+                analysis.tianGanRelations.forEach(function(r) {
+                    var color = r.category === '冲' ? '#DC143C' : '#2E8B57';
+                    tgHtml += '<div style="padding:6px 0;font-size:13px;"><span style="color:' + color + ';font-weight:bold;">' + r.name + '</span> <span style="color:#999;">（' + r.pos1 + '柱' + r.gan1 + ' ↔ ' + r.pos2 + '柱' + r.gan2 + '）</span></div>';
+                });
+            } else {
+                tgHtml += '<div style="padding:6px 0;font-size:13px;color:#999;">天干无冲合关系</div>';
             }
+            tgHtml += '</div>';
+            html += tgHtml;
+
+            // 地支留意
+            var dzHtml = '<div class="result-card"><div class="result-title">地支留意</div>';
+            if (analysis.diZhiRelations.length > 0) {
+                analysis.diZhiRelations.forEach(function(r) {
+                    var colors = { '刑': '#8B0000', '冲': '#DC143C', '害': '#FF6347', '破': '#FF8C00', '合': '#2E8B57', '会': '#4169E1' };
+                    var color = colors[r.category] || '#333';
+                    dzHtml += '<div style="padding:6px 0;font-size:13px;"><span style="color:' + color + ';font-weight:bold;">[' + r.category + '] ' + r.display + '</span></div>';
+                });
+            } else {
+                dzHtml += '<div style="padding:6px 0;font-size:13px;color:#999;">地支无特殊关系</div>';
+            }
+            dzHtml += '<div style="padding:6px 0;font-size:11px;color:#bbb;">以上为传统命理文化推演，仅供了解参考，不构成任何人生决策依据。</div></div>';
+            html += dzHtml;
         }
-        html += '<div class="result-card">';
-        html += '<div class="result-title">地支留意</div>';
-        html += '<div class="paipan-desc">';
-        html += dzRelations.length > 0 ? dzRelations.join('；') : '无';
-        html += '</div></div>';
 
         // 返回顶部按钮
         html += '<div style="text-align:center;margin:20px 0 10px;">';

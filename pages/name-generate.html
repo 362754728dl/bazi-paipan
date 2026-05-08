@@ -851,6 +851,7 @@
 <script src="../js/bazi.js"></script>
 <script src="../js/storage.js"></script>
 <script src="../config.js"></script>
+<script src="../js/relation-analyzer.js"></script>
 
 <script>
 (function() {
@@ -1372,6 +1373,47 @@
         return html;
     }
 
+    // ==================== 天干地支关系分析（统一分析器） ====================
+    function renderRelationAnalysis(baziResult) {
+        if (!baziResult || !baziResult.pillars) return '';
+        var p = baziResult.pillars;
+        var baziForAnalyze = {
+            year: { gan: p.year.gan, zhi: p.year.zhi },
+            month: { gan: p.month.gan, zhi: p.month.zhi },
+            day: { gan: p.day.gan, zhi: p.day.zhi },
+            hour: { gan: p.hour.gan, zhi: p.hour.zhi }
+        };
+        var analysis = RelationAnalyzer.analyzeRelations(baziForAnalyze);
+        var html = '';
+
+        // 天干留意
+        html += '<div class="result-card"><div class="result-title">天干留意</div>';
+        if (analysis.tianGanRelations.length > 0) {
+            analysis.tianGanRelations.forEach(function(r) {
+                var color = r.category === '冲' ? '#DC143C' : '#2E8B57';
+                html += '<div style="padding:6px 0;font-size:13px;"><span style="color:' + color + ';font-weight:bold;">' + r.name + '</span> <span style="color:#999;">（' + r.pos1 + '柱' + r.gan1 + ' ↔ ' + r.pos2 + '柱' + r.gan2 + '）</span></div>';
+            });
+        } else {
+            html += '<div style="padding:6px 0;font-size:13px;color:#999;">天干无冲合关系</div>';
+        }
+        html += '</div>';
+
+        // 地支留意
+        html += '<div class="result-card"><div class="result-title">地支留意</div>';
+        if (analysis.diZhiRelations.length > 0) {
+            analysis.diZhiRelations.forEach(function(r) {
+                var colors = { '刑': '#8B0000', '冲': '#DC143C', '害': '#FF6347', '破': '#FF8C00', '合': '#2E8B57', '会': '#4169E1' };
+                var color = colors[r.category] || '#333';
+                html += '<div style="padding:6px 0;font-size:13px;"><span style="color:' + color + ';font-weight:bold;">[' + r.category + '] ' + r.display + '</span></div>';
+            });
+        } else {
+            html += '<div style="padding:6px 0;font-size:13px;color:#999;">地支无特殊关系</div>';
+        }
+        html += '<div style="padding:6px 0;font-size:11px;color:#bbb;">以上为传统命理文化推演，仅供了解参考，不构成任何人生决策依据。</div></div>';
+
+        return html;
+    }
+
     // ==================== 解析大模型返回内容 ====================
     function parseAiContent(text) {
         var html = '';
@@ -1562,13 +1604,16 @@
         // 纯前端五行十神统计分析
         var analysisHtml = renderWuxingShiShenAnalysis(name, baziResult);
 
+        // 天干地支关系分析
+        var relationHtml = renderRelationAnalysis(baziResult);
+
         // 专业评测引导按钮
         var proHtml = '<div style="text-align:center;margin-top:16px;">' +
             '<button onclick="showProEvalModal()" style="padding:12px 32px;background:linear-gradient(135deg,#07C160,#06AD56);color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;letter-spacing:1px;">专业姓名评测</button>' +
             '<div style="font-size:12px;color:var(--text-light);margin-top:8px;">由专业命理师一对一深度分析</div>' +
             '</div>';
 
-        resultArea.innerHTML = baziHtml + analysisHtml + proHtml;
+        resultArea.innerHTML = baziHtml + analysisHtml + relationHtml + proHtml;
         resultArea.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
@@ -1592,6 +1637,9 @@
 
         var baziHtml = renderBaziResult(baziResult);
         var analysisHtml = renderWuxingShiShenAnalysis(surname, baziResult);
+
+        // 天干地支关系分析
+        var relationHtml = renderRelationAnalysis(baziResult);
 
         // 生成信息汇总文本
         var p = baziResult.pillars;
@@ -1633,7 +1681,7 @@
         copyHtml += '</div>';
         copyHtml += '</div>';
 
-        resultArea.innerHTML = baziHtml + analysisHtml + copyHtml;
+        resultArea.innerHTML = baziHtml + analysisHtml + relationHtml + copyHtml;
         resultArea.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
