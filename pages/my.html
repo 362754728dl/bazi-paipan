@@ -448,11 +448,6 @@
 </head>
 <body>
 
-<!-- 临时调试横幅（定位会员状态同步问题后删除） -->
-<div style="background:yellow; color:red; font-size:16px; padding:5px; text-align:center; font-weight:bold;" id="debug-info">
-   [调试] 当前用户等级：正在加载...
-</div>
-
 <!-- 顶部标题栏 -->
 <header class="header">
     <a class="back-link" href="../index.html">&lt; 返回</a>
@@ -623,11 +618,6 @@
 
     var isVip = v2User && (v2User.member_level === 1 || v2User.level === 'vip');
 
-    // 3. 更新调试横幅
-    var debugEl = document.getElementById('debug-info');
-    if (debugEl) {
-        debugEl.innerText = '[调试] 当前用户: ' + (v2User ? v2User.username : 'null') + ', member_level: ' + (v2User ? v2User.member_level : 'null') + ', isVip: ' + (isVip ? 'true' : 'false');
-    }
     // ===== 统一会员系统结束 =====
 
     var nameRecords = JSON.parse(localStorage.getItem('bazi_name_records') || '[]');
@@ -648,16 +638,6 @@
             isVip = false;
         }
     }
-
-    // ===== 临时探测代码（定位会员状态问题后删除） =====
-    var v2UserRaw = localStorage.getItem('v2_user');
-    var v2UserProbe = v2UserRaw ? JSON.parse(v2UserRaw) : null;
-    console.log('[UI更新前探测] v2_user原始值:', v2UserRaw);
-    console.log('[UI更新前探测] v2_user.member_level:', v2UserProbe ? v2UserProbe.member_level : 'null');
-    console.log('[UI更新前探测] 当前显示逻辑将显示:', (v2UserProbe && v2UserProbe.member_level === 1) ? 'VIP' : '普通用户');
-    console.log('[UI更新前探测] isVip变量值:', isVip);
-    console.log('[UI更新前探测] v2User.level:', v2UserProbe ? v2UserProbe.level : 'null');
-    // ===== 临时探测代码结束 =====
 
     // ==================== 渲染账户卡片 ====================
 

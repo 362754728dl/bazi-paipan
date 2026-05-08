@@ -700,7 +700,8 @@ body {
     left: 0;
     right: 0;
     height: 50vh;
-    max-height: 400px;
+    max-height: 60vh;
+    height: auto;
     background: var(--bg-card);
     border-radius: 16px 16px 0 0;
     z-index: 201;
