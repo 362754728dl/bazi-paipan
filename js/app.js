@@ -2913,7 +2913,7 @@ const App = (function () {
         // 分隔线
         html += '<div class="ai-eval-divider"></div>';
 
-        // 付费引导区域
+        // 引导区域
         html += '<div class="ai-eval-paid-section">';
         html += '<div class="ai-eval-paid-title">完整流年大运心理疏导</div>';
         html += '<div class="ai-eval-paid-features">';
@@ -2922,8 +2922,8 @@ const App = (function () {
         html += '<div class="paid-feature-item">✓ 事业财运婚姻健康综合指导</div>';
         html += '<div class="paid-feature-item">✓ 个性化心理疏导建议</div>';
         html += '</div>';
-        html += '<button id="btnAIEvalFull" class="btn-ai-eval-full">解锁完整评测（50积分）</button>';
-        html += '<div class="ai-eval-paid-note">或开通会员无限次查看完整评测</div>';
+        html += '<button id="btnAIEvalFull" class="btn-ai-eval-full">添加站长微信了解更多</button>';
+        html += '<div class="ai-eval-paid-note">微信号：DLing3313</div>';
         html += '</div>';
 
         html += '</div>';
@@ -3511,7 +3511,7 @@ const App = (function () {
     // ==================== 会员管理 ====================
 
     /**
-     * 管理员开通会员
+     * 管理员功能
      */
     function adminActivateVip() {
         var username = $('vipUsername').value.trim();
@@ -3550,7 +3550,7 @@ const App = (function () {
             container.innerHTML = '<div style="text-align:center;color:var(--text-light);padding:30px;">暂无会员数据</div>';
             return;
         }
-        var planNames = { trial: '体验会员', yearly: '年度会员', lifetime: '终身会员' };
+        var planNames = { trial: '体验', yearly: '年度', lifetime: '永久' };
         var html = '<table style="width:100%;border-collapse:collapse;font-size:13px;"><thead><tr style="background:var(--bg-secondary);"><th style="padding:8px;border:1px solid var(--border-color);">用户名</th><th style="padding:8px;border:1px solid var(--border-color);">套餐</th><th style="padding:8px;border:1px solid var(--border-color);">开通日期</th><th style="padding:8px;border:1px solid var(--border-color);">到期日期</th><th style="padding:8px;border:1px solid var(--border-color);">AI次数</th><th style="padding:8px;border:1px solid var(--border-color);">状态</th></tr></thead><tbody>';
         for (var i = 0; i < members.length; i++) {
             var m = members[i];
@@ -3622,11 +3622,10 @@ const App = (function () {
         return parts.join('，');
     }
 
-    // ==================== 会员充值套餐页面 ====================
+    // ==================== 服务介绍页面 ====================
 
     /**
-     * 渲染会员充值套餐页面
-     * 包含三档套餐卡片：体验会员、年度会员（主推）、终身会员
+     * 渲染服务介绍页面
      */
     function renderVipPage() {
         var container = $('vipContent');
@@ -3637,7 +3636,7 @@ const App = (function () {
         // 顶部标题区
         html += '<div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">';
         html += '<button onclick="switchPage(\'pageToday\')" style="background:none;border:none;font-size:20px;color:var(--text-primary);cursor:pointer;padding:4px;">&#8592;</button>';
-        html += '<h2 style="font-size:17px;font-weight:600;color:var(--text-primary);margin:0;">AI专业命理疏导 · 会员服务</h2>';
+        html += '<h2 style="font-size:17px;font-weight:600;color:var(--text-primary);margin:0;">AI专业命理疏导 · 服务介绍</h2>';
         html += '</div>';
 
         // 核心说明文案
@@ -3645,69 +3644,17 @@ const App = (function () {
         html += '<p>本平台不搞迷信、不恐吓、不改运，仅以正统子平命理、五行旺衰、十神逻辑为基础，结合主流大模型（Kimi/DeepSeek/豆包/智谱）专业命理提示词，为用户提供五行缺失测算、日主强弱分析、喜忌判定、大运流年理性疏导、心理情绪引导，帮助用户认清自身命理结构，做到顺势而为、生活顺遂。</p>';
         html += '</div>';
 
-        // 卡片1：体验会员
-        html += '<div class="vip-card">';
-        html += '<div class="vip-card-header">';
-        html += '<span class="vip-tag vip-tag-gray">体验</span>';
-        html += '<span class="vip-card-title">体验会员（基础疏导）</span>';
-        html += '</div>';
-        html += '<div class="vip-price">¥29.9<span class="vip-price-unit">/月</span></div>';
-        html += '<ul class="vip-features">';
-        html += '<li><span class="vip-check">&#10003;</span>每日3次AI简批</li>';
-        html += '<li><span class="vip-check">&#10003;</span>五行旺衰基础查询</li>';
-        html += '<li><span class="vip-check">&#10003;</span>基础喜忌判定</li>';
-        html += '<li><span class="vip-check">&#10003;</span>无广告体验</li>';
-        html += '</ul>';
-        html += '<div class="vip-qr-area">';
-        html += '<div class="vip-qr-img"><img src="images/wechat-qr.jpg" alt="微信收款码"><span>微信收款码</span></div>';
-        html += '<div class="vip-qr-img"><img src="images/alipay-qr.jpg" alt="支付宝收款码"><span>支付宝收款码</span></div>';
-        html += '</div>';
-        html += '<p class="vip-pay-note">付款请备注：会员+手机号后4位</p>';
-        html += '<button class="vip-btn vip-btn-gray" onclick="showToast(\'请联系站长完成开通\')">立即开通</button>';
-        html += '</div>';
-
-        // 卡片2：年度会员（主推）
+        // 微信引导卡片
         html += '<div class="vip-card featured">';
         html += '<div class="vip-card-header">';
-        html += '<span class="vip-tag vip-tag-red">主推</span>';
-        html += '<span class="vip-card-title">年度会员（深度命理疏导 · 主推）</span>';
+        html += '<span class="vip-tag vip-tag-red">联系站长</span>';
+        html += '<span class="vip-card-title">添加站长微信了解更多</span>';
         html += '</div>';
-        html += '<div class="vip-price">¥199<span class="vip-price-unit">/年</span> <span class="vip-price-original">¥399/年</span></div>';
-        html += '<ul class="vip-features">';
-        html += '<li><span class="vip-check">&#10003;</span>无限次AI专业详批</li>';
-        html += '<li><span class="vip-check">&#10003;</span>完整日主强弱+喜用神深度报告</li>';
-        html += '<li><span class="vip-check">&#10003;</span>十年大运流年心理疏导</li>';
-        html += '<li><span class="vip-check">&#10003;</span>夫妻宫/事业宫/健康宫专业解读</li>';
-        html += '<li><span class="vip-check">&#10003;</span>五行平衡生活建议</li>';
-        html += '<li><span class="vip-check">&#10003;</span>全部功能解锁</li>';
-        html += '</ul>';
+        html += '<div style="font-size:16px;font-weight:bold;color:#333;text-align:center;margin:16px 0 8px;">微信号：DLing3313</div>';
         html += '<div class="vip-qr-area">';
-        html += '<div class="vip-qr-img"><img src="images/wechat-qr.jpg" alt="微信收款码"><span>微信收款码</span></div>';
-        html += '<div class="vip-qr-img"><img src="images/alipay-qr.jpg" alt="支付宝收款码"><span>支付宝收款码</span></div>';
+        html += '<div class="vip-qr-img"><img src="images/wechat-qr.jpg" alt="站长微信二维码"><span>站长微信二维码</span></div>';
         html += '</div>';
-        html += '<p class="vip-pay-note">付款请备注：会员+手机号后4位</p>';
-        html += '<button class="vip-btn vip-btn-red" onclick="showToast(\'请联系站长完成开通\')">立即开通</button>';
-        html += '</div>';
-
-        // 卡片3：终身会员
-        html += '<div class="vip-card">';
-        html += '<div class="vip-card-header">';
-        html += '<span class="vip-tag vip-tag-gold">尊享</span>';
-        html += '<span class="vip-card-title">终身会员（全站永久尊享）</span>';
-        html += '</div>';
-        html += '<div class="vip-price">¥399<span class="vip-price-unit">/永久</span></div>';
-        html += '<ul class="vip-features">';
-        html += '<li><span class="vip-check">&#10003;</span>年度会员全部功能永久有效</li>';
-        html += '<li><span class="vip-check">&#10003;</span>站长一对一命理咨询优先通道</li>';
-        html += '<li><span class="vip-check">&#10003;</span>民俗表文代写专属优惠</li>';
-        html += '<li><span class="vip-check">&#10003;</span>后续全站新功能永久免费更新</li>';
-        html += '</ul>';
-        html += '<div class="vip-qr-area">';
-        html += '<div class="vip-qr-img"><img src="images/wechat-qr.jpg" alt="微信收款码"><span>微信收款码</span></div>';
-        html += '<div class="vip-qr-img"><img src="images/alipay-qr.jpg" alt="支付宝收款码"><span>支付宝收款码</span></div>';
-        html += '</div>';
-        html += '<p class="vip-pay-note">付款请备注：会员+手机号后4位</p>';
-        html += '<button class="vip-btn vip-btn-gold" onclick="showToast(\'请联系站长完成开通\')">立即开通</button>';
+        html += '<p style="text-align:center;color:#666;font-size:14px;margin-top:12px;">了解更多，请添加微信</p>';
         html += '</div>';
 
         // 底部合规说明

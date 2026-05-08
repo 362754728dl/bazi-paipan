@@ -483,7 +483,7 @@
         </div>
         <a class="func-item" id="funcVip" href="index.html">
             <span class="icon">&#x1F451;</span>
-            <span class="label">会员中心</span>
+            <span class="label">帮助中心</span>
             <span class="count" id="vipStatus">未开通</span>
             <span class="arrow">&gt;</span>
         </a>
@@ -618,7 +618,7 @@
             var isVip = membership && membership.isActive && (membership.plan === 'lifetime' || membership.expireDate >= new Date().toISOString().split('T')[0]);
             var levelHtml = '';
             if (isVip) {
-                var planLabel = membership.plan === 'lifetime' ? '终身会员' : '月度会员';
+                var planLabel = membership.plan === 'lifetime' ? '注册用户' : '注册用户';
                 var expireText = membership.plan === 'lifetime' ? '永久有效' : '到期：' + membership.expireDate;
                 levelHtml =
                     '<span class="level-tag vip">' + planLabel + '</span>' +
@@ -802,7 +802,7 @@
         document.getElementById('recordsSection').scrollIntoView({ behavior: 'smooth' });
     });
 
-    // 会员中心：跳转主页并切换到VIP页面
+    // 帮助中心：跳转主页并切换到VIP页面
     document.getElementById('funcVip').addEventListener('click', function (e) {
         e.preventDefault();
         window.location.href = 'index.html#vip';
