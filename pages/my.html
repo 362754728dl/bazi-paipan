@@ -123,10 +123,7 @@
         background: #F0F0F0;
         color: var(--text-secondary);
     }
-    .level-tag.vip {
-        background: linear-gradient(135deg, var(--gold-light), var(--gold));
-        color: #FFF;
-    }
+    
     .account-actions {
         display: flex;
         gap: 8px;
@@ -469,27 +466,21 @@
             <span class="label">排盘记录</span>
             <span class="count" id="paipanCount">0 条</span>
         </div>
-        <!-- 姓名评测记录：仅会员可展开 -->
+        <!-- 姓名评测记录：点击展开 -->
         <div class="func-item" id="funcEval">
             <span class="icon">&#x270D;&#xFE0F;</span>
             <span class="label">姓名评测记录</span>
             <span class="count" id="evalCount">0 条</span>
             <span class="arrow" id="evalArrow">&gt;</span>
         </div>
-        <!-- 取名记录：仅会员可展开 -->
+        <!-- 取名记录：点击展开 -->
         <div class="func-item" id="funcName">
             <span class="icon">&#x1F476;</span>
             <span class="label">取名记录</span>
             <span class="count" id="nameCount">0 条</span>
             <span class="arrow" id="nameArrow">&gt;</span>
         </div>
-        <!-- 会员中心：展示账号状态，不跳转 -->
-        <div class="func-item" id="funcVip" style="cursor:default;">
-            <span class="icon">&#x1F451;</span>
-            <span class="label">会员中心</span>
-            <span class="count" id="vipStatus">未开通</span>
-        </div>
-        <!-- 合配记录：仅会员可展开（新增） -->
+        <!-- 合配记录：点击展开 -->
         <div class="func-item" id="funcHepei">
             <span class="icon">&#x1F48D;</span>
             <span class="label">合配记录</span>
@@ -533,6 +524,14 @@
     <!-- 底部合规声明 -->
     <div class="disclaimer">
         本内容仅供传统民俗文化参考，基于《三命通会》《渊海子平》等传统命理典籍整理，不构成命运判定、不做吉凶预测、不作为任何人生决策依据。
+    </div>
+
+    <!-- 底部微信引导 -->
+    <div style="text-align:center;padding:16px 20px;margin-top:12px;">
+        <div style="background:#FFF;border-radius:12px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+            <div style="font-size:14px;color:var(--text-secondary);margin-bottom:10px;">如需帮助，请添加站长微信</div>
+            <div style="font-size:16px;font-weight:bold;color:var(--red-primary);">DLing3313</div>
+        </div>
     </div>
 </div>
 
@@ -598,27 +597,7 @@
     var user = Storage.getCurrentUser();
     var baziRecords = Storage.getRecords();
 
-    // ===== 强制统一会员系统：只认 v2_user =====
-    // 1. 强制清除旧版本地缓存
-    var currentUsername = user ? user.username : '';
-    if (currentUsername) {
-        localStorage.removeItem('bazi_membership_' + currentUsername);
-    }
-
-    // 2. 从 v2_user 读取权威会员状态
-    var v2UserStr = localStorage.getItem('v2_user');
-    var v2User = v2UserStr ? JSON.parse(v2UserStr) : null;
-
-    // 防御性修复：member_level=0 但 level=vip 时强制纠正
-    if (v2User && v2User.member_level === 0 && v2User.level === 'vip') {
-        console.log('[防御性修复] 检测到 member_level=0 但 level=vip，强制修正 member_level=1');
-        v2User.member_level = 1;
-        localStorage.setItem('v2_user', JSON.stringify(v2User));
-    }
-
-    var isVip = v2User && (v2User.member_level === 1 || v2User.level === 'vip');
-
-    // ===== 统一会员系统结束 =====
+     =====
 
     var nameRecords = JSON.parse(localStorage.getItem('bazi_name_records') || '[]');
     var myNameRecords = nameRecords.filter(function (r) {
@@ -629,92 +608,6 @@
 
     // 当前激活的记录 tab
     var activeTab = 'evaluate';
-
-    // ==================== VIP 状态判断（统一使用 v2_user） ====================
-    // isVip 已在上方统一初始化，此处增加过期检查
-    if (isVip && v2User && v2User.member_expire_time) {
-        var nowTs = Math.floor(Date.now() / 1000);
-        if (nowTs > v2User.member_expire_time) {
-            isVip = false;
-        }
-    }
-
-    // ==================== 渲染账户卡片 ====================
-
-    function renderAccountCard() {
-        var card = document.getElementById('accountCard');
-        if (!user) {
-            // 未登录
-            card.innerHTML =
-                '<div class="avatar gray">未</div>' +
-                '<div class="account-info">' +
-                    '<div class="username">未登录</div>' +
-                    '<div class="tip">登录后查看更多功能</div>' +
-                    '<div class="account-actions">' +
-                        '<button class="btn btn-primary" id="btnMyLogin">登录</button>' +
-                        '<button class="btn btn-outline" id="btnMyRegister">注册</button>' +
-                    '</div>' +
-                '</div>';
-            document.getElementById('logoutSection').style.display = 'none';
-            // 绑定登录/注册按钮 → 弹出登录弹窗
-            document.getElementById('btnMyLogin').addEventListener('click', function () {
-                openLoginModal('login');
-            });
-            document.getElementById('btnMyRegister').addEventListener('click', function () {
-                openLoginModal('register');
-            });
-        } else {
-            // 已登录
-            var firstChar = user.username.charAt(0).toUpperCase();
-            var levelHtml = '';
-            if (isVip) {
-                var expireDateStr = '到期：未知';
-                if (v2User && v2User.member_expire_time) {
-                    expireDateStr = '到期：' + new Date(v2User.member_expire_time * 1000).toLocaleDateString('zh-CN');
-                }
-                levelHtml =
-                    '<span class="level-tag vip">月度会员</span>' +
-                    '<div class="tip">' + expireDateStr + '</div>';
-            } else {
-                levelHtml = '<span class="level-tag normal">普通用户</span>';
-            }
-            card.innerHTML =
-                '<div class="avatar red">' + firstChar + '</div>' +
-                '<div class="account-info">' +
-                    '<div class="username">' + escapeHtml(user.username) + '</div>' +
-                    levelHtml +
-                    '<div class="account-actions">' +
-                        '<button class="btn btn-outline btn-sm" id="btnChangePwd">修改密码</button>' +
-                    '</div>' +
-                '</div>';
-            document.getElementById('logoutSection').style.display = 'block';
-            // 绑定修改密码按钮
-            document.getElementById('btnChangePwd').addEventListener('click', function () {
-                openPwdModal();
-            });
-        }
-    }
-
-    // ==================== 渲染功能列表计数 ====================
-
-    function renderFuncCounts() {
-        document.getElementById('paipanCount').textContent = baziRecords.length + ' 条';
-        document.getElementById('evalCount').textContent = evalRecords.length + ' 条';
-        document.getElementById('nameCount').textContent = nameGenRecords.length + ' 条';
-
-        // 会员状态（统一使用 v2_user）
-        var vipEl = document.getElementById('vipStatus');
-        if (isVip) {
-            vipEl.textContent = '已开通';
-            vipEl.style.color = 'var(--green)';
-            if (v2User && v2User.member_expire_time) {
-                vipEl.textContent = '到期: ' + new Date(v2User.member_expire_time * 1000).toLocaleDateString('zh-CN');
-            }
-        } else {
-            vipEl.textContent = '未开通';
-            vipEl.style.color = '';
-        }
-    }
 
     // ==================== 渲染姓名记录列表 ====================
 
@@ -809,94 +702,12 @@
         funcPaipan.style.opacity = '0.8';
     }
 
-    // 姓名评测记录：仅会员可展开
+    // 姓名评测记录：点击展开
     var funcEval = document.getElementById('funcEval');
     if (funcEval) {
         funcEval.addEventListener('click', function() {
-            if (!isVip) {
-                showToast('仅会员可查看评测记录');
-                return;
-            }
             toggleRecordPanel('evaluate');
         });
-    }
-
-    // 取名记录：仅会员可展开
-    var funcName = document.getElementById('funcName');
-    if (funcName) {
-        funcName.addEventListener('click', function() {
-            if (!isVip) {
-                showToast('仅会员可查看取名记录');
-                return;
-            }
-            toggleRecordPanel('name');
-        });
-    }
-
-    // 会员中心：展示状态，不跳转
-    var funcVip = document.getElementById('funcVip');
-    if (funcVip) {
-        funcVip.style.cursor = 'default';
-        funcVip.style.opacity = '0.8';
-    }
-
-    // 合配记录：仅会员可展开
-    var funcHepei = document.getElementById('funcHepei');
-    if (funcHepei) {
-        funcHepei.addEventListener('click', function() {
-            if (!isVip) {
-                showToast('仅会员可查看合配记录');
-                return;
-            }
-            toggleRecordPanel('hepei');
-        });
-    }
-
-    // ==================== 记录展开面板逻辑 ====================
-
-    // 当前展开的面板类型
-    var currentPanelType = null;
-
-    // 切换记录面板
-    function toggleRecordPanel(type) {
-        var panel = document.getElementById('recordPanel');
-        var title = document.getElementById('recordPanelTitle');
-        var content = document.getElementById('recordPanelContent');
-        
-        if (!panel) return;
-        
-        // 如果点击的是当前已展开的面板，则关闭
-        if (currentPanelType === type && panel.style.display !== 'none') {
-            panel.style.display = 'none';
-            currentPanelType = null;
-            // 恢复箭头方向
-            updateArrows(null);
-            return;
-        }
-        
-        currentPanelType = type;
-        panel.style.display = 'block';
-        updateArrows(type);
-        
-        // 设置标题
-        var titles = { evaluate: '姓名评测记录', name: '取名记录', hepei: '合配记录' };
-        title.textContent = titles[type] || '记录详情';
-        
-        // 加载数据
-        loadRecordData(type);
-    }
-
-    // 更新箭头方向
-    function updateArrows(activeType) {
-        ['evalArrow', 'nameArrow', 'hepeiArrow'].forEach(function(id) {
-            var el = document.getElementById(id);
-            if (el) el.textContent = '>';
-        });
-        var arrowMap = { evaluate: 'evalArrow', name: 'nameArrow', hepei: 'hepeiArrow' };
-        if (activeType && arrowMap[activeType]) {
-            var activeArrow = document.getElementById(arrowMap[activeType]);
-            if (activeArrow) activeArrow.textContent = '\u2228';
-        }
     }
 
     // 加载记录数据
@@ -1154,7 +965,7 @@
                                 username: loginData.data.username || username,
                                 level: loginData.data.level || 'normal',
                                 role: loginData.data.role || '',
-                                member_level: loginData.data.member_level || 0,
+                                
                                 member_expire_time: loginData.data.member_expire_time || 0,
                                 vip_expire_time: loginData.data.vip_expire_time || ''
                             }));
@@ -1202,7 +1013,7 @@
                         username: data.data.username || username,
                         level: data.data.level || 'normal',
                         role: data.data.role || '',
-                        member_level: data.data.member_level || 0,
+                        
                         member_expire_time: data.data.member_expire_time || 0,
                         vip_expire_time: data.data.vip_expire_time || ''
                     }));
@@ -1230,46 +1041,6 @@
     renderFuncCounts();
     renderRecords();
 
-    // ==================== 会员状态显示 ====================
-
-    var vipStatusEl = document.getElementById('vipStatus');
-    if (vipStatusEl) {
-        var v2UserStr = localStorage.getItem('v2_user');
-        var v2User = v2UserStr ? JSON.parse(v2UserStr) : null;
-        
-        // 检查是否会员且未过期
-        var isMember = false;
-        var expireTime = null;
-        
-        if (v2User) {
-            isMember = (v2User.level === 'vip' || v2User.member_level === 1);
-            expireTime = v2User.member_expire_time || v2User.vip_expire_time;
-            
-            // 检查过期
-            if (isMember && v2User.member_expire_time) {
-                var now = Math.floor(Date.now() / 1000);
-                if (now > v2User.member_expire_time) {
-                    isMember = false;
-                }
-            }
-        }
-        
-        if (isMember) {
-            vipStatusEl.textContent = '已开通';
-            vipStatusEl.style.color = '#e74c3c';
-            // 如果有到期时间，显示
-            if (expireTime) {
-                var expireDate = typeof expireTime === 'number' 
-                    ? new Date(expireTime * 1000).toLocaleDateString('zh-CN')
-                    : expireTime;
-                vipStatusEl.textContent = '到期: ' + expireDate;
-            }
-        } else {
-            vipStatusEl.textContent = '未开通';
-            vipStatusEl.style.color = '#999';
-        }
-    }
-
     // ==================== 管理员入口 ====================
 
     var adminEntry = document.getElementById('adminEntry');
@@ -1286,68 +1057,7 @@
         hepeiCountEl.textContent = hepeiRecords.length + ' 条';
     }
 
-    // ==================== 强制刷新会员状态 ====================
-
-    // 强制从后端刷新会员状态（静默更新，不刷新页面）
-    function refreshMemberStatusFromServer() {
-        var token = localStorage.getItem('v2_token');
-        if (!token) return;
-        
-        fetch('/api/user/ai-quota', {
-            headers: { 'Authorization': 'Bearer ' + token }
-        })
-        .then(function(res) { return res.json(); })
-        .then(function(data) {
-            if (data.code === 200 && data.data) {
-                // 更新 v2_user 中的会员状态
-                var v2UserStr = localStorage.getItem('v2_user');
-                var v2User = v2UserStr ? JSON.parse(v2UserStr) : {};
-                v2User.member_level = data.data.member_level || 0;
-                v2User.member_expire_time = data.data.member_expire_time || 0;
-                v2User.level = data.data.is_member ? 'vip' : (v2User.level || 'normal');
-                localStorage.setItem('v2_user', JSON.stringify(v2User));
-                
-                // 静默更新页面显示（不刷新页面）
-                updateVipStatusDisplay();
-            }
-        })
-        .catch(function(err) {
-            console.error('刷新会员状态失败:', err);
-        });
-    }
-
-    // 更新会员状态显示
-    function updateVipStatusDisplay() {
-        var v2UserStr = localStorage.getItem('v2_user');
-        var v2User = v2UserStr ? JSON.parse(v2UserStr) : null;
-        var vipStatusEl = document.getElementById('vipStatus');
-        if (!vipStatusEl || !v2User) return;
-        
-        var isMember = (v2User.level === 'vip' || v2User.member_level === 1);
-        var expireTime = v2User.member_expire_time || v2User.vip_expire_time;
-        
-        if (isMember && v2User.member_expire_time) {
-            var now = Math.floor(Date.now() / 1000);
-            if (now > v2User.member_expire_time) isMember = false;
-        }
-        
-        if (isMember) {
-            vipStatusEl.textContent = '已开通';
-            vipStatusEl.style.color = '#e74c3c';
-            if (expireTime) {
-                var expireDate = typeof expireTime === 'number' 
-                    ? new Date(expireTime * 1000).toLocaleDateString('zh-CN')
-                    : expireTime;
-                vipStatusEl.textContent = '到期: ' + expireDate;
-            }
-        } else {
-            vipStatusEl.textContent = '未开通';
-            vipStatusEl.style.color = '#999';
-        }
-    }
-
-    // 页面加载完成后刷新会员状态（静默）
-    refreshMemberStatusFromServer();
+    // 页面加载完成
 
 })();
 </script>
