@@ -213,7 +213,7 @@ var HuangliAnalyzer = (function() {
         html += '</div></div>';
 
         // 免责声明
-        html += '<div class="huangli-disclaimer">以上为传统黄历文化推演，仅供了解参考，不构成任何人生决策依据。</div>';
+        html += '<div class="huangli-disclaimer">以上为传统命理文化推演，仅供了解参考，不构成任何人生决策依据。</div>';
 
         html += '</div>';
 
