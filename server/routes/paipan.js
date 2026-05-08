@@ -15,7 +15,7 @@ router.post('/save', authMiddleware, async (req, res) => {
     const stmt = db.prepare(
       'INSERT INTO paipan_records (user_id, name, solar_date, lunar_date, gender, sheng_xiao, bazi_str, form_data) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
     );
-    const result = stmt.run(
+    const result = await stmt.run(
       req.user_id,
       name || '',
       solarDate || '',
@@ -26,7 +26,7 @@ router.post('/save', authMiddleware, async (req, res) => {
       formDataStr
     );
 
-    const record = db.prepare('SELECT * FROM paipan_records WHERE id = ?').get(result.lastInsertRowid);
+    const record = await db.prepare('SELECT * FROM paipan_records WHERE id = ?').get(result.lastInsertRowid);
 
     res.json({
       code: 200,
@@ -47,10 +47,10 @@ router.get('/records', authMiddleware, async (req, res) => {
     const pageSize = Math.min(50, Math.max(1, parseInt(req.query.pageSize) || 20));
     const offset = (page - 1) * pageSize;
 
-    const total = db.prepare('SELECT COUNT(*) as count FROM paipan_records WHERE user_id = ?')
-      .get(req.user_id).count;
+    const total = (await db.prepare('SELECT COUNT(*) as count FROM paipan_records WHERE user_id = ?')
+      .get(req.user_id)).count;
 
-    const records = db.prepare(
+    const records = await db.prepare(
       'SELECT id, name, solar_date, lunar_date, gender, sheng_xiao, bazi_str, form_data, created_at FROM paipan_records WHERE user_id = ? ORDER BY id DESC LIMIT ? OFFSET ?'
     ).all(req.user_id, pageSize, offset);
 
@@ -78,7 +78,7 @@ router.delete('/record/:id', authMiddleware, async (req, res) => {
     const recordId = req.params.id;
 
     // 先检查记录是否存在且属于当前用户
-    const record = db.prepare('SELECT id, user_id FROM paipan_records WHERE id = ?').get(recordId);
+    const record = await db.prepare('SELECT id, user_id FROM paipan_records WHERE id = ?').get(recordId);
     if (!record) {
       return res.json({ code: 404, message: '记录不存在' });
     }
@@ -86,7 +86,7 @@ router.delete('/record/:id', authMiddleware, async (req, res) => {
       return res.json({ code: 403, message: '无权删除此记录' });
     }
 
-    db.prepare('DELETE FROM paipan_records WHERE id = ?').run(recordId);
+    await db.prepare('DELETE FROM paipan_records WHERE id = ?').run(recordId);
 
     res.json({
       code: 200,

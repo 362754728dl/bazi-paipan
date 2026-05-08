@@ -258,6 +258,14 @@ async function initPg() {
     );
   }
 
+  // 确保 password_hash 字段足够长（bcrypt hash 需要 60+ 字符）
+  try {
+    await query(`ALTER TABLE users ALTER COLUMN password_hash TYPE VARCHAR(255)`);
+    console.log('password_hash 字段已确保为 VARCHAR(255)');
+  } catch(e) {
+    console.log('password_hash 字段长度检查:', e.message);
+  }
+
   console.log('PostgreSQL 数据库初始化完成');
 }
 

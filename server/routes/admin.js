@@ -17,7 +17,7 @@ router.post('/login', async (req, res) => {
       return res.json({ code: 400, message: '用户名和密码不能为空' });
     }
 
-    const user = db.prepare('SELECT * FROM users WHERE username = ?').get(username);
+    const user = await db.prepare('SELECT * FROM users WHERE username = ?').get(username);
     if (!user) {
       return res.json({ code: 400, message: '用户名或密码错误' });
     }
@@ -70,9 +70,9 @@ router.get('/users', adminAuthMiddleware, async (req, res) => {
 
     dataSql += ' ORDER BY id DESC LIMIT ? OFFSET ?';
 
-    const total = db.prepare(countSql).get(...params).count;
+    const total = (await db.prepare(countSql).get(...params)).count;
     const dataParams = [...params, pageSize, offset];
-    const users = db.prepare(dataSql).all(...dataParams);
+    const users = await db.prepare(dataSql).all(...dataParams);
 
     res.json({
       code: 200,
@@ -98,7 +98,7 @@ router.put('/user/:id', adminAuthMiddleware, async (req, res) => {
     const { level, vip_expire_time } = req.body;
     const db = getDb();
 
-    const user = db.prepare('SELECT id FROM users WHERE id = ?').get(id);
+    const user = await db.prepare('SELECT id FROM users WHERE id = ?').get(id);
     if (!user) {
       return res.json({ code: 404, message: '用户不存在' });
     }
@@ -128,7 +128,7 @@ router.put('/user/:id', adminAuthMiddleware, async (req, res) => {
     updates.push('updated_at = datetime(\'now\',\'localtime\')');
     values.push(id);
 
-    db.prepare(`UPDATE users SET ${updates.join(', ')} WHERE id = ?`).run(...values);
+    await db.prepare(`UPDATE users SET ${updates.join(', ')} WHERE id = ?`).run(...values);
 
     res.json({ code: 200, data: null, message: '用户信息更新成功' });
   } catch (err) {
@@ -176,9 +176,9 @@ router.get('/orders', adminAuthMiddleware, async (req, res) => {
 
     dataSql += ' ORDER BY o.id DESC LIMIT ? OFFSET ?';
 
-    const total = db.prepare(countSql).get(...params).count;
+    const total = (await db.prepare(countSql).get(...params)).count;
     const dataParams = [...params, pageSize, offset];
-    const orders = db.prepare(dataSql).all(...dataParams);
+    const orders = await db.prepare(dataSql).all(...dataParams);
 
     res.json({
       code: 200,
@@ -204,7 +204,7 @@ router.put('/order/:id', adminAuthMiddleware, async (req, res) => {
     const { status, tracking_no } = req.body;
     const db = getDb();
 
-    const order = db.prepare('SELECT * FROM orders WHERE id = ?').get(id);
+    const order = await db.prepare('SELECT * FROM orders WHERE id = ?').get(id);
     if (!order) {
       return res.json({ code: 404, message: '订单不存在' });
     }
@@ -236,12 +236,12 @@ router.put('/order/:id', adminAuthMiddleware, async (req, res) => {
     // 更新 orders 表
     if (updates.length > 0) {
       values.push(id);
-      db.prepare(`UPDATE orders SET ${updates.join(', ')} WHERE id = ?`).run(...values);
+      await db.prepare(`UPDATE orders SET ${updates.join(', ')} WHERE id = ?`).run(...values);
     }
 
     // 如果支付成功且是VIP订单，自动开通会员
     if (status === 'paid' && order.type === 'vip') {
-      const user = db.prepare('SELECT level, vip_expire_time FROM users WHERE id = ?').get(order.user_id);
+      const user = await db.prepare('SELECT level, vip_expire_time FROM users WHERE id = ?').get(order.user_id);
       const now = new Date();
 
       let newExpire;
@@ -253,18 +253,18 @@ router.put('/order/:id', adminAuthMiddleware, async (req, res) => {
       }
 
       const expireStr = newExpire.toISOString().slice(0, 19).replace('T', ' ');
-      db.prepare(
+      await db.prepare(
         'UPDATE users SET level = \'vip\', vip_expire_time = ?, updated_at = datetime(\'now\',\'localtime\') WHERE id = ?'
       ).run(expireStr, order.user_id);
     }
 
     // 如果是表文订单且有物流号，更新biaowen_orders
     if (tracking_no !== undefined && order.type === 'biaowen') {
-      const bw = db.prepare('SELECT id FROM biaowen_orders WHERE order_id = ?').get(id);
+      const bw = await db.prepare('SELECT id FROM biaowen_orders WHERE order_id = ?').get(id);
       if (bw) {
-        db.prepare('UPDATE biaowen_orders SET tracking_no = ? WHERE order_id = ?').run(tracking_no, id);
+        await db.prepare('UPDATE biaowen_orders SET tracking_no = ? WHERE order_id = ?').run(tracking_no, id);
       } else {
-        db.prepare('INSERT INTO biaowen_orders (order_id, tracking_no) VALUES (?, ?)').run(id, tracking_no);
+        await db.prepare('INSERT INTO biaowen_orders (order_id, tracking_no) VALUES (?, ?)').run(id, tracking_no);
       }
     }
 
@@ -282,30 +282,30 @@ router.get('/statistics', adminAuthMiddleware, async (req, res) => {
     const today = new Date().toISOString().slice(0, 10);
 
     // 今日新增用户
-    const todayUsers = db.prepare(
+    const todayUsers = (await db.prepare(
       "SELECT COUNT(*) as count FROM users WHERE date(created_at) = ?"
-    ).get(today).count;
+    ).get(today)).count;
 
     // 今日订单数
-    const todayOrders = db.prepare(
+    const todayOrders = (await db.prepare(
       "SELECT COUNT(*) as count FROM orders WHERE date(created_at) = ?"
-    ).get(today).count;
+    ).get(today)).count;
 
     // 今日收入
-    const todayRevenue = db.prepare(
+    const todayRevenue = (await db.prepare(
       "SELECT COALESCE(SUM(amount), 0) as total FROM orders WHERE date(created_at) = ? AND status = 'paid'"
-    ).get(today).total;
+    ).get(today)).total;
 
     // 总用户数
-    const totalUsers = db.prepare('SELECT COUNT(*) as count FROM users').get().count;
+    const totalUsers = (await db.prepare('SELECT COUNT(*) as count FROM users').get()).count;
 
     // 总订单数
-    const totalOrders = db.prepare('SELECT COUNT(*) as count FROM orders').get().count;
+    const totalOrders = (await db.prepare('SELECT COUNT(*) as count FROM orders').get()).count;
 
     // 总收入
-    const totalRevenue = db.prepare(
+    const totalRevenue = (await db.prepare(
       "SELECT COALESCE(SUM(amount), 0) as total FROM orders WHERE status = 'paid'"
-    ).get().total;
+    ).get()).total;
 
     res.json({
       code: 200,
@@ -364,7 +364,7 @@ router.put('/settings', adminAuthMiddleware, async (req, res) => {
         return res.json({ code: 400, message: '新密码至少6位' });
       }
 
-      const admin = db.prepare('SELECT * FROM users WHERE username = ?').get(config.adminUser);
+      const admin = await db.prepare('SELECT * FROM users WHERE username = ?').get(config.adminUser);
       if (!admin) {
         return res.json({ code: 404, message: '管理员账号不存在' });
       }
@@ -375,7 +375,7 @@ router.put('/settings', adminAuthMiddleware, async (req, res) => {
       }
 
       const newHash = require('bcryptjs').hashSync(new_password, 10);
-      db.prepare('UPDATE users SET password_hash = ?, updated_at = datetime(\'now\',\'localtime\') WHERE username = ?')
+      await db.prepare('UPDATE users SET password_hash = ?, updated_at = datetime(\'now\',\'localtime\') WHERE username = ?')
         .run(newHash, config.adminUser);
     }
 
@@ -442,7 +442,7 @@ router.post('/set-vip', adminAuthMiddleware, async (req, res) => {
       return res.json({ code: 400, message: '月数必须为正整数' });
     }
 
-    const user = db.prepare('SELECT id, level, vip_expire_time, member_level, member_expire_time FROM users WHERE username = ?').get(username);
+    const user = await db.prepare('SELECT id, level, vip_expire_time, member_level, member_expire_time FROM users WHERE username = ?').get(username);
     if (!user) {
       return res.json({ code: 404, message: '用户不存在' });
     }
@@ -463,14 +463,14 @@ router.post('/set-vip', adminAuthMiddleware, async (req, res) => {
     console.log('[管理员操作] 正在为用户 ' + username + ' 升级会员 ' + monthsNum + ' 个月');
 
     // 同时更新 level/vip_expire_time 和 member_level/member_expire_time（两套会员标识）
-    const result = db.prepare(
+    const result = await db.prepare(
       "UPDATE users SET level = 'vip', vip_expire_time = ?, member_level = 1, member_expire_time = ?, updated_at = datetime('now','localtime') WHERE id = ?"
     ).run(expireStr, expireTimestamp, user.id);
 
     console.log('[数据库确认] 更新行数: ' + result.changes);
 
     // 紧接着再查一遍数据库，确认真实值
-    const verifyRow = db.prepare('SELECT username, level, member_level, member_expire_time FROM users WHERE username = ?').get(username);
+    const verifyRow = await db.prepare('SELECT username, level, member_level, member_expire_time FROM users WHERE username = ?').get(username);
     console.log('[数据库最终确认] 用户: ' + verifyRow.username + ', level: ' + verifyRow.level + ', member_level: ' + verifyRow.member_level + ', member_expire_time: ' + verifyRow.member_expire_time);
     console.log('[关键修复] ' + username + ' 的 level, member_level(必须为1), 及两个到期时间已全部更新');
 
@@ -492,12 +492,12 @@ router.post('/cancel-vip', adminAuthMiddleware, async (req, res) => {
       return res.json({ code: 400, message: '用户名不能为空' });
     }
 
-    const user = db.prepare('SELECT id FROM users WHERE username = ?').get(username);
+    const user = await db.prepare('SELECT id FROM users WHERE username = ?').get(username);
     if (!user) {
       return res.json({ code: 404, message: '用户不存在' });
     }
 
-    db.prepare(
+    await db.prepare(
       "UPDATE users SET level = 'normal', vip_expire_time = '', member_level = 0, member_expire_time = 0, ai_used_today = 0, ai_last_use_date = '', updated_at = datetime('now','localtime') WHERE id = ?"
     ).run(user.id);
 
@@ -517,8 +517,8 @@ router.get('/registration-logs', adminAuthMiddleware, async (req, res) => {
     const pageSize = Math.min(50, Math.max(1, parseInt(req.query.pageSize) || 20));
     const offset = (page - 1) * pageSize;
 
-    const total = db.prepare('SELECT COUNT(*) as count FROM registration_logs').get().count;
-    const logs = db.prepare(
+    const total = (await db.prepare('SELECT COUNT(*) as count FROM registration_logs').get()).count;
+    const logs = await db.prepare(
       'SELECT id, username, ip, created_at FROM registration_logs ORDER BY id DESC LIMIT ? OFFSET ?'
     ).all(pageSize, offset);
 

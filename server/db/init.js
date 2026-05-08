@@ -44,7 +44,7 @@ function createCompatDb(sqlDb) {
 
 /**
  * 创建 PostgreSQL 兼容包装器
- * 将 db.prepare(sql).get(params) / .all(params) / .run(params) 映射到 pg 查询
+ * 将 await db.prepare(sql).get(params) / .all(params) / .run(params) 映射到 pg 查询
  * 自动转换 SQLite 特有语法为 PostgreSQL 语法
  */
 function createPgCompatDb(pgPool) {
@@ -173,8 +173,8 @@ async function initSqlite() {
     db = new SQL.Database();
   }
 
-  db.exec('PRAGMA journal_mode = WAL');
-  db.exec('PRAGMA foreign_keys = ON');
+  await db.exec('PRAGMA journal_mode = WAL');
+  await db.exec('PRAGMA foreign_keys = ON');
 
   var compatDb = createCompatDb(db);
 
@@ -363,7 +363,7 @@ async function initSqlite() {
   try { compatDb.exec(`ALTER TABLE users ADD COLUMN role TEXT DEFAULT 'normal'`); } catch(e) {}
 
   // 创建默认管理员账号
-  const adminExists = compatDb.prepare('SELECT id FROM users WHERE username = ?').get(config.adminUser);
+  const adminExists = await compatDb.prepare('SELECT id FROM users WHERE username = ?').get(config.adminUser);
   if (!adminExists) {
     const hash = bcrypt.hashSync(config.adminPassword, 10);
     compatDb.prepare('INSERT INTO users (username, password_hash, level, role) VALUES (?, ?, ?, ?)')
@@ -385,21 +385,23 @@ async function initSqlite() {
 }
 
 /**
- * 主初始化函数：根据环境变量选择数据库
+ * 主初始化函数：强制使用 PostgreSQL（移除 SQLite fallback）
  */
 async function initDb() {
-  if (process.env.DATABASE_URL) {
-    console.log('检测到 DATABASE_URL，使用 PostgreSQL 数据库');
-    isPg = true;
-    const initPg = require('./init-pg');
-    await initPg();
-    const { pool } = require('./pg');
-    db = createPgCompatDb(pool);
-  } else {
-    console.log('未检测到 DATABASE_URL，使用 SQLite 数据库');
-    isPg = false;
-    await initSqlite();
+  // 强制使用 PostgreSQL，不再回退到 SQLite
+  if (!process.env.DATABASE_URL) {
+    console.error('[数据库] 错误：DATABASE_URL 环境变量未设置！');
+    console.error('[数据库] 请在 Railway 中配置 DATABASE_URL 环境变量');
+    throw new Error('DATABASE_URL 环境变量未设置，无法启动数据库连接');
   }
+  
+  console.log('[数据库] 当前使用 PostgreSQL，连接字符串前30位:', process.env.DATABASE_URL.substring(0, 30) + '...');
+  isPg = true;
+  const initPg = require('./init-pg');
+  await initPg();
+  const { pool } = require('./pg');
+  db = createPgCompatDb(pool);
+  console.log('[数据库] PostgreSQL 连接初始化完成');
 }
 
 /**

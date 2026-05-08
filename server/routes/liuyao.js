@@ -111,13 +111,13 @@ async function getLiuyaoCountInfo(userId) {
   const db = getDb();
   const today = new Date().toISOString().slice(0, 10);
 
-  const user = db.prepare('SELECT level, vip_expire_time FROM users WHERE id = ?').get(userId);
+  const user = await db.prepare('SELECT level, vip_expire_time FROM users WHERE id = ?').get(userId);
   let isVip = user.level === 'vip';
   if (isVip && user.vip_expire_time) {
     const now = new Date();
     const expire = new Date(user.vip_expire_time);
     if (now > expire) {
-      db.prepare("UPDATE users SET level = 'normal', vip_expire_time = '', updated_at = datetime('now','localtime') WHERE id = ?").run(userId);
+      await db.prepare("UPDATE users SET level = 'normal', vip_expire_time = '', updated_at = datetime('now','localtime') WHERE id = ?").run(userId);
       isVip = false;
     }
   }
@@ -125,7 +125,7 @@ async function getLiuyaoCountInfo(userId) {
   if (isVip) {
     // VIP用户：每天5次，按日期重置
     const limitValue = config.vipLimits.liuyaoCount;
-    let record = db.prepare(
+    let record = await db.prepare(
       'SELECT liuyao_count FROM daily_counts WHERE user_id = ? AND date = ?'
     ).get(userId, today);
     const used = record ? record.liuyao_count : 0;
@@ -133,7 +133,7 @@ async function getLiuyaoCountInfo(userId) {
   } else {
     // 普通用户：累计终身1次（不按日期重置）
     const limitValue = config.freeLimits.liuyaoCount;
-    const totalUsed = db.prepare('SELECT COUNT(*) as cnt FROM liuyao_ai_records WHERE user_id = ?').get(userId).cnt;
+    const totalUsed = (await db.prepare('SELECT COUNT(*) as cnt FROM liuyao_ai_records WHERE user_id = ?').get(userId)).cnt;
     return { used: totalUsed, limit: limitValue, remaining: Math.max(0, limitValue - totalUsed), is_vip: false };
   }
 }
@@ -143,13 +143,13 @@ async function checkAndDeductLiuyaoCount(userId) {
   const db = getDb();
   const today = new Date().toISOString().slice(0, 10);
 
-  const user = db.prepare('SELECT level, vip_expire_time FROM users WHERE id = ?').get(userId);
+  const user = await db.prepare('SELECT level, vip_expire_time FROM users WHERE id = ?').get(userId);
   let isVip = user.level === 'vip';
   if (isVip && user.vip_expire_time) {
     const now = new Date();
     const expire = new Date(user.vip_expire_time);
     if (now > expire) {
-      db.prepare("UPDATE users SET level = 'normal', vip_expire_time = '', updated_at = datetime('now','localtime') WHERE id = ?").run(userId);
+      await db.prepare("UPDATE users SET level = 'normal', vip_expire_time = '', updated_at = datetime('now','localtime') WHERE id = ?").run(userId);
       isVip = false;
     }
   }
@@ -157,12 +157,12 @@ async function checkAndDeductLiuyaoCount(userId) {
   if (isVip) {
     // VIP用户：每天5次，按日期重置
     const limitValue = config.vipLimits.liuyaoCount;
-    let record = db.prepare(
+    let record = await db.prepare(
       'SELECT id, liuyao_count FROM daily_counts WHERE user_id = ? AND date = ?'
     ).get(userId, today);
 
     if (!record) {
-      const result = db.prepare(
+      const result = await db.prepare(
         'INSERT INTO daily_counts (user_id, date, name_count, eval_count, liuyao_count) VALUES (?, ?, 0, 0, 0)'
       ).run(userId, today);
       record = { id: result.lastInsertRowid, liuyao_count: 0 };
@@ -172,12 +172,12 @@ async function checkAndDeductLiuyaoCount(userId) {
       return { allowed: false, used: record.liuyao_count, limit: limitValue, is_vip: true };
     }
 
-    db.prepare('UPDATE daily_counts SET liuyao_count = liuyao_count + 1 WHERE id = ?').run(record.id);
+    await db.prepare('UPDATE daily_counts SET liuyao_count = liuyao_count + 1 WHERE id = ?').run(record.id);
     return { allowed: true, used: record.liuyao_count + 1, limit: limitValue, is_vip: true };
   } else {
     // 普通用户：累计终身1次
     const limitValue = config.freeLimits.liuyaoCount;
-    const totalUsed = db.prepare('SELECT COUNT(*) as cnt FROM liuyao_ai_records WHERE user_id = ?').get(userId).cnt;
+    const totalUsed = (await db.prepare('SELECT COUNT(*) as cnt FROM liuyao_ai_records WHERE user_id = ?').get(userId)).cnt;
 
     if (totalUsed >= limitValue) {
       return { allowed: false, used: totalUsed, limit: limitValue, is_vip: false };
@@ -194,7 +194,7 @@ async function checkAndDeductLiuyaoCount(userId) {
 // GET /api/liuyao/count - 查询今日六爻AI分析剩余次数
 router.get('/count', authMiddleware, async (req, res) => {
   try {
-    const info = getLiuyaoCountInfo(req.user_id);
+    const info = await getLiuyaoCountInfo(req.user_id);
     res.json({ code: 200, data: info });
   } catch (err) {
     console.error('查询六爻次数失败:', err);
@@ -210,7 +210,7 @@ router.get('/ai-cache', authMiddleware, async (req, res) => {
       return res.json({ code: 400, message: '缺少卦象参数' });
     }
     const db = getDb();
-    const cache = db.prepare(
+    const cache = await db.prepare(
       "SELECT result FROM liuyao_ai_cache WHERE hex_binary = ? AND (matter = ? OR matter IS NULL OR matter = '') ORDER BY id DESC LIMIT 1"
     ).get(hex_binary, matter || '');
     if (cache) {
@@ -234,7 +234,7 @@ router.post('/ai-analyze', authMiddleware, async (req, res) => {
     }
 
     // 1. 先查缓存（缓存命中不扣次数）
-    const cache = db.prepare(
+    const cache = await db.prepare(
       "SELECT result FROM liuyao_ai_cache WHERE hex_binary = ? AND (matter = ? OR matter IS NULL OR matter = '') ORDER BY id DESC LIMIT 1"
     ).get(hex_binary, matter || '');
 
@@ -278,7 +278,7 @@ router.post('/ai-analyze', authMiddleware, async (req, res) => {
       try {
         const dbRefund = getDb();
         const today = new Date().toISOString().slice(0, 10);
-        dbRefund.prepare(
+        await dbRefund.prepare(
           "UPDATE users SET ai_used_today = MAX(0, ai_used_today - 1) WHERE id = ? AND ai_last_use_date = ?"
         ).run(req.user_id, today);
       } catch(e) {}
@@ -292,13 +292,13 @@ router.post('/ai-analyze', authMiddleware, async (req, res) => {
 
     // 5. 保存记录
     const resultStr = fullResult;
-    db.prepare(
+    await db.prepare(
       'INSERT INTO liuyao_ai_records (user_id, hex_binary, hex_name, matter, result) VALUES (?, ?, ?, ?, ?)'
     ).run(req.user_id, hex_binary, hex_name || '', matter || '', resultStr);
 
     // 6. 写入缓存
     try {
-      db.prepare(
+      await db.prepare(
         "INSERT OR REPLACE INTO liuyao_ai_cache (hex_binary, matter, result, created_at) VALUES (?, ?, ?, datetime('now','localtime'))"
       ).run(hex_binary, matter || '', resultStr);
     } catch(e) {}
@@ -322,10 +322,10 @@ router.get('/records', authMiddleware, async (req, res) => {
     const pageSize = Math.min(50, Math.max(1, parseInt(req.query.pageSize) || 10));
     const offset = (page - 1) * pageSize;
 
-    const total = db.prepare('SELECT COUNT(*) as count FROM liuyao_ai_records WHERE user_id = ?')
-      .get(req.user_id).count;
+    const total = (await db.prepare('SELECT COUNT(*) as count FROM liuyao_ai_records WHERE user_id = ?')
+      .get(req.user_id)).count;
 
-    const records = db.prepare(
+    const records = await db.prepare(
       'SELECT id, hex_binary, hex_name, matter, result, created_at FROM liuyao_ai_records WHERE user_id = ? ORDER BY id DESC LIMIT ? OFFSET ?'
     ).all(req.user_id, pageSize, offset);
 

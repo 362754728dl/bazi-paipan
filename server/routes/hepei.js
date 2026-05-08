@@ -78,7 +78,7 @@ router.post('/ai-analyze', authMiddleware, async (req, res) => {
     }
 
     // 1. 先查缓存（以 user_id + baziA + baziB 为唯一key，缓存命中不扣次数）
-    const cache = db.prepare(
+    const cache = await db.prepare(
       'SELECT result FROM hepei_cache WHERE user_id = ? AND baziA = ? AND baziB = ? ORDER BY id DESC LIMIT 1'
     ).get(req.user_id, baziA, baziB);
 
@@ -115,7 +115,7 @@ router.post('/ai-analyze', authMiddleware, async (req, res) => {
       try {
         const dbRefund = getDb();
         const today = new Date().toISOString().slice(0, 10);
-        dbRefund.prepare(
+        await dbRefund.prepare(
           "UPDATE users SET ai_used_today = MAX(0, ai_used_today - 1) WHERE id = ? AND ai_last_use_date = ?"
         ).run(req.user_id, today);
       } catch(e) {}
@@ -128,13 +128,13 @@ router.post('/ai-analyze', authMiddleware, async (req, res) => {
     const fullResult = aiResult + disclaimer;
 
     // 5. 保存记录到 hepei_records
-    db.prepare(
+    await db.prepare(
       'INSERT INTO hepei_records (user_id, nameA, genderA, baziA, strengthA, nameB, genderB, baziB, strengthB, result) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
     ).run(req.user_id, nameA || '', genderA || '', baziA, strengthA || '', nameB || '', genderB || '', baziB, strengthB || '', fullResult);
 
     // 6. 写入缓存到 hepei_cache
     try {
-      db.prepare(
+      await db.prepare(
         "INSERT OR REPLACE INTO hepei_cache (user_id, baziA, baziB, result, created_at) VALUES (?, ?, ?, ?, datetime('now','localtime'))"
       ).run(req.user_id, baziA, baziB, fullResult);
     } catch(e) {}
@@ -158,10 +158,10 @@ router.get('/records', authMiddleware, async (req, res) => {
     const pageSize = Math.min(50, Math.max(1, parseInt(req.query.pageSize) || 10));
     const offset = (page - 1) * pageSize;
 
-    const total = db.prepare('SELECT COUNT(*) as count FROM hepei_records WHERE user_id = ?')
-      .get(req.user_id).count;
+    const total = (await db.prepare('SELECT COUNT(*) as count FROM hepei_records WHERE user_id = ?')
+      .get(req.user_id)).count;
 
-    const records = db.prepare(
+    const records = await db.prepare(
       'SELECT id, nameA, genderA, baziA, strengthA, nameB, genderB, baziB, strengthB, result, created_at FROM hepei_records WHERE user_id = ? ORDER BY id DESC LIMIT ? OFFSET ?'
     ).all(req.user_id, pageSize, offset);
 
@@ -184,7 +184,7 @@ router.get('/cache', authMiddleware, async (req, res) => {
       return res.json({ code: 400, message: '缺少八字参数' });
     }
     const db = getDb();
-    const cache = db.prepare(
+    const cache = await db.prepare(
       'SELECT result FROM hepei_cache WHERE user_id = ? AND baziA = ? AND baziB = ? ORDER BY id DESC LIMIT 1'
     ).get(req.user_id, baziA, baziB);
     if (cache) {

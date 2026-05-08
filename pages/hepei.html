@@ -797,192 +797,23 @@
     }
 
     // ==================== 构建用户消息 ====================
-    function buildUserMessage(nameA, genderA, resultA, nameB, genderB, resultB) {
-        var pA = resultA.pillars;
-        var pB = resultB.pillars;
-        var wxA = resultA.wuXing || {};
-        var wxB = resultB.wuXing || {};
-
-        // 计算日主强弱
-        function getStrength(pillars, wuXing) {
-            var riZhuWx = Lunar.wuXingGan[pillars.day.ganIndex];
-            var total = 0;
-            ['木', '火', '土', '金', '水'].forEach(function(n) { total += (wuXing[n] || 0); });
-            var count = wuXing[riZhuWx] || 0;
-            if (count >= Math.ceil(total / 5) + 1) return '偏强';
-            if (count <= Math.floor(total / 5) - 1) return '偏弱';
-            return '中和';
-        }
-
-        var strengthA = getStrength(pA, wxA);
-        var strengthB = getStrength(pB, wxB);
-
-        // 四柱八字
-        var baziA = pA.year.gan + pA.year.zhi + ' ' + pA.month.gan + pA.month.zhi + ' ' + pA.day.gan + pA.day.zhi + ' ' + pA.hour.gan + pA.hour.zhi;
-        var baziB = pB.year.gan + pB.year.zhi + ' ' + pB.month.gan + pB.month.zhi + ' ' + pB.day.gan + pB.day.zhi + ' ' + pB.hour.gan + pB.hour.zhi;
-
-        // 五行分布
-        var wxStrA = '金' + (wxA['金'] || 0) + '、木' + (wxA['木'] || 0) + '、水' + (wxA['水'] || 0) + '、火' + (wxA['火'] || 0) + '、土' + (wxA['土'] || 0);
-        var wxStrB = '金' + (wxB['金'] || 0) + '、木' + (wxB['木'] || 0) + '、水' + (wxB['水'] || 0) + '、火' + (wxB['火'] || 0) + '、土' + (wxB['土'] || 0);
-
-        var genderLabelA = genderA === 1 ? '男' : '女';
-        var genderLabelB = genderB === 1 ? '男' : '女';
-
-        var msg = '';
-        msg += '甲方信息：\n';
-        msg += '姓名：' + nameA + '\n';
-        msg += '性别：' + genderLabelA + '\n';
-        msg += '四柱八字：' + baziA + '\n';
-        msg += '日主：' + pA.day.gan + '（' + Lunar.wuXingGan[pA.day.ganIndex] + '），生于' + pA.month.zhi + '月，日主' + strengthA + '\n';
-        msg += '五行分布：' + wxStrA + '\n';
-        msg += '年柱纳音：' + pA.year.naiYin + '，月柱纳音：' + pA.month.naiYin + '，日柱纳音：' + pA.day.naiYin + '，时柱纳音：' + pA.hour.naiYin + '\n\n';
-
-        msg += '乙方信息：\n';
-        msg += '姓名：' + nameB + '\n';
-        msg += '性别：' + genderLabelB + '\n';
-        msg += '四柱八字：' + baziB + '\n';
-        msg += '日主：' + pB.day.gan + '（' + Lunar.wuXingGan[pB.day.ganIndex] + '），生于' + pB.month.zhi + '月，日主' + strengthB + '\n';
-        msg += '五行分布：' + wxStrB + '\n';
-        msg += '年柱纳音：' + pB.year.naiYin + '，月柱纳音：' + pB.month.naiYin + '，日柱纳音：' + pB.day.naiYin + '，时柱纳音：' + pB.hour.naiYin + '\n\n';
-
-        msg += '请按照系统提示词要求的格式和流程，为双方进行传统民俗八字合配参考分析。';
-
-        return msg;
-    }
+    function buildUserMessage(nameA, genderA, resultA, nameB, genderB, resultB) { return ''; }
 
     // ==================== 系统提示词 ====================
-    var SYSTEM_PROMPT = '你是一位严谨的传统命理文化研究者，严格依据《三命通会》《渊海子平》正统子平命理理论，为用户提供传统民俗八字合配参考。\n\n### 合规铁律（必须严格遵守）\n1. 绝不出现：吉凶、祸福、旺衰定论、必定、必然、改运、转运等词语\n2. 所有结论必须加上："本方案仅为传统民俗姓名文化参考，不涉及运势判定"\n3. 语言专业、克制、客观，不夸大、不套路\n4. 不做任何绝对化断言，仅供文化学习与参考\n\n### 分析流程（必须严格执行）\n1. 双方命局基础分析\n   - 分别分析男女双方的日主强弱、五行分布、格局特点\n   - 确定双方的用神、喜神、忌神\n\n2. 合配维度分析\n   - 五行互补性：分析双方五行是否能够相互补益，达到平衡\n   - 干支关系：分析年柱、月柱、日柱、时柱的生克合冲关系\n   - 格局搭配：分析双方格局是否能够相互配合，相得益彰\n   - 十神配合：分析男命正财、女命正官的旺衰及相互关系\n\n3. 输出格式\n【甲方命局分析】\n日主：XXX，生于 XXX 月，日主 [强 / 弱]\n五行分布：金 X、木 X、水 X、火 X、土 X\n用神：XXX  喜神：XXX  忌神：XXX\n\n【乙方命局分析】\n日主：XXX，生于 XXX 月，日主 [强 / 弱]\n五行分布：金 X、木 X、水 X、火 X、土 X\n用神：XXX  喜神：XXX  忌神：XXX\n\n【合配分析】\n一、五行互补性：...\n二、干支关系：...\n三、格局搭配：...\n四、十神配合：...\n五、综合参考：...\n\n本分析仅为传统民俗文化参考，不涉及命运判定。';
+    var SYSTEM_PROMPT = '';
 
     // ==================== 调用大模型（通过后端代理） ====================
+    // AI接口已移除
     async function callDeepSeek(userMessage) {
-        var response = await fetch(AI_CONFIG.proxyUrl, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                provider: AI_CONFIG.deepseek,
-                messages: [
-                    { role: 'system', content: SYSTEM_PROMPT },
-                    { role: 'user', content: userMessage }
-                ],
-                temperature: 0.7,
-                max_tokens: 3000
-            })
-        });
-
-        if (!response.ok) {
-            throw new Error('请求失败：' + response.status);
-        }
-
-        var data = await response.json();
-        if (data.choices && data.choices.length > 0) {
-            return data.choices[0].message.content;
-        }
-        throw new Error('返回数据格式异常');
+        throw new Error('AI功能已下线');
     }
 
     // ==================== 格式化AI输出 ====================
-    function formatAIContent(text) {
-        // 将【】标题加粗显示
-        var html = text
-            .replace(/&/g, '&amp;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;')
-            .replace(/【([^】]+)】/g, '<div class="section-title">$1</div>')
-            .replace(/\n/g, '<br>');
-        return html;
-    }
+    function formatAIContent(text) { return ''; }
 
     // ==================== 开始分析（全局函数） ====================
     window.startAnalysis = async function() {
-        var nameA = document.getElementById('nameA').value.trim();
-        var nameB = document.getElementById('nameB').value.trim();
-
-        if (!nameA || !nameB) {
-            alert('请输入双方姓名');
-            return;
-        }
-
-        var yearA = parseInt(document.getElementById('yearA').value);
-        var monthA = parseInt(document.getElementById('monthA').value);
-        var dayA = parseInt(document.getElementById('dayA').value);
-        var hourA = parseInt(document.getElementById('hourA').value);
-
-        var yearB = parseInt(document.getElementById('yearB').value);
-        var monthB = parseInt(document.getElementById('monthB').value);
-        var dayB = parseInt(document.getElementById('dayB').value);
-        var hourB = parseInt(document.getElementById('hourB').value);
-
-        // 验证日期
-        if (dayA > getDaysInMonth(yearA, monthA)) {
-            alert('甲方出生日期不合法');
-            return;
-        }
-        if (dayB > getDaysInMonth(yearB, monthB)) {
-            alert('乙方出生日期不合法');
-            return;
-        }
-
-        var btn = document.getElementById('btnAnalyze');
-        btn.disabled = true;
-        btn.textContent = '分析中...';
-
-        var resultArea = document.getElementById('resultArea');
-
-        // 获取经度（省市联动）
-        var lngA = getCityLongitude('A');
-        var lngB = getCityLongitude('B');
-
-        // 生成双方排盘
-        var resultA = Bazi.generate(yearA, monthA, dayA, hourA, 0, genderA, lngA);
-        var resultB = Bazi.generate(yearB, monthB, dayB, hourB, 0, genderB, lngB);
-
-        if (!resultA || !resultB) {
-            alert('排盘失败，请检查输入的日期是否正确');
-            btn.disabled = false;
-            btn.textContent = '开始合配分析';
-            return;
-        }
-
-        // 渲染双方命局卡片
-        var html = '';
-        html += renderBaziCard(nameA, genderA, resultA, 'party-a');
-        html += renderBaziCard(nameB, genderB, resultB, 'party-b');
-
-        // AI分析卡片（带加载动画）
-        html += '<div class="ai-analysis-card" id="aiCard">';
-        html += '<div class="ai-analysis-title">大模型合配分析</div>';
-        html += '<div class="loading-area" id="aiLoading">';
-        html += '<div class="loading-spinner"></div>';
-        html += '<div class="loading-text">正在分析中，请稍候...</div>';
-        html += '</div>';
-        html += '<div class="ai-result-content" id="aiResult" style="display:none;"></div>';
-        html += '</div>';
-
-        resultArea.innerHTML = html;
-
-        // 滚动到结果区域
-        resultArea.scrollIntoView({ behavior: 'smooth', block: 'start' });
-
-        // 调用大模型
-        try {
-            var userMessage = buildUserMessage(nameA, genderA, resultA, nameB, genderB, resultB);
-            var aiContent = await callDeepSeek(userMessage);
-
-            document.getElementById('aiLoading').style.display = 'none';
-            var aiResultEl = document.getElementById('aiResult');
-            aiResultEl.innerHTML = formatAIContent(aiContent);
-            aiResultEl.style.display = 'block';
-        } catch (err) {
-            document.getElementById('aiLoading').style.display = 'none';
-            var aiResultEl = document.getElementById('aiResult');
-            aiResultEl.innerHTML = '<div style="color:var(--red-primary);text-align:center;padding:10px;">分析请求失败：' + err.message + '</div>';
-            aiResultEl.style.display = 'block';
-        }
-
-        btn.disabled = false;
-        btn.textContent = '开始合配分析';
+        showToast('AI合配分析功能已升级为纯前端排盘分析，请使用"开始合配排盘"按钮');
     };
 
     // ==================== 初始化 ====================
@@ -1217,6 +1048,37 @@
         html += renderStrengthAnalysis(nameAVal, resultA, 'party-a');
         html += renderStrengthAnalysis(nameBVal, resultB, 'party-b');
 
+        // 生成双方八字信息汇总文本
+        var pA = resultA.pillars;
+        var pB = resultB.pillars;
+        var wxA = resultA.wuXing || {};
+        var wxB = resultB.wuXing || {};
+        var genderLabelA = genderA === 1 ? '男' : '女';
+        var genderLabelB = genderB === 1 ? '男' : '女';
+
+        var summaryText = '【八字合配信息汇总】\n\n';
+        summaryText += '甲方信息：\n';
+        summaryText += '姓名：' + nameAVal + '\n';
+        summaryText += '性别：' + genderLabelA + '\n';
+        summaryText += '四柱八字：' + pA.year.ganZhi + ' ' + pA.month.ganZhi + ' ' + pA.day.ganZhi + ' ' + pA.hour.ganZhi + '\n';
+        summaryText += '日主：' + pA.day.gan + '（' + Lunar.wuXingGan[pA.day.ganIndex] + '）\n';
+        summaryText += '五行分布：金' + (wxA['金']||0) + '、木' + (wxA['木']||0) + '、水' + (wxA['水']||0) + '、火' + (wxA['火']||0) + '、土' + (wxA['土']||0) + '\n\n';
+        summaryText += '乙方信息：\n';
+        summaryText += '姓名：' + nameBVal + '\n';
+        summaryText += '性别：' + genderLabelB + '\n';
+        summaryText += '四柱八字：' + pB.year.ganZhi + ' ' + pB.month.ganZhi + ' ' + pB.day.ganZhi + ' ' + pB.hour.ganZhi + '\n';
+        summaryText += '日主：' + pB.day.gan + '（' + Lunar.wuXingGan[pB.day.ganIndex] + '）\n';
+        summaryText += '五行分布：金' + (wxB['金']||0) + '、木' + (wxB['木']||0) + '、水' + (wxB['水']||0) + '、火' + (wxB['火']||0) + '、土' + (wxB['土']||0) + '\n\n';
+        summaryText += '请添加站长微信 DLing3313，将以上信息发送给我，获取专业合配分析。';
+
+        var summaryId = 'hepeiSummary_' + Date.now();
+        html += '<div class="ai-analysis-card">';
+        html += '<div class="ai-analysis-title">信息汇总</div>';
+        html += '<textarea id="' + summaryId + '" style="width:100%;min-height:200px;padding:10px;border:1px solid var(--border-color);border-radius:8px;font-size:13px;line-height:1.6;background:var(--bg-secondary);color:var(--text-primary);resize:vertical;font-family:inherit;">' + summaryText.replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</textarea>';
+        html += '<div style="text-align:center;margin-top:12px;">';
+        html += '<button onclick="copyHepeiText(\'' + summaryId + '\')" style="padding:10px 28px;background:linear-gradient(135deg,#07C160,#06AD56);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;">一键复制</button>';
+        html += '</div></div>';
+
         resultArea.innerHTML = html;
 
         // 滚动到结果区域
@@ -1225,10 +1087,10 @@
         btn.disabled = false;
         btn.textContent = '开始合配排盘';
 
-        // 显示原本隐藏的「开始合配分析」按钮
+        // 隐藏AI分析按钮（已移除AI功能）
         var btnAnalyze = document.getElementById('btnAnalyze');
         if (btnAnalyze) {
-            btnAnalyze.style.display = 'block';
+            btnAnalyze.style.display = 'none';
         }
     };
 
@@ -1316,11 +1178,26 @@ function showWechatGuide() {
     document.getElementById('wechatGuideModal').style.display = 'flex';
 }
 function checkMemberAndAnalyze() {
-    var v2User = JSON.parse(localStorage.getItem('v2_user') || '{}');
-    if (v2User.member_level === 1 || v2User.level === 'vip') {
-        startAnalysis();
-    } else {
-        showWechatGuide();
+    showToast('AI合配分析已升级，请使用排盘功能查看双方命局');
+}
+
+function copyHepeiText(textareaId) {
+    var textarea = document.getElementById(textareaId);
+    if (!textarea) return;
+    textarea.select();
+    textarea.setSelectionRange(0, 99999);
+    try {
+        if (navigator.clipboard) {
+            navigator.clipboard.writeText(textarea.value).then(function() {
+                var t = document.getElementById('toast');
+                if (t) { t.textContent = '已复制！请添加站长微信 DLing3313'; t.classList.add('show'); setTimeout(function(){ t.classList.remove('show'); }, 2500); }
+            });
+        } else {
+            document.execCommand('copy');
+            alert('已复制！请添加站长微信 DLing3313，将复制内容发送给我');
+        }
+    } catch(e) {
+        alert('复制失败，请手动选择文本复制');
     }
 }
 </script>

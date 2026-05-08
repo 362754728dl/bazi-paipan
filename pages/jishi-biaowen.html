@@ -429,21 +429,18 @@
 
     <!-- 服务说明卡片 -->
     <div class="service-card">
-        <div class="service-card-title">传统民俗祭祀表文代写服务</div>
+        <div class="service-card-title">传统民俗祭祀路引表文代写服务</div>
         <p class="service-card-desc">
-            表文是传统民俗祭祀文化中的重要组成部分，用于表达对先人的缅怀与敬意。本服务提供正规民俗文书撰写，格式规范，庄重得体。
+            表文是传统民俗祭祀文化的重要组成部分，是后人缅怀先祖、表达敬意的庄重方式，也是中华孝道文化与民俗礼仪的传承载体。
         </p>
         <div class="service-card-price">
             <span class="price-amount">19.9</span>
             <span class="price-unit">元/份</span>
             <span class="price-detail">含20份表文，全国包邮</span>
         </div>
-        <ul class="service-card-features">
-            <li>祭祀表文 - 用于常规祭祀仪式</li>
-            <li>祈福表文 - 用于表达美好祝愿</li>
-            <li>超度表文 - 用于追思缅怀先人</li>
-            <li>多种类型可选，格式规范庄重</li>
-        </ul>
+        <p class="service-card-desc" style="text-align:center;color:var(--red-primary);font-weight:500;">
+            祭祀路引表文，寓意为先人指引归途，寄托后人思念。
+        </p>
     </div>
 
     <!-- 下单表单 -->
@@ -490,21 +487,7 @@
         </form>
     </div>
 
-    <!-- 收款区域 -->
-    <div class="payment-section">
-        <div class="payment-title">扫码付款</div>
-        <div class="qr-area">
-            <div class="qr-item">
-                <img src="../images/wechat-qr.jpg" alt="微信收款码">
-                <span>微信收款</span>
-            </div>
-            <div class="qr-item">
-                <img src="../images/alipay-qr.jpg" alt="支付宝收款码">
-                <span>支付宝收款</span>
-            </div>
-        </div>
-        <p class="payment-hint">付款后请截图，点击下方按钮提交订单</p>
-    </div>
+
 
     <!-- 提交按钮 -->
     <button class="btn-submit" id="btnSubmit" onclick="submitOrder()">提交订单</button>
@@ -566,26 +549,53 @@
             return;
         }
 
-        // 在控制台展示表单数据（仅前端展示，不发送到服务器）
-        var orderData = {
-            '逝者姓名': deceasedName,
-            '逝者性别': selectedGender,
-            '祭祀类型': ritualType,
-            '安葬地址': burialAddress || '未填写',
-            '烧化家属姓名': familyName,
-            '家属排行': familyRank || '未填写',
-            '备注说明': remark || '无',
-            '提交时间': new Date().toLocaleString('zh-CN')
-        };
-        console.log('订单信息（仅前端展示）：', orderData);
+        // 生成信息汇总文本
+        var summaryText = '【祭祀路引表文订单信息】\n\n';
+        summaryText += '逝者姓名：' + deceasedName + '\n';
+        summaryText += '逝者性别：' + selectedGender + '\n';
+        summaryText += '祭祀类型：' + ritualType + '\n';
+        summaryText += '安葬地址：' + (burialAddress || '未填写') + '\n';
+        summaryText += '烧化家属姓名：' + familyName + '\n';
+        summaryText += '家属排行：' + (familyRank || '未填写') + '\n';
+        summaryText += '备注说明：' + (remark || '无') + '\n';
+        summaryText += '提交时间：' + new Date().toLocaleString('zh-CN') + '\n\n';
+        summaryText += '请添加站长微信 DLing3313，将以上信息发送给我，确认订单。';
 
-        // 显示成功提示
-        document.getElementById('successOverlay').classList.add('show');
+        // 显示带信息汇总的成功弹窗
+        var overlay = document.getElementById('successOverlay');
+        var modal = overlay.querySelector('.success-modal');
+        modal.innerHTML = '<div class="success-icon">&#10003;</div>' +
+            '<h3>订单已提交</h3>' +
+            '<textarea id="biaowenSummary" style="width:100%;min-height:150px;padding:10px;border:1px solid var(--border-color);border-radius:8px;font-size:13px;line-height:1.6;background:var(--bg-secondary);color:var(--text-primary);resize:vertical;font-family:inherit;margin-bottom:12px;">' + summaryText.replace(/</g,'&lt;') + '</textarea>' +
+            '<button class="btn-confirm" onclick="copyBiaowenText()" style="margin-bottom:8px;background:linear-gradient(135deg,#07C160,#06AD56);">一键复制</button>' +
+            '<button class="btn-confirm" onclick="closeSuccess()" style="background:var(--text-light);">关闭</button>';
+        overlay.classList.add('show');
+
+        console.log('订单信息:', summaryText);
     };
 
     // 关闭成功提示
     window.closeSuccess = function() {
         document.getElementById('successOverlay').classList.remove('show');
+    };
+
+    window.copyBiaowenText = function() {
+        var textarea = document.getElementById('biaowenSummary');
+        if (!textarea) return;
+        textarea.select();
+        textarea.setSelectionRange(0, 99999);
+        try {
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(textarea.value).then(function() {
+                    alert('已复制！请添加站长微信 DLing3313，将复制内容发送给我确认订单。');
+                });
+            } else {
+                document.execCommand('copy');
+                alert('已复制！请添加站长微信 DLing3313，将复制内容发送给我确认订单。');
+            }
+        } catch(e) {
+            alert('复制失败，请手动选择文本复制');
+        }
     };
 
     // 点击遮罩层关闭

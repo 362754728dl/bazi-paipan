@@ -85,7 +85,7 @@ router.post('/register', async (req, res) => {
     // 【防护层3】数据库级IP注册限制（最近24小时该IP注册>=3次则拒绝）
     const db = getDb();
     const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().slice(0, 19).replace('T', ' ');
-    const ipRegCount = db.prepare(
+    const ipRegCount = await db.prepare(
       "SELECT COUNT(*) as count FROM registration_logs WHERE ip = ? AND created_at >= ?"
     ).get(ip, twentyFourHoursAgo).count;
     if (ipRegCount >= 3) {
@@ -104,7 +104,7 @@ router.post('/register', async (req, res) => {
     }
 
     // 检查用户名是否已存在
-    const existing = db.prepare('SELECT id FROM users WHERE username = ?').get(username);
+    const existing = await db.prepare('SELECT id FROM users WHERE username = ?').get(username);
     if (existing) {
       return res.json({ code: 400, message: '用户名已存在' });
     }
@@ -113,7 +113,7 @@ router.post('/register', async (req, res) => {
     const passwordHash = bcrypt.hashSync(password, 10);
 
     // 插入用户
-    const result = db.prepare(
+    const result = await db.prepare(
       'INSERT INTO users (username, password_hash) VALUES (?, ?)'
     ).run(username, passwordHash);
 
@@ -128,13 +128,14 @@ router.post('/register', async (req, res) => {
 
     // 注册成功：写入注册日志
     try {
-      db.prepare(
+      await db.prepare(
         'INSERT INTO registration_logs (username, ip) VALUES (?, ?)'
       ).run(username, ip);
     } catch(e) {
       console.error('写入注册日志失败:', e);
     }
 
+    console.log('[认证] 用户 ' + username + ' 注册成功');
     const token = await generateToken(user);
 
     console.log('[用户信息返回] 用户名: ' + user.username + ', level: ' + user.level + ', member_level: ' + (user.member_level || 0) + ', member_expire_time: ' + (user.member_expire_time || 0));
@@ -160,8 +161,10 @@ router.post('/login', async (req, res) => {
       return res.json({ code: 400, message: '用户名和密码不能为空' });
     }
 
-    const user = db.prepare('SELECT * FROM users WHERE username = ?').get(username);
+    console.log('[认证] 用户 ' + username + ' 尝试登录');
+    const user = await db.prepare('SELECT * FROM users WHERE username = ?').get(username);
     if (!user) {
+      console.log('[认证] 用户 ' + username + ' 登录失败：用户不存在');
       return res.json({ code: 400, message: '用户名或密码错误' });
     }
 
@@ -172,6 +175,7 @@ router.post('/login', async (req, res) => {
 
     const valid = bcrypt.compareSync(password, user.password_hash);
     if (!valid) {
+      console.log('[认证] 用户 ' + username + ' 登录失败：密码错误');
       return res.json({ code: 400, message: '用户名或密码错误' });
     }
 
@@ -180,7 +184,7 @@ router.post('/login', async (req, res) => {
     if (user.member_level === 1 && user.member_expire_time > 0) {
       const now = Math.floor(Date.now() / 1000);
       if (now > user.member_expire_time) {
-        db2.prepare(
+        await db2.prepare(
           "UPDATE users SET member_level = 0, member_expire_time = 0, ai_used_today = 0, ai_last_use_date = '', updated_at = datetime('now','localtime') WHERE id = ?"
         ).run(user.id);
         user.member_level = 0;
@@ -191,10 +195,11 @@ router.post('/login', async (req, res) => {
     // 重置每日AI次数（如果不是今天）
     const today = new Date().toISOString().slice(0, 10);
     if (user.ai_last_use_date !== today) {
-      db2.prepare("UPDATE users SET ai_used_today = 0, ai_last_use_date = ? WHERE id = ?").run(today, user.id);
+      await db2.prepare("UPDATE users SET ai_used_today = 0, ai_last_use_date = ? WHERE id = ?").run(today, user.id);
       user.ai_used_today = 0;
     }
 
+    console.log('[认证] 用户 ' + username + ' 登录成功');
     const token = await generateToken(user);
 
     console.log('[登录返回] 用户名: ' + user.username + ', level: ' + user.level + ', member_level: ' + (user.member_level || 0) + ', member_expire_time: ' + (user.member_expire_time || 0));
@@ -227,7 +232,7 @@ router.post('/login', async (req, res) => {
 router.get('/info', authMiddleware, async (req, res) => {
   try {
     const db = getDb();
-    const user = db.prepare(
+    const user = await db.prepare(
       'SELECT id, username, email, phone, level, vip_expire_time, created_at FROM users WHERE id = ?'
     ).get(req.user_id);
 
@@ -259,7 +264,7 @@ router.post('/change-password', authMiddleware, async (req, res) => {
       return res.json({ code: 400, message: '新密码至少6位' });
     }
 
-    const user = db.prepare('SELECT * FROM users WHERE id = ?').get(req.user_id);
+    const user = await db.prepare('SELECT * FROM users WHERE id = ?').get(req.user_id);
     if (!user) {
       return res.json({ code: 404, message: '用户不存在' });
     }
@@ -270,7 +275,7 @@ router.post('/change-password', authMiddleware, async (req, res) => {
     }
 
     const newHash = bcrypt.hashSync(newPassword, 10);
-    db.prepare('UPDATE users SET password_hash = ?, updated_at = datetime(\'now\',\'localtime\') WHERE id = ?')
+    await db.prepare('UPDATE users SET password_hash = ?, updated_at = datetime(\'now\',\'localtime\') WHERE id = ?')
       .run(newHash, req.user_id);
 
     res.json({ code: 200, data: null, message: '密码修改成功' });
@@ -287,14 +292,14 @@ router.get('/daily-count', authMiddleware, async (req, res) => {
     const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
 
     // 检查VIP是否过期
-    const user = db.prepare('SELECT level, vip_expire_time FROM users WHERE id = ?').get(req.user_id);
+    const user = await db.prepare('SELECT level, vip_expire_time FROM users WHERE id = ?').get(req.user_id);
     let isVip = user.level === 'vip';
     if (isVip && user.vip_expire_time) {
       const now = new Date();
       const expire = new Date(user.vip_expire_time);
       if (now > expire) {
         // VIP已过期，降级
-        db.prepare('UPDATE users SET level = \'normal\', vip_expire_time = \'\', updated_at = datetime(\'now\',\'localtime\') WHERE id = ?')
+        await db.prepare('UPDATE users SET level = \'normal\', vip_expire_time = \'\', updated_at = datetime(\'now\',\'localtime\') WHERE id = ?')
           .run(req.user_id);
         isVip = false;
       }
@@ -303,7 +308,7 @@ router.get('/daily-count', authMiddleware, async (req, res) => {
     const limits = isVip ? config.vipLimits : config.freeLimits;
 
     // 获取今日使用次数
-    const record = db.prepare(
+    const record = await db.prepare(
       'SELECT name_count, eval_count, liuyao_count FROM daily_counts WHERE user_id = ? AND date = ?'
     ).get(req.user_id, today);
 
@@ -338,7 +343,7 @@ router.get('/daily-count', authMiddleware, async (req, res) => {
 // 辅助函数：检查并刷新会员状态（到期自动降级）
 async function refreshMemberStatus(userId) {
   const db = getDb();
-  const user = db.prepare(
+  const user = await db.prepare(
     'SELECT member_level, member_expire_time FROM users WHERE id = ?'
   ).get(userId);
 
@@ -349,7 +354,7 @@ async function refreshMemberStatus(userId) {
     const now = Math.floor(Date.now() / 1000);
     if (now > user.member_expire_time) {
       // 已到期，自动降级为普通会员
-      db.prepare(
+      await db.prepare(
         "UPDATE users SET member_level = 0, member_expire_time = 0, ai_used_today = 0, ai_last_use_date = '', updated_at = datetime('now','localtime') WHERE id = ?"
       ).run(userId);
       return { member_level: 0, member_expire_time: 0, ai_used_today: 0, ai_last_use_date: '', ai_experience_used: user.ai_experience_used || 0 };
@@ -363,10 +368,10 @@ async function refreshMemberStatus(userId) {
 async function resetDailyAiCountIfNeeded(userId) {
   const db = getDb();
   const today = new Date().toISOString().slice(0, 10);
-  const user = db.prepare('SELECT ai_last_use_date FROM users WHERE id = ?').get(userId);
+  const user = await db.prepare('SELECT ai_last_use_date FROM users WHERE id = ?').get(userId);
 
   if (!user || user.ai_last_use_date !== today) {
-    db.prepare(
+    await db.prepare(
       "UPDATE users SET ai_used_today = 0, ai_last_use_date = ? WHERE id = ?"
     ).run(today, userId);
   }
@@ -378,16 +383,16 @@ router.get('/ai-quota', authMiddleware, async (req, res) => {
     const db = getDb();
 
     // 先刷新会员状态
-    const memberUser = refreshMemberStatus(req.user_id);
+    const memberUser = await refreshMemberStatus(req.user_id);
     if (!memberUser) {
       return res.json({ code: 404, message: '用户不存在' });
     }
 
     // 重置每日次数
-    resetDailyAiCountIfNeeded(req.user_id);
+    await resetDailyAiCountIfNeeded(req.user_id);
 
     // 重新查询最新数据
-    const user = db.prepare(
+    const user = await db.prepare(
       'SELECT member_level, member_expire_time, ai_used_today, ai_last_use_date, ai_experience_used FROM users WHERE id = ?'
     ).get(req.user_id);
 
@@ -425,16 +430,16 @@ router.post('/ai-use', authMiddleware, async (req, res) => {
     const db = getDb();
 
     // 先刷新会员状态
-    const memberUser = refreshMemberStatus(req.user_id);
+    const memberUser = await refreshMemberStatus(req.user_id);
     if (!memberUser) {
       return res.json({ code: 404, message: '用户不存在' });
     }
 
     // 重置每日次数
-    resetDailyAiCountIfNeeded(req.user_id);
+    await resetDailyAiCountIfNeeded(req.user_id);
 
     // 重新查询最新数据
-    const user = db.prepare(
+    const user = await db.prepare(
       'SELECT member_level, ai_used_today, ai_experience_used FROM users WHERE id = ?'
     ).get(req.user_id);
 
@@ -451,7 +456,7 @@ router.post('/ai-use', authMiddleware, async (req, res) => {
         });
       }
       // 扣减次数
-      db.prepare('UPDATE users SET ai_used_today = ai_used_today + 1 WHERE id = ?').run(req.user_id);
+      await db.prepare('UPDATE users SET ai_used_today = ai_used_today + 1 WHERE id = ?').run(req.user_id);
       return res.json({
         code: 200,
         data: { allowed: true, is_member: true, used: user.ai_used_today + 1, limit: todayLimit, remaining: todayLimit - user.ai_used_today - 1 },
@@ -467,7 +472,7 @@ router.post('/ai-use', authMiddleware, async (req, res) => {
         });
       }
       // 使用体验资格
-      db.prepare('UPDATE users SET ai_experience_used = 1, ai_used_today = ai_used_today + 1 WHERE id = ?').run(req.user_id);
+      await db.prepare('UPDATE users SET ai_experience_used = 1, ai_used_today = ai_used_today + 1 WHERE id = ?').run(req.user_id);
       return res.json({
         code: 200,
         data: { allowed: true, is_member: false, experience_used: true },

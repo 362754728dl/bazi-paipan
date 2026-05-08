@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>身心调养 · 正念生活</title>
+    <style>
+    :root {
+        --bg-primary: #F5F0E8;
+        --bg-secondary: #FFF8EE;
+        --bg-card: #FFFCF5;
+        --border-color: #D4C5A0;
+        --border-dark: #B8A472;
+        --text-primary: #3D2B1F;
+        --text-secondary: #6B5B4E;
+        --text-light: #8C7B6B;
+        --red-primary: #A81216;
+        --red-dark: #8B1A1A;
+        --red-light: #E8D0D0;
+        --gold: #C8A84E;
+        --gold-light: #E8D48C;
+        --green: #4A7C59;
+        --shadow: rgba(61, 43, 31, 0.1);
+        --shadow-strong: rgba(61, 43, 31, 0.2);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+        font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+        background: var(--bg-primary);
+        color: var(--text-primary);
+        min-height: 100vh;
+        font-size: 14px;
+        line-height: 1.6;
+        padding-bottom: 30px;
+    }
+
+    /* ==================== 顶部标题栏 ==================== */
+    .header {
+        background: linear-gradient(135deg, #2E8B57, #3CB371);
+        color: #FFF;
+        padding: 15px 20px;
+        text-align: center;
+        position: sticky;
+        top: 0;
+        z-index: 200;
+        box-shadow: 0 2px 8px var(--shadow-strong);
+    }
+    .header h1 {
+        font-size: 18px;
+        font-weight: 600;
+        letter-spacing: 3px;
+    }
+    .header .back-link {
+        position: absolute;
+        left: 15px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #FFF;
+        text-decoration: none;
+        font-size: 14px;
+        opacity: 0.9;
+    }
+    .header .back-link:hover { opacity: 1; }
+
+    /* ==================== 页面容器 ==================== */
+    .page-container {
+        padding: 12px;
+        max-width: 480px;
+        margin: 0 auto;
+    }
+
+    /* ==================== 引言区域 ==================== */
+    .intro-section {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 20px 16px;
+        margin-bottom: 16px;
+        box-shadow: 0 2px 8px var(--shadow);
+        text-align: center;
+    }
+    .intro-section .intro-icon {
+        font-size: 48px;
+        margin-bottom: 12px;
+    }
+    .intro-section .intro-title {
+        font-size: 20px;
+        font-weight: 600;
+        color: var(--green);
+        margin-bottom: 8px;
+        letter-spacing: 2px;
+    }
+    .intro-section .intro-desc {
+        font-size: 13px;
+        color: var(--text-secondary);
+        line-height: 1.8;
+    }
+
+    /* ==================== 卡片样式 ==================== */
+    .card {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 20px 16px;
+        margin-bottom: 12px;
+        box-shadow: 0 2px 8px var(--shadow);
+    }
+    .card-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 14px;
+        padding-bottom: 12px;
+        border-bottom: 1px solid var(--border-color);
+    }
+    .card-icon {
+        width: 44px;
+        height: 44px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        flex-shrink: 0;
+    }
+    .card-icon.green { background: linear-gradient(135deg, #E8F5E9, #C8E6C9); }
+    .card-icon.orange { background: linear-gradient(135deg, #FFF3E0, #FFE0B2); }
+    .card-icon.blue { background: linear-gradient(135deg, #E3F2FD, #BBDEFB); }
+    .card-title {
+        font-size: 17px;
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+    .card-subtitle {
+        font-size: 12px;
+        color: var(--text-light);
+        margin-top: 2px;
+    }
+    .card-content {
+        font-size: 14px;
+        color: var(--text-secondary);
+        line-height: 1.8;
+    }
+    .card-content p {
+        margin-bottom: 10px;
+    }
+    .card-content p:last-child {
+        margin-bottom: 0;
+    }
+
+    /* ==================== 占位提示 ==================== */
+    .placeholder-tag {
+        display: inline-block;
+        background: linear-gradient(135deg, #FFF8E1, #FFECB3);
+        color: #F57C00;
+        font-size: 12px;
+        padding: 4px 10px;
+        border-radius: 12px;
+        margin-top: 10px;
+    }
+
+    /* ==================== 底部声明 ==================== */
+    .disclaimer {
+        text-align: center;
+        padding: 20px;
+        font-size: 12px;
+        color: var(--text-light);
+        line-height: 1.8;
+    }
+
+    /* ==================== 响应式 ==================== */
+    @media (min-width: 481px) {
+        .page-container { padding: 20px; }
+        .header h1 { font-size: 20px; }
+    }
+
+    @media (max-width: 375px) {
+        .page-container { padding: 10px; }
+        .card { padding: 16px 12px; }
+        .intro-section { padding: 16px 12px; }
+        .intro-section .intro-title { font-size: 18px; }
+    }
+    </style>
+</head>
+<body>
+
+<!-- 顶部标题栏 -->
+<header class="header">
+    <a class="back-link" href="../index.html">&larr; 主页</a>
+    <h1>身心调养 · 正念生活</h1>
+</header>
+
+<!-- 页面容器 -->
+<div class="page-container">
+
+    <!-- 引言区域 -->
+    <div class="intro-section">
+        <div class="intro-icon">🧘</div>
+        <div class="intro-title">身心合一，正气存内</div>
+        <div class="intro-desc">
+            传统养生智慧认为，身心健康源于"形神合一"。<br>
+            站桩养气、饮食调和、自律修心，三者相辅相成，<br>
+            助你在快节奏生活中找回内在的平静与力量。
+        </div>
+    </div>
+
+    <!-- 站桩引导 -->
+    <div class="card">
+        <div class="card-header">
+            <div class="card-icon green">🧍</div>
+            <div>
+                <div class="card-title">站桩引导</div>
+                <div class="card-subtitle">静立养气，固本培元</div>
+            </div>
+        </div>
+        <div class="card-content">
+            <p><strong>站桩</strong>是传统内家拳的基础功法，通过静态站立姿势，调节呼吸、放松身心，达到"松静自然"的状态。</p>
+            <p><strong>核心要点：</strong>双脚与肩同宽，膝盖微曲，脊柱正直，肩沉肘坠，呼吸自然深长。</p>
+            <p><strong>功效：</strong>疏通经络、调和气血、增强体质、改善睡眠。</p>
+            <span class="placeholder-tag">📹 视频教程即将上线</span>
+        </div>
+    </div>
+
+    <!-- 抗炎饮食 -->
+    <div class="card">
+        <div class="card-header">
+            <div class="card-icon orange">🥗</div>
+            <div>
+                <div class="card-title">抗炎饮食</div>
+                <div class="card-subtitle">食疗养生，调和五脏</div>
+            </div>
+        </div>
+        <div class="card-content">
+            <p><strong>慢性炎症</strong>是许多现代疾病的根源。通过调整饮食结构，可以有效降低体内炎症水平。</p>
+            <p><strong>推荐食物：</strong>深色蔬菜、浆果类、深海鱼、坚果、橄榄油、姜黄、绿茶。</p>
+            <p><strong>避免食物：</strong>精制糖、油炸食品、加工肉类、反式脂肪酸。</p>
+            <span class="placeholder-tag">📹 食谱指南即将上线</span>
+        </div>
+    </div>
+
+    <!-- 戒色自律 -->
+    <div class="card">
+        <div class="card-header">
+            <div class="card-icon blue">💪</div>
+            <div>
+                <div class="card-title">戒色自律</div>
+                <div class="card-subtitle">节欲保精，强健体魄</div>
+            </div>
+        </div>
+        <div class="card-content">
+            <p><strong>节欲保精</strong>是传统养生的重要理念。《黄帝内经》云："恬淡虚无，真气从之，精神内守，病安从来。"</p>
+            <p><strong>实践方法：</strong>规律作息、适度运动、培养正念爱好、减少不良刺激、建立健康社交圈。</p>
+            <p><strong>益处：</strong>精力充沛、思维清晰、意志坚定、人际关系和谐。</p>
+            <span class="placeholder-tag">📹 修心方法即将上线</span>
+        </div>
+    </div>
+
+    <!-- 底部声明 -->
+    <div class="disclaimer">
+        本页面内容仅供参考，不构成医疗建议。<br>
+        如有健康问题，请咨询专业医师。
+    </div>
+</div>
+
+</body>
+</html>

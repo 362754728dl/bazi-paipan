@@ -11,13 +11,13 @@ async function checkAndUpdateDailyCount(userId, type) {
   const today = new Date().toISOString().slice(0, 10);
 
   // 检查VIP是否过期
-  const user = db.prepare('SELECT level, vip_expire_time FROM users WHERE id = ?').get(userId);
+  const user = await db.prepare('SELECT level, vip_expire_time FROM users WHERE id = ?').get(userId);
   let isVip = user.level === 'vip';
   if (isVip && user.vip_expire_time) {
     const now = new Date();
     const expire = new Date(user.vip_expire_time);
     if (now > expire) {
-      db.prepare('UPDATE users SET level = \'normal\', vip_expire_time = \'\', updated_at = datetime(\'now\',\'localtime\') WHERE id = ?')
+      await db.prepare('UPDATE users SET level = \'normal\', vip_expire_time = \'\', updated_at = datetime(\'now\',\'localtime\') WHERE id = ?')
         .run(userId);
       isVip = false;
     }
@@ -28,12 +28,12 @@ async function checkAndUpdateDailyCount(userId, type) {
   const limitValue = type === 'name' ? limits.nameCount : limits.evalCount;
 
   // 获取或创建今日记录
-  let record = db.prepare(
+  let record = await db.prepare(
     'SELECT id, name_count, eval_count FROM daily_counts WHERE user_id = ? AND date = ?'
   ).get(userId, today);
 
   if (!record) {
-    const result = db.prepare(
+    const result = await db.prepare(
       'INSERT INTO daily_counts (user_id, date, name_count, eval_count) VALUES (?, ?, 0, 0)'
     ).run(userId, today);
     record = { id: result.lastInsertRowid, name_count: 0, eval_count: 0 };
@@ -46,7 +46,7 @@ async function checkAndUpdateDailyCount(userId, type) {
   }
 
   // 增加计数
-  db.prepare(
+  await db.prepare(
     `UPDATE daily_counts SET ${countField} = ${countField} + 1 WHERE id = ?`
   ).run(record.id);
 
@@ -69,7 +69,7 @@ router.post('/check-cache', authMiddleware, async (req, res) => {
     const baziKey = typeof baziData === 'string' ? baziData : JSON.stringify(baziData);
 
     // 在 name_evaluation_cache 表中查找缓存
-    const cache = db.prepare(
+    const cache = await db.prepare(
       'SELECT id, evaluation_result, created_at FROM name_evaluation_cache WHERE user_id = ? AND name = ? AND bazi_data = ?'
     ).get(req.user_id, name, baziKey);
 
@@ -111,7 +111,7 @@ router.post('/save-cache', authMiddleware, async (req, res) => {
     const resultStr = typeof evaluation_result === 'string' ? evaluation_result : JSON.stringify(evaluation_result);
 
     // 使用 INSERT OR IGNORE 避免重复（UNIQUE 约束）
-    const insertResult = db.prepare(
+    const insertResult = await db.prepare(
       'INSERT OR IGNORE INTO name_evaluation_cache (user_id, name, bazi_data, evaluation_result, created_at) VALUES (?, ?, ?, ?, strftime(\'%s\',\'now\'))'
     ).run(req.user_id, name, baziKey, resultStr);
 
@@ -124,7 +124,7 @@ router.post('/save-cache', authMiddleware, async (req, res) => {
     }
 
     // 已存在缓存，返回已有的
-    const existing = db.prepare(
+    const existing = await db.prepare(
       'SELECT id, evaluation_result FROM name_evaluation_cache WHERE user_id = ? AND name = ? AND bazi_data = ?'
     ).get(req.user_id, name, baziKey);
 
@@ -170,13 +170,13 @@ router.post('/generate', authMiddleware, async (req, res) => {
     const stmt = db.prepare(
       'INSERT INTO name_records (user_id, surname, gender, birthday, birthplace, style, result) VALUES (?, ?, ?, ?, ?, ?, ?)'
     );
-    const insertResult = stmt.run(
+    const insertResult = await stmt.run(
       req.user_id, surname, gender || '', birthday || '', birthplace || '', style || '', resultStr || ''
     );
 
     // 写入缓存表
     try {
-      db.prepare('INSERT OR REPLACE INTO name_cache (surname, birthday, birthplace, style, result, created_at) VALUES (?, ?, ?, ?, ?, datetime(\'now\',\'localtime\'))').run(
+      await db.prepare('INSERT OR REPLACE INTO name_cache (surname, birthday, birthplace, style, result, created_at) VALUES (?, ?, ?, ?, ?, datetime(\'now\',\'localtime\'))').run(
         surname, birthday, birthplace || null, style || '', resultStr || ''
       );
     } catch(e) {}
@@ -200,7 +200,7 @@ router.get('/eval-cache', authMiddleware, async (req, res) => {
       return res.json({ code: 400, message: '缺少查询参数' });
     }
     const db = getDb();
-    const cache = db.prepare(
+    const cache = await db.prepare(
       'SELECT result FROM eval_cache WHERE name = ? AND birthday = ? AND (birthplace = ? OR birthplace IS NULL) ORDER BY id DESC LIMIT 1'
     ).get(name, birthday, birthplace || null);
     if (cache) {
@@ -221,7 +221,7 @@ router.get('/name-cache', authMiddleware, async (req, res) => {
       return res.json({ code: 400, message: '缺少查询参数' });
     }
     const db = getDb();
-    const cache = db.prepare(
+    const cache = await db.prepare(
       'SELECT result FROM name_cache WHERE surname = ? AND birthday = ? AND style = ? AND (birthplace = ? OR birthplace IS NULL) ORDER BY id DESC LIMIT 1'
     ).get(surname, birthday, style || '', birthplace || null);
     if (cache) {
@@ -263,13 +263,13 @@ router.post('/evaluate', authMiddleware, async (req, res) => {
     const stmt = db.prepare(
       'INSERT INTO eval_records (user_id, name, gender, birthday, birthplace, result) VALUES (?, ?, ?, ?, ?, ?)'
     );
-    const insertResult = stmt.run(
+    const insertResult = await stmt.run(
       req.user_id, name, gender || '', birthday || '', birthplace || '', resultStr || ''
     );
 
     // 写入缓存表
     try {
-      db.prepare('INSERT OR REPLACE INTO eval_cache (name, birthday, birthplace, result, created_at) VALUES (?, ?, ?, ?, datetime(\'now\',\'localtime\'))').run(
+      await db.prepare('INSERT OR REPLACE INTO eval_cache (name, birthday, birthplace, result, created_at) VALUES (?, ?, ?, ?, datetime(\'now\',\'localtime\'))').run(
         name, birthday, birthplace || null, resultStr || ''
       );
     } catch(e) {}
@@ -293,10 +293,10 @@ router.get('/records', authMiddleware, async (req, res) => {
     const pageSize = Math.min(50, Math.max(1, parseInt(req.query.pageSize) || 10));
     const offset = (page - 1) * pageSize;
 
-    const total = db.prepare('SELECT COUNT(*) as count FROM name_records WHERE user_id = ?')
-      .get(req.user_id).count;
+    const total = (await db.prepare('SELECT COUNT(*) as count FROM name_records WHERE user_id = ?')
+      .get(req.user_id)).count;
 
-    const records = db.prepare(
+    const records = await db.prepare(
       'SELECT id, surname, gender, birthday, birthplace, style, result, created_at FROM name_records WHERE user_id = ? ORDER BY id DESC LIMIT ? OFFSET ?'
     ).all(req.user_id, pageSize, offset);
 
@@ -325,10 +325,10 @@ router.get('/eval-records', authMiddleware, async (req, res) => {
     const pageSize = Math.min(50, Math.max(1, parseInt(req.query.pageSize) || 10));
     const offset = (page - 1) * pageSize;
 
-    const total = db.prepare('SELECT COUNT(*) as count FROM eval_records WHERE user_id = ?')
-      .get(req.user_id).count;
+    const total = (await db.prepare('SELECT COUNT(*) as count FROM eval_records WHERE user_id = ?')
+      .get(req.user_id)).count;
 
-    const records = db.prepare(
+    const records = await db.prepare(
       'SELECT id, name, gender, birthday, birthplace, result, created_at FROM eval_records WHERE user_id = ? ORDER BY id DESC LIMIT ? OFFSET ?'
     ).all(req.user_id, pageSize, offset);
 

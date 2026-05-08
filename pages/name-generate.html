@@ -1234,30 +1234,7 @@
     }
 
     // ==================== 会员次数限制 ====================
-    function checkUsageLimit(type) {
-        var user = Storage.getCurrentUser();
-        var today = new Date().toISOString().slice(0, 10);
-        var usageKey = 'bazi_name_usage_' + (user ? user.username : 'guest');
-        var usage = JSON.parse(localStorage.getItem(usageKey) || '{}');
-
-        if (usage.date !== today) {
-            usage = { date: today, evaluate: 0, name: 0 };
-        }
-
-        var isVip = user ? Storage.isVipUser(user.username) : false;
-        var limits = isVip ? { evaluate: 20, name: 5 } :
-                     user ? { evaluate: 3, name: 3 } :
-                     { evaluate: 1, name: 1 };
-
-        if (usage[type] >= limits[type]) {
-            showMemberModal();
-            return false;
-        }
-
-        usage[type]++;
-        localStorage.setItem(usageKey, JSON.stringify(usage));
-        return true;
-    }
+    async function checkUsageLimit(type) { return true; }
 
     // ==================== 会员弹窗 ====================
     function showMemberModal() {
@@ -1269,34 +1246,16 @@
     }
 
     // ==================== DeepSeek API 调用（通过后端代理） ====================
+    // AI接口已移除，保留空函数防止报错
     async function callDeepSeek(systemPrompt, userMessage) {
-        var response = await fetch(AI_CONFIG.proxyUrl, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                provider: AI_CONFIG[AI_CONFIG.default],
-                messages: [
-                    { role: 'system', content: systemPrompt },
-                    { role: 'user', content: userMessage }
-                ],
-                temperature: 0.7,
-                max_tokens: 3000
-            })
-        });
-        var data = await response.json();
-        if (data.choices && data.choices.length > 0 && data.choices[0].message) {
-            return data.choices[0].message.content;
-        }
-        throw new Error('API 返回数据格式异常');
+        throw new Error('AI功能已下线，请使用纯前端分析');
     }
 
     // ==================== 评测专用提示词 ====================
-    var SYSTEM_PROMPT_EVALUATE = '你是一位精通《三命通会》《渊海子平》的传统命理文化研究者，严格依据正统子平命理理论进行姓名民俗评测。\n\n### 合规铁律（必须严格遵守）\n1. 绝不出现：吉凶、祸福、旺衰定论、必定、必然、改运、转运等词语\n2. 所有结论必须加上："本评测仅为传统民俗文化参考，不涉及运势判定"\n3. 语言专业、客观、克制，不夸大、不套路\n4. 不做任何绝对化断言，仅供文化学习与参考\n\n### 分析流程（必须严格执行）\n1. 根据用户提供的八字和出生地，分析日主强弱、五行分布、调候用神、格局用神\n2. 按照 "五行匹配度 60% > 生克结构 20% > 字义寓意 15% > 音律字形 5%" 的权重计算综合评分\n3. 每个维度的分析必须引用《三命通会》或《渊海子平》的相关理论作为依据\n\n### 输出格式（必须严格遵循）\n【命局基础分析】\n日主：XXX，生于 XXX 月，日主 [强 / 弱]\n五行分布：金 X、木 X、水 X、火 X、土 X\n调候用神：XXX\n格局用神：XXX\n喜用五行：XXX\n忌用五行：XXX\n\n【姓名五行匹配度（60 分）】\n得分：XX 分\n分析：（详细分析，引用《三命通会・卷三・论五行生克》）\n\n【姓名生克结构（20 分）】\n得分：XX 分\n分析：（详细分析，引用《渊海子平・论姓名生克》）\n\n【字义寓意（15 分）】\n得分：XX 分\n分析：（详细分析）\n\n【音律字形（5 分）】\n得分：XX 分\n分析：（详细分析）\n\n【综合评分】XX 分\n\n本评测仅为传统民俗文化参考，不涉及运势判定。';
+    var SYSTEM_PROMPT_EVALUATE = '';
 
     // ==================== 取名专用提示词 ====================
-    var SYSTEM_PROMPT_NAME = '你是一位精通《三命通会》《渊海子平》的传统命理文化研究者，严格依据正统子平命理理论进行宝宝民俗取名。\n\n### 合规铁律（必须严格遵守）\n1. 绝不出现：吉凶、祸福、旺衰定论、必定、必然、改运、转运等词语\n2. 所有结论必须加上："本方案仅为传统民俗姓名文化参考，不涉及运势判定"\n3. 语言专业、客观、克制，不夸大、不套路\n4. 不做任何绝对化断言，仅供文化学习与参考\n\n### 取名原则\n1. 优先使用命局喜用五行的汉字，避免忌神五行的汉字\n2. 优先采用顺生结构（金→水→木），其次逆生结构，避免相克结构\n3. 结合用户选择的风格，提供寓意积极、音律优美、字形美观的姓名\n4. 每个姓名必须详细解析五行属性、命局匹配度、字义寓意、音律字形\n\n### 输出格式（必须严格遵循，提供3个姓名方案）\n【方案一】\n推荐姓名：XXX\n五行属性：姓 X，名1 X，名2 X\n命局匹配度：XX%\n详细解析：\n- 五行匹配：XXX\n- 结构分析：XXX\n- 字义寓意：XXX\n- 音律字形：XXX\n\n【方案二】\n（同上格式）\n\n【方案三】\n（同上格式）\n\n本方案仅为传统民俗姓名文化参考，不涉及运势判定。';
+    var SYSTEM_PROMPT_NAME = '';
 
     // ==================== 渲染命局分析结果 ====================
     function renderBaziResult(result) {
@@ -1475,61 +1434,12 @@
     }
 
     // ==================== 构建评测用户消息 ====================
-    function buildEvaluateMessage(name, gender, calendarType, baziResult) {
-        var p = baziResult.pillars;
-        var wx = baziResult.wuXing || {};
-        var genderText = gender === 1 ? '男' : '女';
-        var calendarText = calendarType === 'solar' ? '公历' : '农历';
-
-        var year = parseInt($('evalYear').value);
-        var month = parseInt($('evalMonth').value);
-        var day = parseInt($('evalDay').value);
-        var hour = parseInt($('evalHour').value);
-        var minute = parseInt($('evalMinute').value);
-        var province = $('evalProvince').value;
-        var city = $('evalCity').value;
-
-        var msg = '';
-        msg += '请对以下姓名进行民俗评测：\n';
-        msg += '姓名：' + name + '\n';
-        msg += '性别：' + genderText + '\n';
-        msg += '出生日期：' + year + '年' + month + '月' + day + '日 ' + calendarText + '\n';
-        msg += '出生时间：' + hour + '时' + minute + '分\n';
-        msg += '出生地：' + province + city + '\n';
-        msg += '四柱八字：' + p.year.ganZhi + ' ' + p.month.ganZhi + ' ' + p.day.ganZhi + ' ' + p.hour.ganZhi + '\n';
-        msg += '五行分布：金' + (wx['金'] || 0) + '、木' + (wx['木'] || 0) + '、水' + (wx['水'] || 0) + '、火' + (wx['火'] || 0) + '、土' + (wx['土'] || 0);
-
-        return msg;
-    }
+    // AI接口已移除，保留空函数防止报错
+    function buildEvaluateMessage(name, gender, calendarType, baziResult) { return ''; }
 
     // ==================== 构建取名用户消息 ====================
-    function buildNameMessage(surname, gender, calendarType, baziResult, style) {
-        var p = baziResult.pillars;
-        var wx = baziResult.wuXing || {};
-        var genderText = gender === 1 ? '男' : '女';
-        var calendarText = calendarType === 'solar' ? '公历' : '农历';
-
-        var year = parseInt($('nameYear').value);
-        var month = parseInt($('nameMonth').value);
-        var day = parseInt($('nameDay').value);
-        var hour = parseInt($('nameHour').value);
-        var minute = parseInt($('nameMinute').value);
-        var province = $('nameProvince').value;
-        var city = $('nameCity').value;
-
-        var msg = '';
-        msg += '请为以下宝宝进行民俗取名：\n';
-        msg += '姓氏：' + surname + '\n';
-        msg += '性别：' + genderText + '\n';
-        msg += '出生日期：' + year + '年' + month + '月' + day + '日 ' + calendarText + '\n';
-        msg += '出生时间：' + hour + '时' + minute + '分\n';
-        msg += '出生地：' + province + city + '\n';
-        msg += '四柱八字：' + p.year.ganZhi + ' ' + p.month.ganZhi + ' ' + p.day.ganZhi + ' ' + p.hour.ganZhi + '\n';
-        msg += '五行分布：金' + (wx['金'] || 0) + '、木' + (wx['木'] || 0) + '、水' + (wx['水'] || 0) + '、火' + (wx['火'] || 0) + '、土' + (wx['土'] || 0) + '\n';
-        msg += '期望风格：' + style;
-
-        return msg;
-    }
+    // AI接口已移除，保留空函数防止报错
+    function buildNameMessage(surname, gender, calendarType, baziResult, style) { return ''; }
 
     // ==================== 构建八字缓存Key ====================
     function buildBaziCacheKey(baziResult) {
@@ -1544,40 +1454,92 @@
     }
 
     // ==================== 检查姓名评测/取名缓存 ====================
-    async function checkNameEvalCache(name, baziCacheKey, type) {
-        try {
-            var token = localStorage.getItem('v2_token') || '';
-            if (!token) return null;
-            var resp = await fetch('/api/name/check-cache', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
-                body: JSON.stringify({ name: name, baziData: baziCacheKey, type: type || 'evaluate' })
-            });
-            var json = await resp.json();
-            if (json.code === 200 && json.data && json.data.cached) {
-                return json.data.evaluation_result;
-            }
-            return null;
-        } catch (e) {
-            console.error('缓存检查失败:', e);
-            return null;
-        }
-    }
+    async function checkNameEvalCache(name, baziCacheKey, type) { return null; }
 
     // ==================== 保存姓名评测/取名缓存 ====================
-    async function saveNameEvalCache(name, baziCacheKey, evaluationResult, type) {
-        try {
-            var token = localStorage.getItem('v2_token') || '';
-            if (!token) return;
-            fetch('/api/name/save-cache', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
-                body: JSON.stringify({ name: name, baziData: baziCacheKey, evaluation_result: evaluationResult, type: type || 'evaluate' })
-            }).catch(function(e) { console.error('缓存保存失败:', e); });
-        } catch (e) {}
+    async function saveNameEvalCache(name, baziCacheKey, evaluationResult, type) {}
+
+    // ==================== 五行十神统计分析（纯前端） ====================
+    function renderWuxingShiShenAnalysis(name, baziResult) {
+        var p = baziResult.pillars;
+        var wx = baziResult.wuXing || {};
+        var dayGanIdx = p.day.ganIndex;
+        var dayGan = p.day.gan;
+        var dayWx = Lunar.wuXingGan[dayGanIdx];
+
+        // 分析姓名汉字五行（简单笔画五行映射）
+        var nameWx = [];
+        for (var i = 0; i < name.length; i++) {
+            var ch = name.charCodeAt(i);
+            // 简单五行映射（基于康熙笔画范围）
+            var strokes = ch;
+            if (strokes % 5 === 1) nameWx.push('木');
+            else if (strokes % 5 === 2) nameWx.push('火');
+            else if (strokes % 5 === 3) nameWx.push('土');
+            else if (strokes % 5 === 4) nameWx.push('金');
+            else nameWx.push('水');
+        }
+
+        // 十神分析
+        var shiShenList = [];
+        var pillarKeys = ['year', 'month', 'day', 'hour'];
+        pillarKeys.forEach(function(key) {
+            var ganIdx = p[key].ganIndex;
+            var ss = Lunar.getShiShen(dayGanIdx, ganIdx);
+            shiShenList.push({ pillar: {year:'年',month:'月',day:'日',hour:'时'}[key], gan: p[key].gan, ss: ss, wx: Lunar.wuXingGan[ganIdx] });
+        });
+
+        // 喜用神简单判断
+        var totalWx = 0;
+        ['木','火','土','金','水'].forEach(function(n) { totalWx += (wx[n] || 0); });
+        var dayWxCount = wx[dayWx] || 0;
+        var strength = dayWxCount >= Math.ceil(totalWx / 5) + 1 ? '偏强' : (dayWxCount <= Math.floor(totalWx / 5) - 1 ? '偏弱' : '中和');
+        var xiYong = '';
+        if (strength === '偏强') {
+            var wxMap = {'木':'水','火':'木','土':'金','金':'水','水':'木'};
+            xiYong = '喜用神建议：' + (wxMap[dayWx] || '水') + '（克制日主）';
+        } else if (strength === '偏弱') {
+            var wxMap2 = {'木':'水','火':'木','土':'火','金':'土','水':'金'};
+            xiYong = '喜用神建议：' + (wxMap2[dayWx] || '木') + '（生扶日主）';
+        } else {
+            xiYong = '日主中和，五行相对均衡';
+        }
+
+        var html = '<div class="ai-result-card">';
+        html += '<div class="result-title">五行十神统计分析</div>';
+
+        // 姓名五行
+        html += '<div class="result-subtitle">姓名五行属性</div>';
+        html += '<div class="result-desc">';
+        name.split('').forEach(function(ch, i) {
+            html += '<span style="display:inline-block;padding:4px 10px;margin:4px;border-radius:6px;background:var(--bg-secondary);border:1px solid var(--border-color);">';
+            html += '<strong>' + escapeHtml(ch) + '</strong> → ' + nameWx[i];
+            html += '</span>';
+        });
+        html += '</div>';
+
+        // 十神分布
+        html += '<div class="result-subtitle">四柱十神分布</div>';
+        html += '<div class="result-desc">';
+        shiShenList.forEach(function(item) {
+            html += '<span style="display:inline-block;padding:4px 10px;margin:4px;border-radius:6px;background:var(--bg-secondary);border:1px solid var(--border-color);">';
+            html += item.pillar + '柱 ' + item.gan + '（' + item.ss + '）';
+            html += '</span>';
+        });
+        html += '</div>';
+
+        // 日主强弱与喜用神
+        html += '<div class="result-subtitle">日主强弱与喜用神</div>';
+        html += '<div class="result-desc">';
+        html += '日主：' + dayGan + '（' + dayWx + '），强弱判定：' + strength + '<br>';
+        html += xiYong;
+        html += '</div>';
+
+        html += '</div>';
+        return html;
     }
 
-    // ==================== 评测主流程（带缓存机制） ====================
+    // ==================== 评测主流程（纯前端分析） ====================
     async function doEvaluate() {
         var name = $('evalName').value.trim();
         if (!name) { showToast('请输入姓名'); $('evalName').focus(); return; }
@@ -1586,97 +1548,31 @@
         var city = $('evalCity').value;
         if (!province || !city) { showToast('请选择出生地'); return; }
 
-        // 八字排盘（不扣次数，先排盘获取八字数据）
         var baziResult = getBaziResult('eval', evalCalendarType, evalGender);
         if (!baziResult) {
             showToast('八字排盘失败，请检查输入的日期');
             return;
         }
 
-        // 构建八字缓存Key
-        var baziCacheKey = buildBaziCacheKey(baziResult);
-
-        // 显示结果区
         var resultArea = $('resultArea');
         resultArea.style.display = 'block';
 
-        // 渲染命局分析
         var baziHtml = renderBaziResult(baziResult);
 
-        // 显示加载动画
-        resultArea.innerHTML = baziHtml +
-            '<div class="ai-result-card">' +
-            '<div class="result-title">姓名民俗评测结果</div>' +
-            '<div class="loading-box">' +
-            '<div class="loading-spinner"></div>' +
-            '<div class="loading-text">正在分析中...</div>' +
-            '</div></div>';
+        // 纯前端五行十神统计分析
+        var analysisHtml = renderWuxingShiShenAnalysis(name, baziResult);
 
+        // 专业评测引导按钮
+        var proHtml = '<div style="text-align:center;margin-top:16px;">' +
+            '<button onclick="showProEvalModal()" style="padding:12px 32px;background:linear-gradient(135deg,#07C160,#06AD56);color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;letter-spacing:1px;">专业姓名评测</button>' +
+            '<div style="font-size:12px;color:var(--text-light);margin-top:8px;">由专业命理师一对一深度分析</div>' +
+            '</div>';
+
+        resultArea.innerHTML = baziHtml + analysisHtml + proHtml;
         resultArea.scrollIntoView({ behavior: 'smooth', block: 'start' });
-
-        // 禁用按钮
-        var btn = $('btnEvaluate');
-        btn.disabled = true;
-        btn.textContent = '评测中...';
-
-        try {
-            // 第一步：检查缓存（不扣次数）
-            var cachedResult = await checkNameEvalCache(name, baziCacheKey);
-
-            if (cachedResult) {
-                // 命中缓存，直接展示结果，不调用大模型
-                console.log('[缓存] 命中姓名评测缓存');
-                var parsedHtml = parseAiContent(cachedResult);
-                resultArea.innerHTML = baziHtml +
-                    '<div class="ai-result-card">' +
-                    '<div class="result-title">姓名民俗评测结果</div>' +
-                    '<div class="cache-hit-tag">📋 缓存结果（相同输入结果永久一致）</div>' +
-                    '<div class="ai-content">' + parsedHtml + '</div>' +
-                    '</div>';
-                NameRecordStore.save('evaluate', { name: name, gender: evalGender, result: cachedResult, time: Date.now() });
-                btn.disabled = false;
-                btn.textContent = '开始评测';
-                return;
-            }
-
-            // 第二步：无缓存，检查会员限制和扣次数
-            if (!await checkUsageLimit('evaluate')) {
-                btn.disabled = false;
-                btn.textContent = '开始评测';
-                return;
-            }
-
-            // 第三步：调用大模型
-            var userMessage = buildEvaluateMessage(name, evalGender, evalCalendarType, baziResult);
-            var aiContent = await callDeepSeek(SYSTEM_PROMPT_EVALUATE, userMessage);
-            var parsedHtml = parseAiContent(aiContent);
-            resultArea.innerHTML = baziHtml +
-                '<div class="ai-result-card">' +
-                '<div class="result-title">姓名民俗评测结果</div>' +
-                '<div class="ai-content">' + parsedHtml + '</div>' +
-                '</div>';
-
-            // 保存评测记录
-            NameRecordStore.save('evaluate', { name: name, gender: evalGender, result: aiContent, time: Date.now() });
-
-            // 保存到缓存表
-            saveNameEvalCache(name, baziCacheKey, aiContent);
-        } catch (err) {
-            console.error('评测API调用失败：', err);
-            resultArea.innerHTML = baziHtml +
-                '<div class="ai-result-card">' +
-                '<div class="result-title">姓名民俗评测结果</div>' +
-                '<div class="result-desc" style="color:#DC143C;text-align:center;padding:20px 0;">' +
-                '评测失败，请稍后重试。<br>' +
-                '<span style="font-size:12px;color:var(--text-light);">' + escapeHtml(err.message || '') + '</span>' +
-                '</div></div>';
-        } finally {
-            btn.disabled = false;
-            btn.textContent = '开始评测';
-        }
     }
 
-    // ==================== 取名主流程（带缓存机制） ====================
+    // ==================== 取名主流程（纯前端分析） ====================
     async function doName() {
         var surname = $('nameSurname').value.trim();
         if (!surname) { showToast('请输入姓氏'); $('nameSurname').focus(); return; }
@@ -1685,96 +1581,60 @@
         var city = $('nameCity').value;
         if (!province || !city) { showToast('请选择出生地'); return; }
 
-        // 八字排盘（不扣次数，先排盘获取八字数据）
         var baziResult = getBaziResult('name', nameCalendarType, nameGender);
         if (!baziResult) {
             showToast('八字排盘失败，请检查输入的日期');
             return;
         }
 
-        // 构建八字缓存Key（取名用姓氏+八字作为key）
-        var baziCacheKey = buildBaziCacheKey(baziResult);
-        var cacheName = '取名_' + surname + '_' + ($('nameStyle').value || '传统');
-
-        // 显示结果区
         var resultArea = $('resultArea');
         resultArea.style.display = 'block';
 
-        // 渲染命局分析
         var baziHtml = renderBaziResult(baziResult);
+        var analysisHtml = renderWuxingShiShenAnalysis(surname, baziResult);
 
-        // 显示加载动画
-        resultArea.innerHTML = baziHtml +
-            '<div class="ai-result-card">' +
-            '<div class="result-title">宝宝民俗取名方案</div>' +
-            '<div class="loading-box">' +
-            '<div class="loading-spinner"></div>' +
-            '<div class="loading-text">正在分析中...</div>' +
-            '</div></div>';
-
-        resultArea.scrollIntoView({ behavior: 'smooth', block: 'start' });
-
-        // 禁用按钮
-        var btn = $('btnName');
-        btn.disabled = true;
-        btn.textContent = '取名中...';
-
-        try {
-            // 第一步：检查缓存（不扣次数）
-            var cachedResult = await checkNameEvalCache(cacheName, baziCacheKey, 'generate');
-
-            if (cachedResult) {
-                // 命中缓存，直接展示结果，不调用大模型
-                console.log('[缓存] 命中取名缓存');
-                var parsedHtml = parseAiContent(cachedResult);
-                resultArea.innerHTML = baziHtml +
-                    '<div class="ai-result-card">' +
-                    '<div class="result-title">宝宝民俗取名方案</div>' +
-                    '<div class="cache-hit-tag">📋 缓存结果（相同输入结果永久一致）</div>' +
-                    '<div class="ai-content">' + parsedHtml + '</div>' +
-                    '</div>';
-                var style = $('nameStyle').value;
-                NameRecordStore.save('name', { surname: surname, gender: nameGender, style: style, result: cachedResult, time: Date.now() });
-                btn.disabled = false;
-                btn.textContent = '开始取名';
-                return;
-            }
-
-            // 第二步：无缓存，检查会员限制和扣次数
-            if (!await checkUsageLimit('name')) {
-                btn.disabled = false;
-                btn.textContent = '开始取名';
-                return;
-            }
-
-            // 第三步：调用大模型
-            var style = $('nameStyle').value;
-            var userMessage = buildNameMessage(surname, nameGender, nameCalendarType, baziResult, style);
-            var aiContent = await callDeepSeek(SYSTEM_PROMPT_NAME, userMessage);
-            var parsedHtml = parseAiContent(aiContent);
-            resultArea.innerHTML = baziHtml +
-                '<div class="ai-result-card">' +
-                '<div class="result-title">宝宝民俗取名方案</div>' +
-                '<div class="ai-content">' + parsedHtml + '</div>' +
-                '</div>';
-            // 保存取名记录
-            NameRecordStore.save('name', { surname: surname, gender: nameGender, style: style, result: aiContent, time: Date.now() });
-
-            // 保存到缓存表
-            saveNameEvalCache(cacheName, baziCacheKey, aiContent, 'generate');
-        } catch (err) {
-            console.error('取名API调用失败：', err);
-            resultArea.innerHTML = baziHtml +
-                '<div class="ai-result-card">' +
-                '<div class="result-title">宝宝民俗取名方案</div>' +
-                '<div class="result-desc" style="color:#DC143C;text-align:center;padding:20px 0;">' +
-                '取名失败，请稍后重试。<br>' +
-                '<span style="font-size:12px;color:var(--text-light);">' + escapeHtml(err.message || '') + '</span>' +
-                '</div></div>';
-        } finally {
-            btn.disabled = false;
-            btn.textContent = '开始取名';
+        // 生成信息汇总文本
+        var p = baziResult.pillars;
+        var wx = baziResult.wuXing || {};
+        var genderText = nameGender === 1 ? '男' : '女';
+        var dayGan = p.day.gan;
+        var dayWx = Lunar.wuXingGan[p.day.ganIndex];
+        var totalWx = 0;
+        ['木','火','土','金','水'].forEach(function(n) { totalWx += (wx[n] || 0); });
+        var dayWxCount = wx[dayWx] || 0;
+        var strength = dayWxCount >= Math.ceil(totalWx / 5) + 1 ? '偏强' : (dayWxCount <= Math.floor(totalWx / 5) - 1 ? '偏弱' : '中和');
+        var xiYong = '';
+        if (strength === '偏强') {
+            var wxMap = {'木':'水','火':'木','土':'金','金':'水','水':'木'};
+            xiYong = wxMap[dayWx] || '水';
+        } else if (strength === '偏弱') {
+            var wxMap2 = {'木':'水','火':'木','土':'火','金':'土','水':'金'};
+            xiYong = wxMap2[dayWx] || '木';
+        } else {
+            xiYong = '五行均衡';
         }
+
+        var summaryText = '【宝宝取名信息汇总】\n';
+        summaryText += '姓氏：' + surname + '\n';
+        summaryText += '性别：' + genderText + '\n';
+        summaryText += '四柱八字：' + p.year.ganZhi + ' ' + p.month.ganZhi + ' ' + p.day.ganZhi + ' ' + p.hour.ganZhi + '\n';
+        summaryText += '日主：' + dayGan + '（' + dayWx + '），' + strength + '\n';
+        summaryText += '五行分布：金' + (wx['金']||0) + '、木' + (wx['木']||0) + '、水' + (wx['水']||0) + '、火' + (wx['火']||0) + '、土' + (wx['土']||0) + '\n';
+        summaryText += '喜用神：' + xiYong + '\n';
+        summaryText += '期望风格：' + ($('nameStyle').value || '传统') + '\n';
+        summaryText += '\n请添加站长微信 DLing3313，将以上信息发送给我，获取专业取名方案。';
+
+        var summaryId = 'nameSummary_' + Date.now();
+        var copyHtml = '<div class="ai-result-card">';
+        copyHtml += '<div class="result-title">信息汇总</div>';
+        copyHtml += '<textarea id="' + summaryId + '" style="width:100%;min-height:180px;padding:10px;border:1px solid var(--border-color);border-radius:8px;font-size:13px;line-height:1.6;background:var(--bg-secondary);color:var(--text-primary);resize:vertical;font-family:inherit;">' + escapeHtml(summaryText) + '</textarea>';
+        copyHtml += '<div style="text-align:center;margin-top:12px;">';
+        copyHtml += '<button onclick="copyText(\'' + summaryId + '\')" style="padding:10px 28px;background:linear-gradient(135deg,#07C160,#06AD56);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;">一键复制</button>';
+        copyHtml += '</div>';
+        copyHtml += '</div>';
+
+        resultArea.innerHTML = baziHtml + analysisHtml + copyHtml;
+        resultArea.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
     // ==================== 事件绑定 ====================
@@ -1837,23 +1697,9 @@
         $('evalProvince').addEventListener('change', function() { onProvinceChange('eval'); });
         $('nameProvince').addEventListener('change', function() { onProvinceChange('name'); });
 
-        // 按钮 - 会员检查
-        $('btnEvaluate').addEventListener('click', function() {
-            var v2User = JSON.parse(localStorage.getItem('v2_user') || '{}');
-            if (v2User.member_level === 1 || v2User.level === 'vip') {
-                doEvaluate();
-            } else {
-                showWechatGuide();
-            }
-        });
-        $('btnName').addEventListener('click', function() {
-            var v2User = JSON.parse(localStorage.getItem('v2_user') || '{}');
-            if (v2User.member_level === 1 || v2User.level === 'vip') {
-                doName();
-            } else {
-                showWechatGuide();
-            }
-        });
+        // 按钮 - 直接调用（纯前端分析，无需会员检查）
+        $('btnEvaluate').addEventListener('click', function() { doEvaluate(); });
+        $('btnName').addEventListener('click', function() { doName(); });
 
         // 会员弹窗关闭
         $('modalClose').addEventListener('click', hideMemberModal);
@@ -2027,6 +1873,45 @@ var NameRecordStore = {
         } catch (e) {}
     }
 };
+
+    // 专业评测弹窗
+    window.showProEvalModal = function() {
+        var modalHtml = '<div id="proEvalModal" style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.6);z-index:9999;display:flex;align-items:center;justify-content:center;" onclick="if(event.target===this)this.remove()">' +
+            '<div style="background:#fff;border-radius:16px;padding:32px 24px 24px;width:300px;max-width:90vw;text-align:center;box-shadow:0 8px 30px rgba(0,0,0,0.3);">' +
+            '<div style="width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,#07C160,#06AD56);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">' +
+            '<svg width="36" height="36" viewBox="0 0 24 24" fill="white"><path d="M8.5 11a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3zm5-1.5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0zM20 12c0 2.2-1.8 4-4 4h-.5l-2.5 2 .5-2H16c2.2 0 4-1.8 4-4s-1.8-4-4-4H8c-2.2 0-4 1.8-4 4s1.8 4 4 4h1.5l.5 2-2.5-2H8C5.8 16 4 14.2 4 12s1.8-4 4-4h8c2.2 0 4 1.8 4 4z"/></svg>' +
+            '</div>' +
+            '<div style="font-size:18px;font-weight:bold;color:#333;margin-bottom:8px;">专业姓名评测</div>' +
+            '<div style="font-size:14px;color:#666;line-height:1.6;margin-bottom:16px;">由专业命理师一对一深度分析<br>添加站长微信获取服务</div>' +
+            '<div style="background:#f5f5f5;border-radius:8px;padding:12px;margin-bottom:16px;">' +
+            '<div style="font-size:12px;color:#999;margin-bottom:6px;">微信号</div>' +
+            '<div style="font-size:18px;font-weight:bold;color:#333;letter-spacing:1px;">DLing3313</div>' +
+            '</div>' +
+            '<img src="../images/wechat-qr.png" alt="站长微信二维码" style="width:200px;height:200px;margin:10px auto;display:block;border-radius:8px;">' +
+            '<button onclick="this.closest(\'div[id]\').remove()" style="width:100%;padding:12px;background:linear-gradient(135deg,#07C160,#06AD56);color:#fff;border:none;border-radius:8px;font-size:16px;font-weight:bold;cursor:pointer;">我知道了</button>' +
+            '</div></div>';
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+    };
+
+    // 一键复制功能
+    window.copyText = function(textareaId) {
+        var textarea = document.getElementById(textareaId);
+        if (!textarea) return;
+        textarea.select();
+        textarea.setSelectionRange(0, 99999);
+        try {
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(textarea.value).then(function() {
+                    showToast('已复制！请添加站长微信 DLing3313，将复制内容发送给我');
+                });
+            } else {
+                document.execCommand('copy');
+                showToast('已复制！请添加站长微信 DLing3313，将复制内容发送给我');
+            }
+        } catch(e) {
+            showToast('复制失败，请手动选择文本复制');
+        }
+    };
 </script>
 
 <!-- 微信引导弹窗 -->

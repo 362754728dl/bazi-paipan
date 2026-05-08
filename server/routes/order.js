@@ -21,7 +21,7 @@ router.post('/create', authMiddleware, async (req, res) => {
 
     const orderAmount = amount || (type === 'vip' ? config.vipPrice : 0);
 
-    const result = db.prepare(
+    const result = await db.prepare(
       'INSERT INTO orders (user_id, order_no, type, amount) VALUES (?, ?, ?, ?)'
     ).run(req.user_id, orderNo, type, orderAmount);
 
@@ -29,12 +29,12 @@ router.post('/create', authMiddleware, async (req, res) => {
 
     // 如果是表文订单，同时创建 biaowen_orders 记录
     if (type === 'biaowen') {
-      db.prepare(
+      await db.prepare(
         'INSERT INTO biaowen_orders (order_id) VALUES (?)'
       ).run(orderId);
     }
 
-    const order = db.prepare('SELECT * FROM orders WHERE id = ?').get(orderId);
+    const order = await db.prepare('SELECT * FROM orders WHERE id = ?').get(orderId);
 
     res.json({
       code: 200,
@@ -63,7 +63,7 @@ router.get('/list', authMiddleware, async (req, res) => {
 
     sql += ' ORDER BY id DESC';
 
-    const orders = db.prepare(sql).all(...params);
+    const orders = await db.prepare(sql).all(...params);
 
     res.json({
       code: 200,
@@ -86,19 +86,19 @@ router.post('/pay-notify', async (req, res) => {
       return res.json({ code: 400, message: '参数不完整' });
     }
 
-    const order = db.prepare('SELECT * FROM orders WHERE order_no = ?').get(orderNo);
+    const order = await db.prepare('SELECT * FROM orders WHERE order_no = ?').get(orderNo);
     if (!order) {
       return res.json({ code: 404, message: '订单不存在' });
     }
 
     // 更新订单状态
-    db.prepare(
+    await db.prepare(
       'UPDATE orders SET status = ?, pay_time = datetime(\'now\',\'localtime\') WHERE order_no = ?'
     ).run(status, orderNo);
 
     // 如果支付成功且是VIP订单，自动开通会员
     if (status === 'paid' && order.type === 'vip') {
-      const user = db.prepare('SELECT level, vip_expire_time, member_level, member_expire_time FROM users WHERE id = ?').get(order.user_id);
+      const user = await db.prepare('SELECT level, vip_expire_time, member_level, member_expire_time FROM users WHERE id = ?').get(order.user_id);
       const now = new Date();
 
       let newExpire;
@@ -114,7 +114,7 @@ router.post('/pay-notify', async (req, res) => {
       const expireStr = newExpire.toISOString().slice(0, 19).replace('T', ' ');
       // 同步更新原有VIP字段和新的会员系统字段
       const memberExpireTs = Math.floor(newExpire.getTime() / 1000);
-      db.prepare(
+      await db.prepare(
         "UPDATE users SET level = 'vip', vip_expire_time = ?, member_level = 1, member_expire_time = ?, updated_at = datetime('now','localtime') WHERE id = ?"
       ).run(expireStr, memberExpireTs, order.user_id);
     }
@@ -137,17 +137,17 @@ router.post('/biaowen/create', authMiddleware, async (req, res) => {
     }
 
     // 验证订单属于当前用户
-    const order = db.prepare('SELECT * FROM orders WHERE id = ? AND user_id = ?').get(orderId, req.user_id);
+    const order = await db.prepare('SELECT * FROM orders WHERE id = ? AND user_id = ?').get(orderId, req.user_id);
     if (!order) {
       return res.json({ code: 404, message: '订单不存在' });
     }
 
     // 检查是否已有biaowen记录
-    const existing = db.prepare('SELECT id FROM biaowen_orders WHERE order_id = ?').get(orderId);
+    const existing = await db.prepare('SELECT id FROM biaowen_orders WHERE order_id = ?').get(orderId);
 
     if (existing) {
       // 更新
-      db.prepare(`
+      await db.prepare(`
         UPDATE biaowen_orders SET
           deceased_name = ?, deceased_gender = ?, address = ?,
           family_member = ?, family_rank = ?, remark = ?
@@ -158,7 +158,7 @@ router.post('/biaowen/create', authMiddleware, async (req, res) => {
       );
     } else {
       // 创建
-      db.prepare(`
+      await db.prepare(`
         INSERT INTO biaowen_orders (order_id, deceased_name, deceased_gender, address, family_member, family_rank, remark)
         VALUES (?, ?, ?, ?, ?, ?, ?)
       `).run(
