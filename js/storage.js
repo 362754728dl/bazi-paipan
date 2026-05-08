@@ -153,70 +153,172 @@ const Storage = (function () {
     return !!load(CURRENT_USER_KEY, null) || !!localStorage.getItem('v2_token');
   }
 
-  // ==================== 排盘记录管理 ====================
+  // ==================== 排盘记录管理（后端API版） ====================
+
+  // 缓存机制：减少API调用
+  var _recordsCache = null;
+  var _recordsCacheTime = 0;
+  var _recordsCacheTTL = 30000; // 缓存30秒
 
   /**
-   * 获取当前用户的排盘记录存储键
+   * 获取当前用户的token
    * @returns {string|null}
    */
-  function _getRecordsKey() {
-    const user = getCurrentUser();
-    if (!user) return null;
-    return 'bazi_records_' + user.username;
+  function _getToken() {
+    return localStorage.getItem('v2_token');
   }
 
   /**
-   * 保存一条排盘记录
+   * 保存一条排盘记录（调用后端API）
    * @param {object} record - 排盘记录对象
    *   - id          {number}   时间戳作为唯一标识
    *   - name        {string}   姓名或备注
    *   - solarDate   {string}   公历日期
    *   - lunarDate   {string}   农历日期
    *   - gender      {string}   性别
-   *   - pillars     {object}   四柱信息
+   *   - shengXiao   {string}   生肖
+   *   - baziStr     {string}   八字字符串
+   *   - formData    {object}   表单数据
    *   - createTime  {number}   创建时间戳
+   * @returns {Promise<object>}
    */
-  function saveRecord(record) {
-    const key = _getRecordsKey();
-    if (!key) return;
-
-    const records = load(key, []);
-    records.push(record);
-    save(key, records);
-  }
-
-  /**
-   * 获取当前用户的所有排盘记录，按创建时间倒序排列
-   * @returns {Array} 排盘记录数组
-   */
-  function getRecords() {
-    const key = _getRecordsKey();
-    if (!key) return [];
-
-    const records = load(key, []);
-    // 按创建时间倒序
-    return records.slice().sort(function (a, b) {
-      return b.createTime - a.createTime;
-    });
-  }
-
-  /**
-   * 删除一条排盘记录
-   * @param {number} id - 记录的唯一标识（时间戳）
-   */
-  function deleteRecord(id) {
-    try {
-    const key = _getRecordsKey();
-    if (!key) return;
-
-    const records = load(key, []);
-    const filtered = records.filter(function (r) {
-      return r.id !== id;
-    });
-    save(key, filtered);
-    } catch (e) {
-      console.error('[deleteRecord] error:', e);
+  async function saveRecord(record) {
+    const token = _getToken();
+    if (!token) {
+      console.warn('[saveRecord] 未登录，无法保存记录');
+      return { success: false, message: '请先登录' };
     }
+
+    try {
+      const response = await fetch('/api/paipan/save', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + token
+        },
+        body: JSON.stringify({
+          name: record.name || '',
+          solarDate: record.solarDate || '',
+          lunarDate: record.lunarDate || '',
+          gender: record.gender === '男' ? 1 : 0,
+          shengXiao: record.shengXiao || '',
+          baziStr: record.baziStr || '',
+          formData: record.formData || {}
+        })
+      });
+
+      const data = await response.json();
+      if (data.code === 200) {
+        // 清除缓存，下次读取时重新加载
+        _recordsCache = null;
+        return { success: true, data: data.data };
+      } else {
+        console.error('[saveRecord] 保存失败:', data.message);
+        return { success: false, message: data.message };
+      }
+    } catch (err) {
+      console.error('[saveRecord] 请求失败:', err);
+      return { success: false, message: '网络错误' };
+    }
+  }
+
+  /**
+   * 获取当前用户的所有排盘记录（调用后端API）
+   * @param {boolean} forceRefresh - 强制刷新，忽略缓存
+   * @returns {Promise<Array>} 排盘记录数组
+   */
+  async function getRecords(forceRefresh) {
+    const token = _getToken();
+    if (!token) {
+      return [];
+    }
+
+    // 检查缓存
+    if (!forceRefresh && _recordsCache && (Date.now() - _recordsCacheTime) < _recordsCacheTTL) {
+      return _recordsCache;
+    }
+
+    try {
+      const response = await fetch('/api/paipan/records?page=1&pageSize=100', {
+        method: 'GET',
+        headers: {
+          'Authorization': 'Bearer ' + token
+        }
+      });
+
+      const data = await response.json();
+      if (data.code === 200 && data.data && data.data.list) {
+        // 转换后端数据格式为前端格式
+        const records = data.data.list.map(function(item) {
+          return {
+            id: item.id,
+            name: item.name,
+            solarDate: item.solar_date,
+            lunarDate: item.lunar_date,
+            gender: item.gender === 1 ? '男' : '女',
+            shengXiao: item.sheng_xiao,
+            baziStr: item.bazi_str,
+            formData: typeof item.form_data === 'string' ? JSON.parse(item.form_data) : (item.form_data || {}),
+            createTime: new Date(item.created_at).getTime()
+          };
+        });
+
+        // 更新缓存
+        _recordsCache = records;
+        _recordsCacheTime = Date.now();
+
+        return records;
+      } else {
+        console.error('[getRecords] 获取失败:', data.message);
+        return [];
+      }
+    } catch (err) {
+      console.error('[getRecords] 请求失败:', err);
+      return [];
+    }
+  }
+
+  /**
+   * 删除一条排盘记录（调用后端API）
+   * @param {number} id - 记录的唯一标识
+   * @returns {Promise<boolean>}
+   */
+  async function deleteRecord(id) {
+    const token = _getToken();
+    if (!token) {
+      console.warn('[deleteRecord] 未登录，无法删除记录');
+      return false;
+    }
+
+    try {
+      const response = await fetch('/api/paipan/record/' + id, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': 'Bearer ' + token
+        }
+      });
+
+      const data = await response.json();
+      if (data.code === 200) {
+        // 清除缓存
+        _recordsCache = null;
+        return true;
+      } else {
+        console.error('[deleteRecord] 删除失败:', data.message);
+        return false;
+      }
+    } catch (err) {
+      console.error('[deleteRecord] 请求失败:', err);
+      return false;
+    }
+  }
+
+  /**
+   * 清除排盘记录缓存
+   */
+  function clearRecordsCache() {
+    _recordsCache = null;
+    _recordsCacheTime = 0;
   }
 
   // ==================== 管理员系统 ====================
@@ -480,6 +582,7 @@ const Storage = (function () {
     saveRecord: saveRecord,
     getRecords: getRecords,
     deleteRecord: deleteRecord,
+    clearRecordsCache: clearRecordsCache,
     initAdmin: initAdmin,
     adminLogin: adminLogin,
     adminChangePassword: adminChangePassword,

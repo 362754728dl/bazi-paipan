@@ -787,9 +787,9 @@ const App = (function () {
         // 显示结果区域
         $('resultArea').style.display = 'block';
 
-        // 自动保存记录（如果已登录且非查看模式）
+        // 自动保存记录（如果已登录且非查看模式）- 异步调用
         if (Storage.isLoggedIn() && !_viewingRecord) {
-            saveRecord(result, name);
+            saveRecordAsync(result, name);
         } else if (!Storage.isLoggedIn()) {
             showToast('排盘成功！登录后可保存记录');
         }
@@ -2912,17 +2912,17 @@ const App = (function () {
     // ==================== 记录管理 ====================
 
     /**
-     * 保存排盘记录到本地存储
+     * 保存排盘记录到后端（异步）
      * @param {object} result - 排盘结果
      * @param {string} name - 姓名
      */
-    function saveRecord(result, name) {
+    async function saveRecordAsync(result, name) {
         var sd = result.solarDate;
         var ld = result.lunarDate;
         var pillars = result.pillars;
 
-        // 重名自动编号：检查已有记录中同名数量
-        var existingRecords = Storage.getRecords();
+        // 重名自动编号：检查已有记录中同名数量（先获取现有记录）
+        var existingRecords = await Storage.getRecords();
         var sameNameCount = 0;
         existingRecords.forEach(function(r) {
             if (r.name === name || r.name.indexOf(name) === 0) {
@@ -2954,16 +2954,19 @@ const App = (function () {
             createTime: Date.now()
         };
 
-        Storage.saveRecord(record);
-        showToast('排盘记录已保存');
+        var res = await Storage.saveRecord(record);
+        if (res.success) {
+            showToast('排盘记录已保存');
+        } else {
+            showToast('记录保存失败：' + (res.message || '未知错误'));
+        }
     }
 
     /**
-     * 渲染记录列表
+     * 渲染记录列表（异步版本）
      */
-    function renderRecords() {
+    async function renderRecords() {
         try {
-        var records = Storage.getRecords();
         var recordList = $('recordList');
         var emptyState = $('emptyState');
 
@@ -2986,6 +2989,12 @@ const App = (function () {
             if (btnReg) btnReg.style.display = 'inline-block';
             return;
         }
+
+        // 显示加载中
+        recordList.innerHTML = '<div style="text-align:center;padding:20px;color:#999;">加载中...</div>';
+
+        // 异步获取记录
+        var records = await Storage.getRecords();
 
         if (records.length === 0) {
             recordList.innerHTML = '';
@@ -3023,16 +3032,20 @@ const App = (function () {
 
         recordList.innerHTML = html;
 
-        // 绑定删除按钮事件
+        // 绑定删除按钮事件（异步）
         recordList.querySelectorAll('.btn-delete').forEach(function (btn) {
-            btn.addEventListener('click', function (e) {
+            btn.addEventListener('click', async function (e) {
                 e.stopPropagation();
                 var id = parseInt(this.getAttribute('data-id'));
                 try {
                     if (confirm('确定要删除这条记录吗？')) {
-                        Storage.deleteRecord(id);
-                        renderRecords();
-                        showToast('记录已删除');
+                        var success = await Storage.deleteRecord(id);
+                        if (success) {
+                            renderRecords();
+                            showToast('记录已删除');
+                        } else {
+                            showToast('删除失败，请重试');
+                        }
                     }
                 } catch (err) {
                     console.error('[deleteRecord] 删除出错:', err);
