@@ -658,93 +658,363 @@ const Lunar = (function() {
             }
         }
 
-        // ========== 1. 驿马（查日支） ==========
-        // 申子辰日→寅，寅午戌日→申，巳酉丑日→亥，亥卯未日→巳
-        var yimaMap = {
-            0: 2, 1: 11, 2: 8, 3: 5, 4: 2, 5: 11,
-            6: 8, 7: 5, 8: 2, 9: 11, 10: 8, 11: 5
-        };
-        addByZhi('驿马', [yimaMap[dayZhiIdx]]);
+        // ==================== 查表定义 ====================
 
-        // ========== 2. 文昌贵人（查年干，五虎遁方式） ==========
-        // 甲(0)/己(5)→巳(5), 乙(1)/庚(6)→午(6), 丙(2)/辛(7)→申(8),
-        // 丁(3)/壬(8)→酉(9), 戊(4)/癸(9)→亥(10)
-        var wenChangMap = {
-            0: 5, 1: 6, 2: 8, 3: 9, 4: 10,
-            5: 5, 6: 6, 7: 8, 8: 9, 9: 10
+        // 天乙贵人（天干→地支数组）
+        var tianYiMap = {
+            0: [1, 7], 4: [1, 7],       // 甲戊→丑未
+            1: [0, 8], 5: [0, 8],       // 乙己→子申
+            2: [11, 9], 3: [11, 9],     // 丙丁→亥酉
+            6: [6, 2], 7: [6, 2],       // 庚辛→午寅
+            8: [3, 5], 9: [3, 5]        // 壬癸→卯巳
         };
+
+        // 文昌贵人（天干→地支）
+        var wenChangMap = {
+            0: 5, 1: 6, 2: 8, 3: 9, 4: 8, 5: 9, 6: 11, 7: 0, 8: 2, 9: 3
+        };
+
+        // 太极贵人（天干→地支数组）
+        var taiJiMap = {
+            0: [0, 6], 1: [0, 6],         // 甲乙→子午
+            2: [3, 9], 3: [3, 9],         // 丙丁→卯酉
+            4: [4, 10, 1, 7], 5: [4, 10, 1, 7], // 戊己→辰戌丑未
+            6: [2, 8], 7: [2, 8],         // 庚辛→寅亥
+            8: [5, 11], 9: [5, 11]        // 壬癸→巳申
+        };
+
+        // 金舆（天干→地支）
+        var jinYuMap = {
+            0: 4, 1: 5, 2: 7, 3: 8, 4: 7, 5: 8, 6: 10, 7: 11, 8: 1, 9: 2
+        };
+
+        // 禄神（天干→地支）
+        var luShenMap = {
+            0: 2, 1: 3, 2: 5, 3: 7, 4: 5, 5: 7, 6: 8, 7: 9, 8: 11, 9: 0
+        };
+
+        // 学堂（天干→地支）
+        var xueTangMap = {
+            0: 11, 1: 6, 2: 2, 3: 9, 4: 2, 5: 9, 6: 5, 7: 0, 8: 8, 9: 3
+        };
+
+        // 羊刃（天干→地支，仅日干查）
+        var yangRenMap = {
+            0: 3, 1: 4, 2: 6, 3: 5, 4: 6, 5: 5, 6: 9, 7: 8, 8: 0, 9: 0
+        };
+
+        // 福星贵人（天干→地支，仅日干查）
+        var fuXingMap = {
+            0: 2, 1: 1, 2: 0, 3: 9, 4: 8, 5: 7, 6: 6, 7: 5, 8: 4, 9: 3
+        };
+
+        // 红艳（天干→地支，仅日干查）
+        var hongYanMap = {
+            0: 6, 1: 8, 2: 2, 3: 7, 4: 4, 5: 4, 6: 10, 7: 9, 8: 0, 9: 8
+        };
+
+        // 桃花（地支→地支）
+        var taoHuaMap = {
+            0: 9, 1: 9, 2: 9,       // 申子辰→酉
+            3: 0, 4: 0, 5: 0,       // 亥卯未→子
+            6: 3, 7: 3, 8: 3,       // 寅午戌→卯
+            9: 6, 10: 6, 11: 6      // 巳酉丑→午
+        };
+
+        // 驿马（地支→地支）
+        var yiMaMap = {
+            0: 2, 1: 2, 2: 2,       // 申子辰→寅
+            3: 5, 4: 5, 5: 5,       // 亥卯未→巳
+            6: 8, 7: 8, 8: 8,       // 寅午戌→申
+            9: 11, 10: 11, 11: 11   // 巳酉丑→亥
+        };
+
+        // 华盖（地支→地支）
+        var huaGaiMap = {
+            0: 4, 1: 4, 2: 4,       // 申子辰→辰
+            3: 7, 4: 7, 5: 7,       // 亥卯未→未
+            6: 10, 7: 10, 8: 10,    // 寅午戌→戌
+            9: 1, 10: 1, 11: 1      // 巳酉丑→丑
+        };
+
+        // 将星（地支→地支）
+        var jiangXingMap = {
+            0: 0, 1: 0, 2: 0,       // 申子辰→子
+            3: 3, 4: 3, 5: 3,       // 亥卯未→卯
+            6: 6, 7: 6, 8: 6,       // 寅午戌→午
+            9: 9, 10: 9, 11: 9      // 巳酉丑→酉
+        };
+
+        // 亡神（地支→地支）
+        var wangShenMap = {
+            0: 11, 1: 11, 2: 11,    // 申子辰→亥
+            6: 5, 7: 5, 8: 5,       // 寅午戌→巳
+            9: 8, 10: 8, 11: 8,     // 巳酉丑→申
+            3: 2, 4: 2, 5: 2        // 亥卯未→寅
+        };
+
+        // 劫煞（地支→地支）
+        var jieShaMap = {
+            0: 5, 1: 5, 2: 5,       // 申子辰→巳
+            6: 11, 7: 11, 8: 11,    // 寅午戌→亥
+            9: 2, 10: 2, 11: 2,     // 巳酉丑→寅
+            3: 8, 4: 8, 5: 8        // 亥卯未→申
+        };
+
+        // 灾煞（地支→地支）
+        var zaiShaMap = {
+            0: 6, 1: 6, 2: 6,       // 申子辰→午
+            6: 0, 7: 0, 8: 0,       // 寅午戌→子
+            9: 3, 10: 3, 11: 3,     // 巳酉丑→卯
+            3: 9, 4: 9, 5: 9        // 亥卯未→酉
+        };
+
+        // 孤辰（地支→地支）
+        var guChenMap = {
+            5: 4, 6: 5, 7: 6, 8: 7, 9: 8, 10: 9, 11: 10, 0: 11, 1: 0, 2: 1, 3: 2, 4: 3
+        };
+
+        // 寡宿（地支→地支）
+        var guaSuMap = {
+            0: 10, 1: 10, 2: 10,    // 申子辰→戌
+            6: 4, 7: 4, 8: 4,       // 寅午戌→辰
+            9: 3, 10: 3, 11: 3,     // 巳酉丑→卯
+            3: 1, 4: 1, 5: 1        // 亥卯未→丑
+        };
+
+        // 天罗地网（地支→名称）
+        var tianLuoDiWangMap = { 4: '天罗地网', 10: '天罗地网' };
+
+        // 红鸾（地支→地支）
+        var hongLuanMap = {
+            0: 3, 1: 2, 2: 1, 3: 0, 4: 11, 5: 10,
+            6: 9, 7: 8, 8: 7, 9: 6, 10: 5, 11: 4
+        };
+
+        // 天喜（地支→地支）
+        var tianXiMap = {
+            0: 9, 1: 8, 2: 7, 3: 6, 4: 5, 5: 4,
+            6: 3, 7: 2, 8: 1, 9: 0, 10: 11, 11: 10
+        };
+
+        // 吊客（地支→地支）
+        var diaoKeMap = {
+            0: 6, 1: 7, 2: 8, 3: 9, 4: 10, 5: 11,
+            6: 0, 7: 1, 8: 2, 9: 3, 10: 4, 11: 5
+        };
+
+        // 丧门（地支→地支）
+        var sangMenMap = {
+            0: 2, 1: 3, 2: 4, 3: 5, 4: 6, 5: 7,
+            6: 8, 7: 9, 8: 10, 9: 11, 10: 0, 11: 1
+        };
+
+        // 天德贵人（月支→[type, index]）
+        var tianDeMap = {
+            2: ['gan', 3],   // 寅月→丁
+            3: ['zhi', 8],   // 卯月→申
+            4: ['gan', 8],   // 辰月→壬
+            5: ['gan', 7],   // 巳月→辛
+            6: ['gan', 2],   // 午月→丙
+            7: ['zhi', 2],   // 未月→寅
+            8: ['gan', 3],   // 申月→丁
+            9: ['zhi', 8],   // 酉月→申
+            10: ['gan', 8],  // 戌月→壬
+            11: ['gan', 7],  // 亥月→辛
+            0: ['gan', 2],   // 子月→丙
+            1: ['zhi', 2]    // 丑月→寅
+        };
+
+        // 月德贵人（月支→天干索引）
+        var yueDeMap = {
+            0: 8, 1: 6, 2: 2, 3: 0, 4: 8, 5: 6,
+            6: 2, 7: 0, 8: 8, 9: 6, 10: 2, 11: 0
+        };
+
+        // 天医（月支→地支）
+        var tianYiMedMap = {
+            0: 11, 1: 0, 2: 1, 3: 2, 4: 3, 5: 4,
+            6: 5, 7: 6, 8: 7, 9: 8, 10: 9, 11: 10
+        };
+
+        // 天赦（月支→地支）
+        var tianSheMap = {
+            2: 2, 3: 2, 4: 2,       // 寅卯辰月(春)→寅
+            5: 6, 6: 6, 7: 6,       // 巳午未月(夏)→午
+            8: 8, 9: 8, 10: 8,      // 申酉戌月(秋)→申
+            11: 0, 0: 0, 1: 0       // 亥子丑月(冬)→子
+        };
+
+        // ==================== 维度1：以年干查 ====================
+
+        // 天乙贵人（年干）
+        addByZhi('天乙贵人', tianYiMap[yearGanIdx] || []);
+
+        // 文昌贵人（年干）
         var wcZhi = wenChangMap[yearGanIdx];
         if (wcZhi !== undefined) {
-            var wcFound = false;
-            for (var p = 0; p < 4; p++) {
-                if (fourZhi[p] === wcZhi) {
-                    result[pillarNames[p]].push('文昌贵人');
-                    wcFound = true;
-                }
-            }
-            // 若贵人地支不在四柱地支中，标注在年柱
-            if (!wcFound) {
-                result.year.push('文昌贵人');
-            }
+            addByZhi('文昌贵人', [wcZhi]);
         }
 
-        // ========== 3. 华盖（查日支和年支） ==========
-        // 寅午戌→戌，申子辰→辰，巳酉丑→丑，亥卯未→未
-        var huaGaiMap = {
-            0: 4, 1: 1, 2: 10, 3: 7, 4: 4, 5: 1,
-            6: 10, 7: 7, 8: 4, 9: 1, 10: 10, 11: 7
-        };
-        addByZhi('华盖', [huaGaiMap[dayZhiIdx]]);
+        // 太极贵人（年干）
+        addByZhi('太极贵人', taiJiMap[yearGanIdx] || []);
+
+        // 金舆（年干）
+        var jyZhi = jinYuMap[yearGanIdx];
+        if (jyZhi !== undefined) {
+            addByZhi('金舆', [jyZhi]);
+        }
+
+        // 禄神（年干）
+        var lsZhi = luShenMap[yearGanIdx];
+        if (lsZhi !== undefined) {
+            addByZhi('禄神', [lsZhi]);
+        }
+
+        // 学堂（年干）
+        var xtZhi = xueTangMap[yearGanIdx];
+        if (xtZhi !== undefined) {
+            addByZhi('学堂', [xtZhi]);
+        }
+
+        // ==================== 维度2：以日干查 ====================
+
+        // 天乙贵人（日干）
+        addByZhi('天乙贵人', tianYiMap[dayGanIdx] || []);
+
+        // 文昌贵人（日干）
+        var wcZhi2 = wenChangMap[dayGanIdx];
+        if (wcZhi2 !== undefined) {
+            addByZhi('文昌贵人', [wcZhi2]);
+        }
+
+        // 太极贵人（日干）
+        addByZhi('太极贵人', taiJiMap[dayGanIdx] || []);
+
+        // 金舆（日干）
+        var jyZhi2 = jinYuMap[dayGanIdx];
+        if (jyZhi2 !== undefined) {
+            addByZhi('金舆', [jyZhi2]);
+        }
+
+        // 禄神（日干）
+        var lsZhi2 = luShenMap[dayGanIdx];
+        if (lsZhi2 !== undefined) {
+            addByZhi('禄神', [lsZhi2]);
+        }
+
+        // 学堂（日干）
+        var xtZhi2 = xueTangMap[dayGanIdx];
+        if (xtZhi2 !== undefined) {
+            addByZhi('学堂', [xtZhi2]);
+        }
+
+        // 羊刃（日干）
+        var yrZhi = yangRenMap[dayGanIdx];
+        if (yrZhi !== undefined) {
+            addByZhi('羊刃', [yrZhi]);
+        }
+
+        // 福星贵人（日干）
+        var fxZhi = fuXingMap[dayGanIdx];
+        if (fxZhi !== undefined) {
+            addByZhi('福星贵人', [fxZhi]);
+        }
+
+        // 红艳（日干）
+        var hyZhi = hongYanMap[dayGanIdx];
+        if (hyZhi !== undefined) {
+            addByZhi('红艳', [hyZhi]);
+        }
+
+        // ==================== 维度3：以年支查 ====================
+
+        // 桃花（年支）
+        addByZhi('桃花', [taoHuaMap[yearZhiIdx]]);
+
+        // 驿马（年支）
+        addByZhi('驿马', [yiMaMap[yearZhiIdx]]);
+
+        // 华盖（年支）
         addByZhi('华盖', [huaGaiMap[yearZhiIdx]]);
 
-        // ========== 4. 太极贵人（查年干和日干） ==========
-        // 甲乙→子午，丙丁→卯酉，戊己→辰戌丑未（四季），庚辛→寅申，壬癸→巳亥
-        var taiJiMap = {
-            0: [0, 6], 1: [0, 6],
-            2: [3, 9], 3: [3, 9],
-            4: [4, 10, 1, 7], 5: [4, 10, 1, 7],
-            6: [2, 8], 7: [2, 8],
-            8: [5, 11], 9: [5, 11]
-        };
-        // 查年干
-        addByZhi('太极贵人', taiJiMap[yearGanIdx] || []);
-        // 查日干
-        addByZhi('太极贵人', taiJiMap[dayGanIdx] || []);
-        // 太极贵人回退：若目标地支不在四柱中，标注在日柱
-        {
-            var tjTargets = (taiJiMap[yearGanIdx] || []).concat(taiJiMap[dayGanIdx] || []);
-            var tjFound = false;
-            for (var tji = 0; tji < tjTargets.length; tji++) {
-                for (var tjp = 0; tjp < 4; tjp++) {
-                    if (fourZhi[tjp] === tjTargets[tji]) { tjFound = true; break; }
+        // 将星（年支）
+        addByZhi('将星', [jiangXingMap[yearZhiIdx]]);
+
+        // 亡神（年支）
+        addByZhi('亡神', [wangShenMap[yearZhiIdx]]);
+
+        // 劫煞（年支）
+        addByZhi('劫煞', [jieShaMap[yearZhiIdx]]);
+
+        // 灾煞（年支）
+        addByZhi('灾煞', [zaiShaMap[yearZhiIdx]]);
+
+        // 孤辰（年支）
+        addByZhi('孤辰', [guChenMap[yearZhiIdx]]);
+
+        // 寡宿（年支）
+        addByZhi('寡宿', [guaSuMap[yearZhiIdx]]);
+
+        // 元辰（年支，简化版：阳男阴女取年支-3，阴男阳女取年支+3，模12）
+        // 此处无法判断性别和年干阴阳，故两种结果都查
+        addByZhi('元辰', [(yearZhiIdx + 9) % 12]); // 年支-3 mod 12
+        addByZhi('元辰', [(yearZhiIdx + 3) % 12]); // 年支+3 mod 12
+
+        // 天罗地网（年支）
+        var tldw = tianLuoDiWangMap[yearZhiIdx];
+        if (tldw) {
+            for (var p = 0; p < 4; p++) {
+                if (fourZhi[p] === yearZhiIdx) {
+                    result[pillarNames[p]].push(tldw);
                 }
-                if (tjFound) break;
-            }
-            if (!tjFound && tjTargets.length > 0) {
-                result.day.push('太极贵人');
             }
         }
 
-        // ========== 5. 天德贵人（查月支） ==========
-        // 正月丁，二月申，三月壬，四月辛，五月丙，六月寅，
-        // 七月丁，八月申，九月壬，十月辛，十一月丙，十二月寅
-        // 注意：正月=寅(2), 二月=卯(3), ...十二月=丑(1)
-        // 部分结果为天干，部分为地支，需要分别用addByGan和addByZhi
-        // 格式：[type, index]  type: 'gan'=天干, 'zhi'=地支
-        var tianDeMap = {
-            2: ['gan', 3],   // 寅月(正月)→丁
-            3: ['zhi', 8],   // 卯月(二月)→申
-            4: ['gan', 8],   // 辰月(三月)→壬
-            5: ['gan', 7],   // 巳月(四月)→辛
-            6: ['gan', 2],   // 午月(五月)→丙
-            7: ['zhi', 2],   // 未月(六月)→寅
-            8: ['gan', 3],   // 申月(七月)→丁
-            9: ['zhi', 8],   // 酉月(八月)→申
-            10: ['gan', 8],  // 戌月(九月)→壬
-            11: ['gan', 7],  // 亥月(十月)→辛
-            0: ['gan', 2],   // 子月(十一月)→丙
-            1: ['zhi', 2]    // 丑月(十二月)→寅
-        };
+        // 红鸾（年支）
+        addByZhi('红鸾', [hongLuanMap[yearZhiIdx]]);
+
+        // 天喜（年支）
+        addByZhi('天喜', [tianXiMap[yearZhiIdx]]);
+
+        // 吊客（年支）
+        addByZhi('吊客', [diaoKeMap[yearZhiIdx]]);
+
+        // 丧门（年支）
+        addByZhi('丧门', [sangMenMap[yearZhiIdx]]);
+
+        // ==================== 维度4：以日支查 ====================
+
+        // 桃花（日支）
+        addByZhi('桃花', [taoHuaMap[dayZhiIdx]]);
+
+        // 驿马（日支）
+        addByZhi('驿马', [yiMaMap[dayZhiIdx]]);
+
+        // 华盖（日支）
+        addByZhi('华盖', [huaGaiMap[dayZhiIdx]]);
+
+        // 将星（日支）
+        addByZhi('将星', [jiangXingMap[dayZhiIdx]]);
+
+        // 亡神（日支）
+        addByZhi('亡神', [wangShenMap[dayZhiIdx]]);
+
+        // 劫煞（日支）
+        addByZhi('劫煞', [jieShaMap[dayZhiIdx]]);
+
+        // 灾煞（日支）
+        addByZhi('灾煞', [zaiShaMap[dayZhiIdx]]);
+
+        // 孤辰（日支）
+        addByZhi('孤辰', [guChenMap[dayZhiIdx]]);
+
+        // 寡宿（日支）
+        addByZhi('寡宿', [guaSuMap[dayZhiIdx]]);
+
+        // ==================== 维度5：以月支查 ====================
+
+        // 天德贵人（月支）
         var tdEntry = tianDeMap[monthZhiIdx];
         if (tdEntry !== undefined) {
             if (tdEntry[0] === 'gan') {
@@ -752,245 +1022,103 @@ const Lunar = (function() {
             } else {
                 addByZhi('天德贵人', [tdEntry[1]]);
             }
-            // 天德贵人回退：若目标不在四柱中，标注在时柱
-            {
-                var tdTarget = tdEntry[1];
-                var tdFound = false;
-                if (tdEntry[0] === 'gan') {
-                    for (var tdp = 0; tdp < 4; tdp++) {
-                        if (fourGan[tdp] === tdTarget) { tdFound = true; break; }
-                    }
-                } else {
-                    for (var tdp2 = 0; tdp2 < 4; tdp2++) {
-                        if (fourZhi[tdp2] === tdTarget) { tdFound = true; break; }
-                    }
-                }
-                if (!tdFound) {
-                    result.hour.push('天德贵人');
-                }
-            }
         }
 
-        // ========== 6. 月德贵人（查月支） ==========
-        // 寅午戌月→丙，申子辰月→壬，亥卯未月→甲，巳酉丑月→庚
-        var yueDeMap = {
-            0: 8, 1: 6, 2: 2, 3: 0, 4: 8, 5: 6,
-            6: 2, 7: 0, 8: 8, 9: 6, 10: 2, 11: 0
-        };
+        // 月德贵人（月支）
         var ydGan = yueDeMap[monthZhiIdx];
         if (ydGan !== undefined) {
             addByGan('月德贵人', [ydGan]);
-            // 月德贵人回退：若目标天干不在四柱中，标注在时柱
-            {
-                var ydFound = false;
-                for (var ydp = 0; ydp < 4; ydp++) {
-                    if (fourGan[ydp] === ydGan) { ydFound = true; break; }
+        }
+
+        // 德秀贵人（月支）：天德贵人和月德贵人同时出现在四柱中
+        {
+            var tdFound = false;
+            var ydFound = false;
+            if (tdEntry !== undefined) {
+                if (tdEntry[0] === 'gan') {
+                    for (var dp = 0; dp < 4; dp++) {
+                        if (fourGan[dp] === tdEntry[1]) { tdFound = true; break; }
+                    }
+                } else {
+                    for (var dp2 = 0; dp2 < 4; dp2++) {
+                        if (fourZhi[dp2] === tdEntry[1]) { tdFound = true; break; }
+                    }
                 }
-                if (!ydFound) {
-                    result.hour.push('月德贵人');
+            }
+            if (ydGan !== undefined) {
+                for (var dp3 = 0; dp3 < 4; dp3++) {
+                    if (fourGan[dp3] === ydGan) { ydFound = true; break; }
                 }
             }
-        }
-
-        // ========== 7. 金舆（查日支） ==========
-        // 子→辰，丑→巳，寅→午，卯→未，辰→申，巳→酉，
-        // 午→戌，未→亥，申→子，酉→丑，戌→寅，亥→卯
-        var jinYuMap = {
-            0: 4, 1: 5, 2: 6, 3: 7, 4: 8, 5: 9,
-            6: 10, 7: 11, 8: 0, 9: 1, 10: 2, 11: 3
-        };
-        addByZhi('金舆', [jinYuMap[dayZhiIdx]]);
-        // 金舆回退：若目标地支不在四柱中，标注在年柱
-        {
-            var jyTarget = jinYuMap[dayZhiIdx];
-            var jyFound = false;
-            for (var jyp = 0; jyp < 4; jyp++) {
-                if (fourZhi[jyp] === jyTarget) { jyFound = true; break; }
-            }
-            if (!jyFound) {
-                result.year.push('金舆');
+            if (tdFound && ydFound) {
+                result.day.push('德秀贵人');
             }
         }
 
-        // ========== 8. 寡宿（查年支） ==========
-        // 寅午戌→辰，申子辰→戌，巳酉丑→卯，亥卯未→丑
-        var guaSuMap = {
-            0: 10, 1: 3, 2: 4, 3: 1, 4: 10, 5: 3,
-            6: 4, 7: 1, 8: 10, 9: 3, 10: 4, 11: 1
-        };
-        addByZhi('寡宿', [guaSuMap[yearZhiIdx]]);
-        // 寡宿回退：若目标地支不在四柱中，标注在时柱
-        {
-            var gsTarget = guaSuMap[yearZhiIdx];
-            var gsFound = false;
-            for (var gsp = 0; gsp < 4; gsp++) {
-                if (fourZhi[gsp] === gsTarget) { gsFound = true; break; }
-            }
-            if (!gsFound) {
-                result.hour.push('寡宿');
-            }
-        }
-
-        // ========== 9. 丧门（查年支，始终分配到时柱） ==========
-        // 子→寅，丑→卯，寅→辰，卯→巳，辰→午，巳→未，
-        // 午→申，未→酉，申→戌，酉→亥，戌→子，亥→丑
-        result.hour.push('丧门');
-
-        // ========== 10. 天罗地网 ==========
-        // 只检查辰(4)/戌(10)→天罗地网，不检查巳/亥→地网
-        var tianLuoDiWangMap = {4:'天罗地网', 10:'天罗地网'};
-        for (var p = 0; p < 4; p++) {
-            if (tianLuoDiWangMap[fourZhi[p]]) {
-                result[pillarNames[p]].push(tianLuoDiWangMap[fourZhi[p]]);
-            }
-        }
-
-        // ========== 11. 天喜（查日支） ==========
-        // 子→酉，丑→申，寅→未，卯→午，辰→巳，巳→辰，
-        // 午→卯，未→寅，申→丑，酉→子，戌→亥，亥→戌
-        var tianXiMap = {
-            0: 9, 1: 8, 2: 7, 3: 6, 4: 5, 5: 4,
-            6: 3, 7: 2, 8: 1, 9: 0, 10: 11, 11: 10
-        };
-        addByZhi('天喜', [tianXiMap[dayZhiIdx]]);
-        // 天喜回退：若目标地支不在四柱中，标注在时柱
-        {
-            var txTarget = tianXiMap[dayZhiIdx];
-            var txFound = false;
-            for (var txp = 0; txp < 4; txp++) {
-                if (fourZhi[txp] === txTarget) { txFound = true; break; }
-            }
-            if (!txFound) {
-                result.hour.push('天喜');
-            }
-        }
-
-        // ========== 12. 羊刃（查日干，不分配到时柱） ==========
-        // 甲→卯，乙→辰，丙戊→午，丁己→未，庚→酉，辛→戌，壬→子，癸→丑
-        var yangRenMap = {
-            0: 3, 1: 4, 2: 6, 3: 7, 4: 6, 5: 7,
-            6: 9, 7: 10, 8: 0, 9: 1
-        };
-        var yrTarget = yangRenMap[dayGanIdx];
-        for (var p = 0; p < 3; p++) {
-            if (fourZhi[p] === yrTarget) {
-                result[pillarNames[p]].push('羊刃');
-            }
-        }
-
-        // ========== 13. 桃花（查日支） ==========
-        // 寅午戌→卯，申子辰→酉，巳酉丑→午，亥卯未→子
-        var taoHuaMap = {
-            0: 9, 1: 9, 2: 3, 3: 3, 4: 9, 5: 6,
-            6: 6, 7: 6, 8: 9, 9: 9, 10: 3, 11: 3
-        };
-        addByZhi('桃花', [taoHuaMap[dayZhiIdx]]);
-
-        // ========== 14. 天乙贵人（查日干） ==========
-        // 甲戊→丑未，乙己→子申，丙丁→亥酉，庚辛→午寅，壬癸→卯巳
-        var tianYiMap = {
-            0: [1, 7], 1: [0, 8], 2: [11, 9], 3: [11, 9],
-            4: [1, 7], 5: [0, 8], 6: [1, 7], 7: [6, 2],
-            8: [3, 5], 9: [3, 5]
-        };
-        addByZhi('天乙贵人', tianYiMap[dayGanIdx] || []);
-
-        // ========== 15. 禄神（查日干） - 《渊海子平》 ==========
-        // 甲→寅，乙→卯，丙戊→巳，丁己→午，庚→申，辛→酉，壬→亥，癸→子
-        var luShenMap = {
-            0: 2, 1: 3, 2: 5, 3: 7, 4: 5, 5: 7,
-            6: 8, 7: 9, 8: 10, 9: 0
-        };
-        addByZhi('禄神', [luShenMap[dayGanIdx]]);
-
-        // ========== 16. 将星（查年支） - 《渊海子平》 ==========
-        // 申子辰→子，寅午戌→午，巳酉丑→酉，亥卯未→卯
-        var jiangXingMap = {
-            0: 0, 1: 9, 2: 6, 3: 3, 4: 0, 5: 9,
-            6: 6, 7: 3, 8: 0, 9: 9, 10: 6, 11: 3
-        };
-        addByZhi('将星', [jiangXingMap[yearZhiIdx]]);
-
-        // ========== 17. 劫煞（查年支） - 《渊海子平》 ==========
-        // 申子辰→巳，寅午戌→亥，巳酉丑→寅，亥卯未→申
-        var jieShaMap = {
-            0: 5, 1: 2, 2: 11, 3: 8, 4: 5, 5: 2,
-            6: 11, 7: 8, 8: 5, 9: 2, 10: 11, 11: 8
-        };
-        addByZhi('劫煞', [jieShaMap[yearZhiIdx]]);
-
-        // ========== 18. 灾煞（查年支） - 《渊海子平》 ==========
-        // 申子辰→午，寅午戌→子，巳酉丑→卯，亥卯未→酉
-        var zaiShaMap = {
-            0: 6, 1: 3, 2: 0, 3: 9, 4: 6, 5: 3,
-            6: 0, 7: 9, 8: 6, 9: 0, 10: 3, 11: 9
-        };
-        addByZhi('灾煞', [zaiShaMap[yearZhiIdx]]);
-
-        // ========== 19. 孤辰（查年支，不分配到时柱） - 《渊海子平》 ==========
-        // 巳→辰，午→巳，未→午，申→未，酉→申，戌→酉，
-        // 亥→戌，子→亥，丑→子，寅→丑，卯→寅，辰→卯
-        var guChenMap = {
-            0: 11, 1: 0, 2: 1, 3: 2, 4: 3, 5: 4,
-            6: 5, 7: 6, 8: 7, 9: 8, 10: 9, 11: 10
-        };
-        var gcTarget = guChenMap[yearZhiIdx];
-        for (var p = 0; p < 3; p++) {
-            if (fourZhi[p] === gcTarget) {
-                result[pillarNames[p]].push('孤辰');
-            }
-        }
-
-        // ========== 20. 亡神（查年支） - 《渊海子平》 ==========
-        // 申子辰→亥，寅午戌→巳，巳酉丑→申，亥卯未→寅
-        var wangShenMap = {
-            0: 11, 1: 8, 2: 5, 3: 2, 4: 11, 5: 8,
-            6: 5, 7: 2, 8: 11, 9: 8, 10: 5, 11: 2
-        };
-        addByZhi('亡神', [wangShenMap[yearZhiIdx]]);
-
-        // ========== 21. 天赦（查月支定季节，验日支） - 《渊海子平》 ==========
-        // 春季（寅卯辰月）→戊寅日（寅），夏季（巳午未月）→甲午日（午），
-        // 秋季（申酉戌月）→戊申日（申），冬季（亥子丑月）→甲子日（子）
-        var tianSheMap = {
-            2: 2, 3: 2, 4: 2,    // 寅卯辰月(春)→寅(2)
-            5: 6, 6: 6, 7: 6,    // 巳午未月(夏)→午(6)
-            8: 8, 9: 8, 10: 8,   // 申酉戌月(秋)→申(8)
-            11: 0, 0: 0, 1: 0    // 亥子丑月(冬)→子(0)
-        };
-        var tianSheZhi = tianSheMap[monthZhiIdx];
-        if (tianSheZhi !== undefined && dayZhiIdx === tianSheZhi) {
-            result.day.push('天赦');
-        }
-
-        // ========== 22. 红鸾（查年支） - 《渊海子平》 ==========
-        // 子→卯，丑→寅，寅→丑，卯→子，辰→亥，巳→戌，
-        // 午→酉，未→申，申→未，酉→午，戌→巳，亥→辰
-        var hongLuanMap = {
-            0: 3, 1: 2, 2: 1, 3: 0, 4: 11, 5: 10,
-            6: 9, 7: 8, 8: 7, 9: 6, 10: 5, 11: 4
-        };
-        addByZhi('红鸾', [hongLuanMap[yearZhiIdx]]);
-
-        // ========== 23. 天医（查月支） - 《渊海子平》 ==========
-        // 寅→丑，卯→寅，辰→卯，巳→辰，午→巳，未→午，
-        // 申→未，酉→申，戌→酉，亥→戌，子→亥，丑→子
-        var tianYiMedMap = {
-            0: 11, 1: 0, 2: 1, 3: 2, 4: 3, 5: 4,
-            6: 5, 7: 6, 8: 7, 9: 8, 10: 9, 11: 10
-        };
+        // 天医（月支）
         addByZhi('天医', [tianYiMedMap[monthZhiIdx]]);
 
-        // ========== 24. 吊客（查年支） - 《渊海子平》 ==========
-        // 子→午，丑→未，寅→申，卯→酉，辰→戌，巳→亥，
-        // 午→子，未→丑，申→寅，酉→卯，戌→辰，亥→巳
-        var diaoKeMap = {
-            0: 6, 1: 7, 2: 8, 3: 9, 4: 10, 5: 11,
-            6: 0, 7: 1, 8: 2, 9: 3, 10: 4, 11: 5
-        };
-        addByZhi('吊客', [diaoKeMap[yearZhiIdx]]);
+        // ==================== 命定神煞（仅日柱） ====================
 
-        // 去重
+        // 魁罡：日柱干支为庚辰、庚戌、壬辰、戊戌
+        {
+            var kuiGanSet = {};
+            kuiGanSet[6 + '_' + 4] = true;  // 庚辰
+            kuiGanSet[6 + '_' + 10] = true; // 庚戌
+            kuiGanSet[8 + '_' + 4] = true;  // 壬辰
+            kuiGanSet[4 + '_' + 10] = true; // 戊戌
+            if (kuiGanSet[dayGanIdx + '_' + dayZhiIdx]) {
+                result.day.push('魁罡');
+            }
+        }
+
+        // 十恶大败：日柱干支为甲辰、乙巳、丙申、丁亥、戊戌、己丑、庚辰、辛巳、壬申、癸亥
+        {
+            var shiESet = {};
+            shiESet[0 + '_' + 4] = true;  // 甲辰
+            shiESet[1 + '_' + 5] = true;  // 乙巳
+            shiESet[2 + '_' + 8] = true;  // 丙申
+            shiESet[3 + '_' + 11] = true; // 丁亥
+            shiESet[4 + '_' + 10] = true; // 戊戌
+            shiESet[5 + '_' + 1] = true;  // 己丑
+            shiESet[6 + '_' + 4] = true;  // 庚辰
+            shiESet[7 + '_' + 5] = true;  // 辛巳
+            shiESet[8 + '_' + 8] = true;  // 壬申
+            shiESet[9 + '_' + 11] = true; // 癸亥
+            if (shiESet[dayGanIdx + '_' + dayZhiIdx]) {
+                result.day.push('十恶大败');
+            }
+        }
+
+        // 天赦：春季日支为寅，夏季日支为午，秋季日支为申，冬季日支为子
+        {
+            var tsZhi = tianSheMap[monthZhiIdx];
+            if (tsZhi !== undefined && dayZhiIdx === tsZhi) {
+                result.day.push('天赦');
+            }
+        }
+
+        // 阴阳差错：日柱干支为丙子、丁丑、戊寅、辛卯、壬辰、癸巳、丙午、丁未、戊申、辛酉、壬戌、癸亥
+        {
+            var yyccSet = {};
+            yyccSet[2 + '_' + 0] = true;  // 丙子
+            yyccSet[3 + '_' + 1] = true;  // 丁丑
+            yyccSet[4 + '_' + 2] = true;  // 戊寅
+            yyccSet[7 + '_' + 3] = true;  // 辛卯
+            yyccSet[8 + '_' + 4] = true;  // 壬辰
+            yyccSet[9 + '_' + 5] = true;  // 癸巳
+            yyccSet[2 + '_' + 6] = true;  // 丙午
+            yyccSet[3 + '_' + 7] = true;  // 丁未
+            yyccSet[4 + '_' + 8] = true;  // 戊申
+            yyccSet[7 + '_' + 9] = true;  // 辛酉
+            yyccSet[8 + '_' + 10] = true; // 壬戌
+            yyccSet[9 + '_' + 11] = true; // 癸亥
+            if (yyccSet[dayGanIdx + '_' + dayZhiIdx]) {
+                result.day.push('阴阳差错');
+            }
+        }
+
+        // ==================== 去重 ====================
         for (var p = 0; p < 4; p++) {
             var seen = {};
             var unique = [];
