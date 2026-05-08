@@ -29,7 +29,7 @@ const RelationAnalyzer = (function() {
     const diZhi = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥'];
     const diZhiWuXing = ['水', '土', '木', '木', '土', '火', '火', '土', '金', '金', '土', '水'];
 
-    // 地支三会
+    // 地支三会（严格要求三个字全齐）
     const diZhiSanHui = [
         { name: '寅卯辰三会东方木', zhi: ['寅', '卯', '辰'], wx: '木' },
         { name: '巳午未三会南方火', zhi: ['巳', '午', '未'], wx: '火' },
@@ -37,12 +37,13 @@ const RelationAnalyzer = (function() {
         { name: '亥子丑三会北方水', zhi: ['亥', '子', '丑'], wx: '水' }
     ];
 
-    // 地支三合
+    // 地支三合（含完整三合 + 半合定义）
+    // 每组：zhi[0]=长生, zhi[1]=帝旺, zhi[2]=墓库
     const diZhiSanHe = [
-        { name: '申子辰三合水局', zhi: ['申', '子', '辰'], wx: '水' },
-        { name: '寅午戌三合火局', zhi: ['寅', '午', '戌'], wx: '火' },
-        { name: '巳酉丑三合金局', zhi: ['巳', '酉', '丑'], wx: '金' },
-        { name: '亥卯未三合木局', zhi: ['亥', '卯', '未'], wx: '木' }
+        { name: '申子辰三合水局', zhi: ['申', '子', '辰'], wx: '水', shengDi: ['申', '子'], muKu: ['子', '辰'] },
+        { name: '寅午戌三合火局', zhi: ['寅', '午', '戌'], wx: '火', shengDi: ['寅', '午'], muKu: ['午', '戌'] },
+        { name: '巳酉丑三合金局', zhi: ['巳', '酉', '丑'], wx: '金', shengDi: ['巳', '酉'], muKu: ['酉', '丑'] },
+        { name: '亥卯未三合木局', zhi: ['亥', '卯', '未'], wx: '木', shengDi: ['亥', '卯'], muKu: ['卯', '未'] }
     ];
 
     // 地支六合
@@ -96,28 +97,34 @@ const RelationAnalyzer = (function() {
 
     /**
      * 分析八字中的天干关系
-     * @param {Array} ganList - 天干列表 [年干, 月干, 日干, 时干]
-     * @returns {Array} 天干关系列表
+     * 天干四冲/五合：双方都必须实际存在于天干列表中
+     * 重复天干只算一个（用集合去重）
      */
     function analyzeTianGanRelations(ganList) {
         const results = [];
         const positions = ['年', '月', '日', '时'];
 
+        // 用集合去重：重复天干只算一个
+        const ganSet = [...new Set(ganList)];
+
         // 检查所有天干两两关系
-        for (let i = 0; i < ganList.length; i++) {
-            for (let j = i + 1; j < ganList.length; j++) {
-                const gan1 = ganList[i];
-                const gan2 = ganList[j];
+        for (let i = 0; i < ganSet.length; i++) {
+            for (let j = i + 1; j < ganSet.length; j++) {
+                const gan1 = ganSet[i];
+                const gan2 = ganSet[j];
 
                 // 检查相冲
                 const chong = checkTianGanChong(gan1, gan2);
                 if (chong) {
+                    // 找到在原始列表中的位置
+                    const pos1 = positions[ganList.indexOf(gan1)];
+                    const pos2 = positions[ganList.indexOf(gan2)];
                     results.push({
                         ...chong,
                         gan1: gan1,
                         gan2: gan2,
-                        pos1: positions[i],
-                        pos2: positions[j],
+                        pos1: pos1,
+                        pos2: pos2,
                         category: '冲'
                     });
                 }
@@ -125,12 +132,14 @@ const RelationAnalyzer = (function() {
                 // 检查相合
                 const he = checkTianGanHe(gan1, gan2);
                 if (he) {
+                    const pos1 = positions[ganList.indexOf(gan1)];
+                    const pos2 = positions[ganList.indexOf(gan2)];
                     results.push({
                         ...he,
                         gan1: gan1,
                         gan2: gan2,
-                        pos1: positions[i],
-                        pos2: positions[j],
+                        pos1: pos1,
+                        pos2: pos2,
                         category: '合'
                     });
                 }
@@ -142,22 +151,26 @@ const RelationAnalyzer = (function() {
 
     /**
      * 分析八字中的地支关系
-     * @param {Array} zhiList - 地支列表 [年支, 月支, 日支, 时支]
-     * @returns {Array} 地支关系列表
+     * 三合：完整三合(3字全齐) / 生地半合(缺墓库) / 墓库半合(缺长生)
+     * 三会：严格要求3字全齐，无半会
+     * 其他：双方都必须存在于地支集合中
      */
     function analyzeDiZhiRelations(zhiList) {
         const results = [];
         const positions = ['年', '月', '日', '时'];
 
+        // 用集合去重：重复地支只算一个
+        const zhiSet = [...new Set(zhiList)];
+
         // 1. 检查三刑（力量最大）
         for (let xing of diZhiSanXing) {
-            const matched = xing.zhi.filter(z => zhiList.includes(z));
+            const matched = xing.zhi.filter(z => zhiSet.includes(z));
             if (matched.length >= 2) {
                 const matchedPositions = matched.map(z => positions[zhiList.indexOf(z)]);
                 results.push({
                     type: 'xing',
                     name: xing.name,
-                    display: xing.name + '（' + xing.type + '）',
+                    display: '[刑] ' + xing.name + '（' + xing.type + '）',
                     zhi: matched,
                     positions: matchedPositions,
                     category: '刑',
@@ -168,13 +181,13 @@ const RelationAnalyzer = (function() {
 
         // 2. 检查六冲
         for (let chong of diZhiLiuChong) {
-            const idx1 = zhiList.indexOf(chong.pair[0]);
-            const idx2 = zhiList.indexOf(chong.pair[1]);
-            if (idx1 !== -1 && idx2 !== -1) {
+            if (zhiSet.includes(chong.pair[0]) && zhiSet.includes(chong.pair[1])) {
+                const idx1 = zhiList.indexOf(chong.pair[0]);
+                const idx2 = zhiList.indexOf(chong.pair[1]);
                 results.push({
                     type: 'chong',
                     name: chong.name,
-                    display: chong.name,
+                    display: '[冲] ' + chong.name,
                     zhi: [chong.pair[0], chong.pair[1]],
                     positions: [positions[idx1], positions[idx2]],
                     category: '冲',
@@ -185,13 +198,13 @@ const RelationAnalyzer = (function() {
 
         // 3. 检查六害
         for (let hai of diZhiLiuHai) {
-            const idx1 = zhiList.indexOf(hai.pair[0]);
-            const idx2 = zhiList.indexOf(hai.pair[1]);
-            if (idx1 !== -1 && idx2 !== -1) {
+            if (zhiSet.includes(hai.pair[0]) && zhiSet.includes(hai.pair[1])) {
+                const idx1 = zhiList.indexOf(hai.pair[0]);
+                const idx2 = zhiList.indexOf(hai.pair[1]);
                 results.push({
                     type: 'hai',
                     name: hai.name,
-                    display: hai.name,
+                    display: '[害] ' + hai.name,
                     zhi: [hai.pair[0], hai.pair[1]],
                     positions: [positions[idx1], positions[idx2]],
                     category: '害',
@@ -202,13 +215,13 @@ const RelationAnalyzer = (function() {
 
         // 4. 检查六破
         for (let po of diZhiLiuPo) {
-            const idx1 = zhiList.indexOf(po.pair[0]);
-            const idx2 = zhiList.indexOf(po.pair[1]);
-            if (idx1 !== -1 && idx2 !== -1) {
+            if (zhiSet.includes(po.pair[0]) && zhiSet.includes(po.pair[1])) {
+                const idx1 = zhiList.indexOf(po.pair[0]);
+                const idx2 = zhiList.indexOf(po.pair[1]);
                 results.push({
                     type: 'po',
                     name: po.name,
-                    display: po.name,
+                    display: '[破] ' + po.name,
                     zhi: [po.pair[0], po.pair[1]],
                     positions: [positions[idx1], positions[idx2]],
                     category: '破',
@@ -217,56 +230,91 @@ const RelationAnalyzer = (function() {
             }
         }
 
-        // 5. 检查六合
-        for (let he of diZhiLiuHe) {
-            const idx1 = zhiList.indexOf(he.pair[0]);
-            const idx2 = zhiList.indexOf(he.pair[1]);
-            if (idx1 !== -1 && idx2 !== -1) {
+        // 5. 检查三会（严格要求3字全齐）
+        for (let hui of diZhiSanHui) {
+            const matched = hui.zhi.filter(z => zhiSet.includes(z));
+            if (matched.length === 3) {
+                const matchedPositions = matched.map(z => positions[zhiList.indexOf(z)]);
                 results.push({
-                    type: 'liuhe',
-                    name: he.name,
-                    display: he.name,
-                    zhi: [he.pair[0], he.pair[1]],
-                    positions: [positions[idx1], positions[idx2]],
-                    category: '合',
-                    strength: 3
+                    type: 'sanhui',
+                    name: hui.name,
+                    display: '[会] ' + hui.name,
+                    zhi: matched,
+                    positions: matchedPositions,
+                    category: '会',
+                    strength: 3.5
                 });
             }
+            // matched.length < 3：不显示任何三会提示（无半会概念）
         }
 
-        // 6. 检查三合
+        // 6. 检查三合（完整三合 + 半合）
         for (let he of diZhiSanHe) {
-            const matched = he.zhi.filter(z => zhiList.includes(z));
-            if (matched.length >= 2) {
+            const matched = he.zhi.filter(z => zhiSet.includes(z));
+
+            if (matched.length === 3) {
+                // 完整三合
                 const matchedPositions = matched.map(z => positions[zhiList.indexOf(z)]);
                 results.push({
                     type: 'sanhe',
                     name: he.name,
-                    display: he.name,
+                    display: '[全合] ' + he.name,
                     zhi: matched,
                     positions: matchedPositions,
+                    category: '合',
+                    strength: 3
+                });
+            } else if (matched.length === 2) {
+                // 判断是生地半合还是墓库半合
+                const hasShengDi = he.shengDi.every(z => zhiSet.includes(z));
+                const hasMuKu = he.muKu.every(z => zhiSet.includes(z));
+
+                let halfType = '';
+                if (hasShengDi) {
+                    halfType = '生地';
+                } else if (hasMuKu) {
+                    halfType = '墓库';
+                }
+
+                if (halfType) {
+                    const matchedPositions = matched.map(z => positions[zhiList.indexOf(z)]);
+                    // 半合名称：取两个命中的地支 + 局名
+                    const halfName = matched[0] + matched[1] + '半合' + he.wx + '局';
+                    results.push({
+                        type: 'banhe',
+                        name: halfName,
+                        display: '[半合] ' + halfName + '（' + halfType + '）',
+                        zhi: matched,
+                        positions: matchedPositions,
+                        category: '半合',
+                        strength: 2.5
+                    });
+                }
+                // matched.length === 2 但既不是生地半合也不是墓库半合：不显示
+                // matched.length === 1：不显示任何三合提示
+            }
+            // matched.length < 2：不显示
+        }
+
+        // 7. 检查六合
+        for (let he of diZhiLiuHe) {
+            if (zhiSet.includes(he.pair[0]) && zhiSet.includes(he.pair[1])) {
+                const idx1 = zhiList.indexOf(he.pair[0]);
+                const idx2 = zhiList.indexOf(he.pair[1]);
+                results.push({
+                    type: 'liuhe',
+                    name: he.name,
+                    display: '[合] ' + he.name,
+                    zhi: [he.pair[0], he.pair[1]],
+                    positions: [positions[idx1], positions[idx2]],
                     category: '合',
                     strength: 2
                 });
             }
         }
 
-        // 7. 检查三会
-        for (let hui of diZhiSanHui) {
-            const matched = hui.zhi.filter(z => zhiList.includes(z));
-            if (matched.length >= 2) {
-                const matchedPositions = matched.map(z => positions[zhiList.indexOf(z)]);
-                results.push({
-                    type: 'sanhui',
-                    name: hui.name,
-                    display: hui.name,
-                    zhi: matched,
-                    positions: matchedPositions,
-                    category: '会',
-                    strength: 1
-                });
-            }
-        }
+        // 按力量排序（从大到小）
+        results.sort((a, b) => b.strength - a.strength);
 
         return results;
     }
@@ -279,6 +327,7 @@ const RelationAnalyzer = (function() {
                 (chong[0] === gan2 && chong[1] === gan1)) {
                 return {
                     name: gan1 + gan2 + '冲',
+                    display: '[冲] ' + gan1 + gan2 + '冲',
                     strength: 4
                 };
             }
@@ -292,6 +341,7 @@ const RelationAnalyzer = (function() {
                 (he.pair[0] === gan2 && he.pair[1] === gan1)) {
                 return {
                     name: he.name,
+                    display: '[合] ' + he.name,
                     strength: 3
                 };
             }
@@ -312,9 +362,6 @@ const RelationAnalyzer = (function() {
 
         const tianGanRelations = analyzeTianGanRelations(ganList);
         const diZhiRelations = analyzeDiZhiRelations(zhiList);
-
-        // 按力量排序（从大到小）
-        diZhiRelations.sort((a, b) => b.strength - a.strength);
 
         return {
             tianGanRelations: tianGanRelations,
@@ -340,12 +387,10 @@ const RelationAnalyzer = (function() {
 
         const positions = ['year', 'month', 'day', 'hour'];
 
-        // 逐一对比各柱地支关系
         for (let pos of positions) {
             const zhiA = baziA[pos].zhi;
             const zhiB = baziB[pos].zhi;
 
-            // 检查六冲
             for (let chong of diZhiLiuChong) {
                 if ((chong.pair[0] === zhiA && chong.pair[1] === zhiB) ||
                     (chong.pair[0] === zhiB && chong.pair[1] === zhiA)) {
@@ -357,7 +402,6 @@ const RelationAnalyzer = (function() {
                 }
             }
 
-            // 检查六合
             for (let he of diZhiLiuHe) {
                 if ((he.pair[0] === zhiA && he.pair[1] === zhiB) ||
                     (he.pair[0] === zhiB && he.pair[1] === zhiA)) {
@@ -377,7 +421,6 @@ const RelationAnalyzer = (function() {
     return {
         analyzeRelations: analyzeRelations,
         analyzeHepeiRelations: analyzeHepeiRelations,
-        // 导出常量供外部使用
         tianGanWuHe: tianGanWuHe,
         diZhiLiuHe: diZhiLiuHe,
         diZhiLiuChong: diZhiLiuChong,
@@ -389,7 +432,6 @@ const RelationAnalyzer = (function() {
     };
 })();
 
-// 兼容CommonJS和浏览器环境
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = RelationAnalyzer;
 }
