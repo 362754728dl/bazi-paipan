@@ -3236,6 +3236,11 @@ const App = (function () {
 
         emptyState.style.display = 'none';
 
+        // 清除骨架屏（首次加载时骨架屏由 innerHTML 设置，追加前必须先清空）
+        if (_recordsPage === 1) {
+            recordList.innerHTML = '';
+        }
+
         // 使用 DocumentFragment 追加记录，减少 DOM 重排
         var fragment = document.createDocumentFragment();
         records.forEach(function (r) {
@@ -3593,11 +3598,6 @@ const App = (function () {
                                 member_expire_time: json.data.member_expire_time || 0,
                                 vip_expire_time: json.data.vip_expire_time || ''
                             }));
-
-                            // 修复验证日志
-                            console.log('[v2_user存储确认] member_level 实际写入值:', memberLevel);
-                            var confirmRead = JSON.parse(localStorage.getItem('v2_user'));
-                            console.log('[v2_user回读确认] member_level:', confirmRead.member_level);
 
                             localStorage.setItem('bazi_current_user', JSON.stringify({
                                 username: json.data.username,
