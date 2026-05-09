@@ -385,7 +385,7 @@ const App = (function () {
             if (resultArea) resultArea.innerHTML = '';
             // 如果在记录页，刷新列表
             if (document.querySelector('#pageRecords.active')) {
-                renderRecords();
+                renderRecords(true);
             }
             showToast('已退出登录');
         });
@@ -425,6 +425,14 @@ const App = (function () {
             btnEmptyRegister.addEventListener('click', function () {
                 showLoginModal();
                 toggleLoginMode();
+            });
+        }
+
+        // 加载更多按钮
+        var btnLoadMore = document.getElementById('btnLoadMore');
+        if (btnLoadMore) {
+            btnLoadMore.addEventListener('click', function () {
+                loadMoreRecords();
             });
         }
 
@@ -661,7 +669,7 @@ const App = (function () {
 
         // 切换到记录页时刷新记录列表
         if (pageId === 'pageRecords') {
-            renderRecords();
+            renderRecords(true);
         }
 
         // 切换到管理员页面时刷新数据
@@ -3140,18 +3148,34 @@ const App = (function () {
         }
     }
 
+    // ==================== 排盘记录分页状态 ====================
+    var _recordsPage = 1;
+    var _recordsPageSize = 10;
+    var _recordsHasMore = false;
+    var _recordsTotal = 0;
+    var _recordsLoading = false;
+    var _recordsAllLoaded = []; // 当前已加载的所有记录（用于点击查看详情）
+
     /**
-     * 渲染记录列表（异步版本）
+     * 渲染记录列表（分页版本）
      */
-    async function renderRecords() {
+    async function renderRecords(resetPage) {
         try {
         var recordList = $('recordList');
         var emptyState = $('emptyState');
+        var loadMoreWrap = $('loadMoreWrap');
+        var recordsCount = $('recordsCount');
 
-        // 安全检查：确保DOM元素存在
         if (!recordList || !emptyState) {
-            console.error('[renderRecords] DOM元素不存在: recordList=', !!recordList, 'emptyState=', !!emptyState);
+            console.error('[renderRecords] DOM元素不存在');
             return;
+        }
+
+        // 重置分页状态
+        if (resetPage) {
+            _recordsPage = 1;
+            _recordsAllLoaded = [];
+            recordList.innerHTML = '';
         }
 
         if (!Storage.isLoggedIn()) {
@@ -3160,7 +3184,8 @@ const App = (function () {
             emptyState.querySelector('.empty-icon').textContent = '🔒';
             emptyState.children[1].textContent = '请先登录查看记录';
             emptyState.children[2].textContent = '点击上方用户栏进行登录';
-            // 显示登录/注册按钮
+            if (loadMoreWrap) loadMoreWrap.style.display = 'none';
+            if (recordsCount) recordsCount.style.display = 'none';
             var btnLogin = $('btnEmptyLogin');
             var btnReg = $('btnEmptyRegister');
             if (btnLogin) btnLogin.style.display = 'inline-block';
@@ -3168,50 +3193,75 @@ const App = (function () {
             return;
         }
 
-        // 显示加载中
-        recordList.innerHTML = '<div style="text-align:center;padding:20px;color:#999;">加载中...</div>';
+        // 防止重复请求
+        if (_recordsLoading) return;
+        _recordsLoading = true;
 
-        // 异步获取记录
-        var records = await Storage.getRecords();
+        // 首次加载显示骨架屏
+        if (_recordsPage === 1 && _recordsAllLoaded.length === 0) {
+            recordList.innerHTML = buildSkeletonHTML(3);
+        }
 
-        if (records.length === 0) {
+        // 更新加载更多按钮状态
+        if (loadMoreWrap) {
+            var btn = $('btnLoadMore');
+            if (btn) { btn.disabled = true; btn.classList.add('loading'); btn.textContent = '加载中...'; }
+        }
+
+        // 分页请求
+        var result = await Storage.getRecordsPage(_recordsPage, _recordsPageSize);
+        var records = result.list || [];
+        _recordsHasMore = !!result.hasMore;
+        _recordsTotal = result.total || 0;
+
+        // 追加到已加载列表
+        _recordsAllLoaded = _recordsAllLoaded.concat(records);
+
+        // 首页无数据
+        if (_recordsPage === 1 && records.length === 0) {
             recordList.innerHTML = '';
             emptyState.style.display = 'block';
             emptyState.querySelector('.empty-icon').textContent = '📋';
             emptyState.children[1].textContent = '暂无排盘记录';
             emptyState.children[2].textContent = '排盘后自动保存';
-            // 已登录但无记录：隐藏登录/注册按钮
-            var btnLogin = $('btnEmptyLogin');
-            var btnReg = $('btnEmptyRegister');
-            if (btnLogin) btnLogin.style.display = 'none';
-            if (btnReg) btnReg.style.display = 'none';
+            var btnLogin2 = $('btnEmptyLogin');
+            var btnReg2 = $('btnEmptyRegister');
+            if (btnLogin2) btnLogin2.style.display = 'none';
+            if (btnReg2) btnReg2.style.display = 'none';
+            if (loadMoreWrap) loadMoreWrap.style.display = 'none';
+            if (recordsCount) recordsCount.style.display = 'none';
+            _recordsLoading = false;
             return;
         }
 
         emptyState.style.display = 'none';
 
-        var html = '';
+        // 使用 DocumentFragment 追加记录，减少 DOM 重排
+        var fragment = document.createDocumentFragment();
         records.forEach(function (r) {
             var date = new Date(r.createTime);
             var timeStr = date.getFullYear() + '/' + padZero(date.getMonth() + 1) + '/' + padZero(date.getDate()) + ' ' + padZero(date.getHours()) + ':' + padZero(date.getMinutes()) + ':' + padZero(date.getSeconds());
 
-            html += '<div class="record-item" data-id="' + r.id + '">';
-            html += '  <div class="record-info">';
-            html += '    <div class="record-name">' + escapeHtml(r.name) + '（' + escapeHtml(r.gender) + '，' + escapeHtml(r.shengXiao) + '）</div>';
-            html += '    <div class="record-date">' + escapeHtml(r.solarDate) + '（' + escapeHtml(r.lunarDate) + '）</div>';
-            html += '    <div class="record-bazi">' + escapeHtml(r.baziStr) + '</div>';
-            html += '    <div class="record-date" style="margin-top:2px">保存于 ' + timeStr + '</div>';
-            html += '  </div>';
-            html += '  <div class="record-actions">';
-            html += '    <button class="btn-delete" data-id="' + r.id + '">删除</button>';
-            html += '  </div>';
-            html += '</div>';
+            var item = document.createElement('div');
+            item.className = 'record-item';
+            item.setAttribute('data-id', r.id);
+            item.innerHTML =
+                '<div class="record-info">' +
+                    '<div class="record-name">' + escapeHtml(r.name) + '（' + escapeHtml(r.gender) + '，' + escapeHtml(r.shengXiao) + '）</div>' +
+                    '<div class="record-date">' + escapeHtml(r.solarDate) + '（' + escapeHtml(r.lunarDate) + '）</div>' +
+                    '<div class="record-bazi">' + escapeHtml(r.baziStr) + '</div>' +
+                    '<div class="record-date" style="margin-top:2px">保存于 ' + timeStr + '</div>' +
+                '</div>' +
+                '<div class="record-actions">' +
+                    '<button class="btn-delete" data-id="' + r.id + '">删除</button>' +
+                '</div>';
+            fragment.appendChild(item);
         });
+        recordList.appendChild(fragment);
 
-        recordList.innerHTML = html;
-
-        // 绑定删除按钮事件（异步）
-        recordList.querySelectorAll('.btn-delete').forEach(function (btn) {
+        // 绑定删除按钮事件
+        recordList.querySelectorAll('.btn-delete:not([data-bound])').forEach(function (btn) {
+            btn.setAttribute('data-bound', '1');
             btn.addEventListener('click', async function (e) {
                 e.stopPropagation();
                 var id = parseInt(this.getAttribute('data-id'));
@@ -3219,7 +3269,31 @@ const App = (function () {
                     if (confirm('确定要删除这条记录吗？')) {
                         var success = await Storage.deleteRecord(id);
                         if (success) {
-                            renderRecords();
+                            // 局部刷新：从DOM移除该条记录
+                            var itemEl = recordList.querySelector('.record-item[data-id="' + id + '"]');
+                            if (itemEl) {
+                                itemEl.style.transition = 'opacity 0.2s, max-height 0.3s';
+                                itemEl.style.opacity = '0';
+                                itemEl.style.maxHeight = itemEl.offsetHeight + 'px';
+                                setTimeout(function() {
+                                    itemEl.style.maxHeight = '0';
+                                    itemEl.style.padding = '0';
+                                    itemEl.style.margin = '0';
+                                    itemEl.style.overflow = 'hidden';
+                                }, 150);
+                                setTimeout(function() {
+                                    itemEl.remove();
+                                    _recordsAllLoaded = _recordsAllLoaded.filter(function(r) { return r.id !== id; });
+                                    _recordsTotal = Math.max(0, _recordsTotal - 1);
+                                    updateRecordsCount();
+                                    // 如果当前页已无记录且之前有更多，重新加载
+                                    if (_recordsAllLoaded.length === 0 && _recordsHasMore) {
+                                        renderRecords(true);
+                                    } else if (_recordsAllLoaded.length === 0) {
+                                        renderRecords(true);
+                                    }
+                                }, 400);
+                            }
                             showToast('记录已删除');
                         } else {
                             showToast('删除失败，请重试');
@@ -3228,42 +3302,110 @@ const App = (function () {
                 } catch (err) {
                     console.error('[deleteRecord] 删除出错:', err);
                     showToast('删除失败，请刷新页面重试');
-                    renderRecords();
                 }
             });
         });
 
-        // 绑定记录点击事件（查看排盘详情，不重复保存）
-        recordList.querySelectorAll('.record-item').forEach(function (item) {
+        // 绑定记录点击事件
+        recordList.querySelectorAll('.record-item:not([data-click-bound])').forEach(function (item) {
+            item.setAttribute('data-click-bound', '1');
             item.addEventListener('click', function () {
                 var id = parseInt(this.getAttribute('data-id'));
-                var record = records.find(function (r) { return r.id === id; });
+                var record = _recordsAllLoaded.find(function (r) { return r.id === id; });
                 if (record && record.formData) {
                     loadFormData(record.formData);
-                    // 先切换到排盘页面
                     switchPage('pagePaipan');
-                    // 再隐藏输入表单、显示返回记录按钮（在switchPage之后执行，覆盖其恢复逻辑）
                     var formSection = document.querySelector('.form-section');
                     if (formSection) formSection.style.display = 'none';
                     var backBtn = $('backToRecords');
                     if (backBtn) backBtn.style.display = 'inline-block';
-                    // 标记为查看模式，不自动保存记录
                     _viewingRecord = true;
                     doPaipan();
                     _viewingRecord = false;
                 }
             });
         });
+
+        // 更新加载更多按钮
+        updateLoadMoreButton();
+        updateRecordsCount();
+
+        _recordsLoading = false;
         } catch (err) {
             console.error('[renderRecords] 渲染出错:', err);
-            // 确保不会白屏：恢复空状态显示
+            _recordsLoading = false;
             try {
                 var recordList = $('recordList');
-                var emptyState = $('emptyState');
-                if (recordList) recordList.innerHTML = '<div style="text-align:center;padding:20px;color:#999;">记录加载异常，请刷新页面</div>';
-                if (emptyState) emptyState.style.display = 'none';
+                if (recordList && _recordsAllLoaded.length === 0) {
+                    recordList.innerHTML = '<div style="text-align:center;padding:20px;color:#999;">记录加载异常，请刷新页面</div>';
+                }
             } catch(e) {}
         }
+    }
+
+    /**
+     * 构建骨架屏HTML
+     */
+    function buildSkeletonHTML(count) {
+        var html = '';
+        for (var i = 0; i < count; i++) {
+            html += '<div class="skeleton-item">';
+            html += '  <div style="flex:1;">';
+            html += '    <div class="skeleton-line w60" style="margin-bottom:8px;"></div>';
+            html += '    <div class="skeleton-line w80" style="margin-bottom:6px;"></div>';
+            html += '    <div class="skeleton-line w40"></div>';
+            html += '  </div>';
+            html += '</div>';
+        }
+        return html;
+    }
+
+    /**
+     * 更新加载更多按钮状态
+     */
+    function updateLoadMoreButton() {
+        var loadMoreWrap = $('loadMoreWrap');
+        if (!loadMoreWrap) return;
+        var btn = $('btnLoadMore');
+        if (!btn) return;
+
+        if (_recordsTotal <= _recordsPageSize) {
+            // 总记录不超过一页，不显示按钮
+            loadMoreWrap.style.display = 'none';
+        } else if (!_recordsHasMore) {
+            loadMoreWrap.style.display = 'block';
+            btn.disabled = true;
+            btn.classList.remove('loading');
+            btn.textContent = '已加载全部记录（共' + _recordsTotal + '条）';
+        } else {
+            loadMoreWrap.style.display = 'block';
+            btn.disabled = false;
+            btn.classList.remove('loading');
+            btn.textContent = '加载更多（已加载' + _recordsAllLoaded.length + '/' + _recordsTotal + '）';
+        }
+    }
+
+    /**
+     * 更新记录计数显示
+     */
+    function updateRecordsCount() {
+        var recordsCount = $('recordsCount');
+        if (!recordsCount) return;
+        if (_recordsTotal > 0) {
+            recordsCount.style.display = 'block';
+            recordsCount.textContent = '共 ' + _recordsTotal + ' 条记录';
+        } else {
+            recordsCount.style.display = 'none';
+        }
+    }
+
+    /**
+     * 加载更多记录（下一页）
+     */
+    function loadMoreRecords() {
+        if (_recordsLoading || !_recordsHasMore) return;
+        _recordsPage++;
+        renderRecords(false);
     }
 
     /**
@@ -3476,7 +3618,7 @@ const App = (function () {
                     updateUserBar();
                     // 如果当前在记录页，刷新记录列表
                     if ($('pageRecords').classList.contains('active')) {
-                        renderRecords();
+                        renderRecords(true);
                     }
                     showToast('登录成功，欢迎 ' + (loginResult.user ? loginResult.user.username : username));
                 } else {

@@ -61,7 +61,8 @@ router.get('/records', authMiddleware, async (req, res) => {
         total,
         page,
         pageSize,
-        totalPages: Math.ceil(total / pageSize)
+        totalPages: Math.ceil(total / pageSize),
+        hasMore: page < Math.ceil(total / pageSize)
       },
       message: 'success'
     });

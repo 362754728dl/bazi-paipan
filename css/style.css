@@ -465,6 +465,56 @@ body {
     color: var(--red-primary);
 }
 
+/* 加载更多按钮 */
+.btn-load-more {
+    display: inline-block;
+    padding: 10px 36px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background: var(--bg-card);
+    color: var(--text-secondary);
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 1px;
+}
+.btn-load-more:hover { border-color: var(--red-primary); color: var(--red-primary); }
+.btn-load-more:active { background: var(--red-light); transform: scale(0.98); }
+.btn-load-more:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    border-color: var(--border-color);
+    color: var(--text-light);
+}
+.btn-load-more.loading {
+    pointer-events: none;
+    opacity: 0.6;
+}
+
+/* 骨架屏 */
+.skeleton-item {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.skeleton-line {
+    height: 14px;
+    border-radius: 4px;
+    background: linear-gradient(90deg, #f0ebe0 25%, #e8e0d0 50%, #f0ebe0 75%);
+    background-size: 200% 100%;
+    animation: skeleton-shimmer 1.5s infinite;
+}
+.skeleton-line.w60 { width: 60%; }
+.skeleton-line.w40 { width: 40%; }
+.skeleton-line.w80 { width: 80%; }
+.skeleton-line.w50 { width: 50%; }
+@keyframes skeleton-shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
 .empty-state {
     text-align: center;
     padding: 40px 20px;

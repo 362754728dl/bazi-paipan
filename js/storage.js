@@ -378,6 +378,68 @@ const Storage = (function () {
     _recordsCacheTime = 0;
   }
 
+  /**
+   * 分页获取排盘记录（调用后端API）
+   * @param {number} page - 页码，默认1
+   * @param {number} pageSize - 每页条数，默认10
+   * @returns {Promise<{list: Array, total: number, page: number, pageSize: number, hasMore: boolean}>}
+   */
+  async function getRecordsPage(page, pageSize) {
+    page = Math.max(1, page || 1);
+    pageSize = Math.min(50, Math.max(1, pageSize || 10));
+    const token = _getToken();
+
+    // 未登录时回退到本地备份（模拟分页）
+    if (!token) {
+      var allRecords = _getLocalRecords();
+      var total = allRecords.length;
+      var offset = (page - 1) * pageSize;
+      var list = allRecords.slice(offset, offset + pageSize);
+      return { list: list, total: total, page: page, pageSize: pageSize, hasMore: offset + pageSize < total };
+    }
+
+    try {
+      const response = await fetch('/api/paipan/records?page=' + page + '&pageSize=' + pageSize, {
+        method: 'GET',
+        headers: {
+          'Authorization': 'Bearer ' + token
+        }
+      });
+
+      const data = await response.json();
+      if (data.code === 200 && data.data && data.data.list) {
+        const records = data.data.list.map(function(item) {
+          return {
+            id: item.id,
+            name: item.name,
+            solarDate: item.solar_date,
+            lunarDate: item.lunar_date,
+            gender: item.gender === 1 ? '男' : '女',
+            shengXiao: item.sheng_xiao,
+            baziStr: item.bazi_str,
+            birthHour: item.birth_hour,
+            formData: typeof item.form_data === 'string' ? JSON.parse(item.form_data) : (item.form_data || {}),
+            createTime: new Date(item.created_at).getTime()
+          };
+        });
+
+        return {
+          list: records,
+          total: data.data.total,
+          page: data.data.page,
+          pageSize: data.data.pageSize,
+          hasMore: !!data.data.hasMore
+        };
+      } else {
+        console.error('[getRecordsPage] 获取失败:', data.message);
+        return { list: [], total: 0, page: page, pageSize: pageSize, hasMore: false };
+      }
+    } catch (err) {
+      console.error('[getRecordsPage] 请求失败:', err);
+      return { list: [], total: 0, page: page, pageSize: pageSize, hasMore: false };
+    }
+  }
+
   // ==================== 管理员系统 ====================
 
   const ADMIN_KEY = 'bazi_admin';
@@ -639,6 +701,7 @@ const Storage = (function () {
     saveRecord: saveRecord,
     getRecords: getRecords,
     deleteRecord: deleteRecord,
+    getRecordsPage: getRecordsPage,
     clearRecordsCache: clearRecordsCache,
     initAdmin: initAdmin,
     adminLogin: adminLogin,
