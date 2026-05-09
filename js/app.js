@@ -824,8 +824,8 @@ const App = (function () {
         // 1. 顶部基础信息区
         renderInfoBar(result);
 
-        // 2. 四柱核心表格（十神、天干、地支、藏干、纳音、空亡、神煞）
-        renderBaziTable(pillars, result.shenSha, result.kongWang);
+        // 2. 四柱核心表格（十神、天干、地支、藏干、纳音、空亡、神煞、十二长生）
+        renderBaziTable(pillars, result.shenSha, result.kongWang, result.changSheng);
 
         // 3. 天干留意（统一分析器）
         renderGanZhiRelationsUnified(result);
@@ -836,6 +836,9 @@ const App = (function () {
         // 5. 五行统计
         renderWuXing(result);
 
+        // 5.5 五行旺衰（旺相休囚死）
+        renderWuXingWangShuai(result);
+
         // 6. 大运流年总表（重新设计）
         renderDaYunLiuNianTable(result);
 
@@ -844,6 +847,9 @@ const App = (function () {
 
         // 7.5 命理专业评测（格局/强弱喜忌/调候/神煞/综合评述）
         renderMingLiAnalysis(result);
+
+        // 7.6 神煞专家注释
+        renderShenShaNote();
 
         // 8. 专业命理评测按钮
         renderAIEvalButton();
@@ -954,7 +960,7 @@ const App = (function () {
      * 渲染四柱八字表格
      * @param {object} pillars - 四柱数据 {year, month, day, hour}
      */
-    function renderBaziTable(pillars, shenSha, kongWang) {
+    function renderBaziTable(pillars, shenSha, kongWang, changSheng) {
         var pillarNames = ['年柱', '月柱', '日柱', '时柱'];
         var pillarKeys = ['year', 'month', 'day', 'hour'];
         var html = '';
@@ -1028,6 +1034,19 @@ const App = (function () {
                     return '<div class="shensha-item">' + ss + '</div>';
                 }).join('');
                 html += '<td class="shensha-cell">' + ssHtml + '</td>';
+            });
+            html += '</tr>';
+        }
+
+        // 第七行：十二长生
+        if (changSheng) {
+            var csColors = { '帝旺': '#e53935', '临官': '#e53935', '长生': '#43a047', '冠带': '#43a047', '养': '#43a047', '胎': '#43a047', '沐浴': '#fb8c00', '衰': '#fb8c00', '病': '#757575', '死': '#757575', '墓': '#5c6bc0', '绝': '#5c6bc0' };
+            html += '<tr>';
+            html += '<td class="label-cell">十二长生</td>';
+            pillarKeys.forEach(function (key) {
+                var cs = changSheng[key] || '—';
+                var csColor = csColors[cs] || 'inherit';
+                html += '<td class="changsheng-cell" style="color:' + csColor + ';font-weight:600;">' + cs + '</td>';
             });
             html += '</tr>';
         }
@@ -1154,6 +1173,80 @@ const App = (function () {
 
         var wxBar = $('wuxingBar');
         if (wxBar) wxBar.innerHTML = html;
+    }
+
+    /**
+     * 渲染五行旺衰（旺相休囚死）
+     */
+    function renderWuXingWangShuai(result) {
+        var monthZhiIdx = result.pillars.month.zhiIndex;
+        var dayGan = result.pillars.day.gan;
+        var dayWuXing = result.pillars.day.wuXing;
+
+        // 月令地支 → 季节
+        var seasonMap = { 2: '春', 3: '春', 4: '春', 5: '夏', 6: '夏', 7: '夏', 8: '秋', 9: '秋', 10: '秋', 11: '冬', 0: '冬', 1: '冬' };
+        var zhiNames = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥'];
+        var season = seasonMap[monthZhiIdx] || '春';
+        var monthZhiName = zhiNames[monthZhiIdx] || '';
+
+        // 旺相休囚死规则
+        var rules = {
+            '春': { '木': '旺', '火': '相', '水': '休', '金': '囚', '土': '死' },
+            '夏': { '火': '旺', '土': '相', '木': '休', '水': '囚', '金': '死' },
+            '秋': { '金': '旺', '水': '相', '土': '休', '火': '囚', '木': '死' },
+            '冬': { '水': '旺', '木': '相', '金': '休', '土': '囚', '火': '死' },
+            '四季末': { '土': '旺', '金': '相', '火': '休', '木': '囚', '水': '死' }
+        };
+
+        // 辰戌丑未为四季末
+        if ([4, 10, 6, 0].indexOf(monthZhiIdx) !== -1) {
+            season = '四季末';
+        }
+        var rule = rules[season] || rules['春'];
+
+        var wsColors = { '旺': '#e53935', '相': '#43a047', '休': '#1e88e5', '囚': '#757575', '死': '#9e9e9e' };
+        var wxClassMap = { '金': 'wx-jin', '木': 'wx-mu', '水': 'wx-shui', '火': 'wx-huo', '土': 'wx-tu' };
+
+        var html = '<div class="result-card" style="margin-top:10px;">';
+        html += '<div class="result-title">五行旺衰（旺相休囚死）</div>';
+        html += '<div style="font-size:12px;color:#888;margin-bottom:8px;">月令：' + monthZhiName + '（' + season + '）</div>';
+        html += '<div style="display:flex;justify-content:space-around;flex-wrap:wrap;gap:8px;">';
+
+        ['木', '火', '土', '金', '水'].forEach(function (wx) {
+            var state = rule[wx] || '—';
+            var color = wsColors[state] || 'inherit';
+            var isDayMaster = (wx === dayWuXing);
+            var tag = isDayMaster ? ' <span style="font-size:10px;color:#e53935;">（日主）</span>' : '';
+            html += '<div style="text-align:center;flex:1;min-width:60px;">';
+            html += '<div class="wx-name ' + (wxClassMap[wx] || '') + '" style="margin-bottom:4px;">' + wx + tag + '</div>';
+            html += '<div style="font-size:18px;font-weight:700;color:' + color + ';">' + state + '</div>';
+            html += '</div>';
+        });
+
+        html += '</div>';
+
+        // 日主旺衰说明
+        var dayState = rule[dayWuXing] || '—';
+        var dayColor = wsColors[dayState] || 'inherit';
+        html += '<div style="margin-top:10px;padding:8px;background:var(--bg-secondary);border-radius:6px;font-size:12px;color:#666;line-height:1.6;">';
+        html += '日主<strong>' + dayGan + '（' + dayWuXing + '）</strong>在' + monthZhiName + '月状态为<strong style="color:' + dayColor + ';">' + dayState + '</strong>';
+        var descMap = {
+            '旺': '，得月令之气，能量最强',
+            '相': '，受月令生扶，次强',
+            '休': '，与月令同类但已退气',
+            '囚': '，被月令克制，力量受困',
+            '死': '，与月令对立，能量最弱'
+        };
+        html += (descMap[dayState] || '') + '。';
+        html += '</div>';
+        html += '</div>';
+
+        var ra = $('resultArea');
+        if (ra) {
+            var div = document.createElement('div');
+            div.innerHTML = html;
+            ra.appendChild(div);
+        }
     }
 
     /**
@@ -2618,6 +2711,21 @@ const App = (function () {
             }
         } catch(e) {
             console.warn('命理专业评测渲染异常:', e);
+        }
+    }
+
+    // ==================== 神煞专家注释 ====================
+
+    function renderShenShaNote() {
+        var html = '<div style="margin:12px 0;padding:12px;background:var(--bg-secondary);border-radius:8px;font-size:12px;color:#999;line-height:1.8;">';
+        html += '<div style="font-weight:600;color:#888;margin-bottom:6px;">关于神煞的说明</div>';
+        html += '传统命理学中，神煞的查法和解读，自古以来即为研习重点，亦存在不同流派观点。本站综合参考《渊海子平》《三命通会》等经典典籍，并借鉴多家权威排盘工具算法，力求提供严谨、全面的命理参考。然而，不同排盘系统或因所依经典侧重、算法细节等存在差异，这可能体现了传统命理学本身的丰富性与多元视角。若您发现本站与他站结果有别，欢迎添加站长微信 DLing3313 共同探讨。神煞仅为命理参考，人生丰盈远非星盘可尽述，愿您以平和之心，观照生活之美。';
+        html += '</div>';
+        var ra = $('resultArea');
+        if (ra) {
+            var div = document.createElement('div');
+            div.innerHTML = html;
+            ra.appendChild(div);
         }
     }
 
