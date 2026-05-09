@@ -308,6 +308,7 @@ const Storage = (function () {
         // 更新缓存
         _recordsCache = records;
         _recordsCacheTime = Date.now();
+        console.log('[性能日志] 排盘记录加载完成，数量：' + records.length);
 
         // 同步备份到本地
         _saveLocalRecords(records);
