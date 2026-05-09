@@ -1,0 +1,995 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>今日运势 - 传统民俗文化参考</title>
+    <style>
+    /* ==================== CSS变量 ==================== */
+    :root {
+        --bg-primary: #F5F0E8;
+        --bg-secondary: #FFF8EE;
+        --bg-card: #FFFCF5;
+        --border-color: #D4C5A0;
+        --text-primary: #3D2B1F;
+        --text-secondary: #6B5B4E;
+        --text-light: #8C7B6B;
+        --red-primary: #A81216;
+        --gold: #C8A84E;
+        --green: #2E8B57;
+        --blue: #1a73e8;
+        --wx-wood: #2E8B57;
+        --wx-fire: #DC143C;
+        --wx-earth: #8B4513;
+        --wx-metal: #DAA520;
+        --wx-water: #4169E1;
+    }
+
+    /* ==================== 全局重置 ==================== */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+        font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+        background: var(--bg-primary);
+        color: var(--text-primary);
+        min-height: 100vh;
+        font-size: 14px;
+        line-height: 1.6;
+        padding-bottom: 20px;
+    }
+
+    /* ==================== 顶部标题栏 ==================== */
+    .header {
+        background: linear-gradient(135deg, #8B1A1A, #A81216);
+        color: #FFF;
+        padding: 15px 20px;
+        text-align: center;
+        position: sticky;
+        top: 0;
+        z-index: 200;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    }
+    .header h1 {
+        font-size: 20px;
+        font-weight: 600;
+        letter-spacing: 3px;
+    }
+    .header .back-link {
+        position: absolute;
+        left: 15px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #FFF;
+        text-decoration: none;
+        font-size: 14px;
+        opacity: 0.9;
+    }
+    .header .back-link:hover { opacity: 1; }
+
+    /* ==================== 页面容器 ==================== */
+    .page-container {
+        padding: 12px;
+        max-width: 480px;
+        margin: 0 auto;
+    }
+
+    /* ==================== 年月选择器 ==================== */
+    .selector-bar {
+        background: var(--bg-card);
+        border-radius: 12px;
+        padding: 12px 15px;
+        margin-bottom: 12px;
+        box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+    }
+    .selector-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .selector-label {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--text-secondary);
+        white-space: nowrap;
+    }
+    .selector-select {
+        flex: 1;
+        padding: 8px 10px;
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        background: var(--bg-secondary);
+        color: var(--text-primary);
+        font-size: 14px;
+    }
+
+    /* ==================== 日历网格 ==================== */
+    .calendar-container {
+        background: var(--bg-card);
+        border-radius: 12px;
+        padding: 12px;
+        margin-bottom: 12px;
+        box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+    }
+    .calendar-weekday {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        text-align: center;
+        margin-bottom: 4px;
+    }
+    .calendar-weekday-cell {
+        font-size: 12px;
+        color: var(--text-light);
+        padding: 4px 0;
+        font-weight: 600;
+    }
+    .calendar-weekday-cell.weekend {
+        color: #CC0000 !important;
+    }
+    .calendar-days {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 2px;
+    }
+    .calendar-day {
+        text-align: center;
+        padding: 6px 2px;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: background 0.2s;
+        min-height: 52px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+    }
+    .calendar-day:hover {
+        background: rgba(26, 115, 232, 0.1);
+    }
+    /* ===== 选中日期样式（深蓝背景+白色文字）===== */
+    .calendar-day.selected {
+        background: #1a73e8 !important;
+        color: #ffffff !important;
+        border-radius: 8px;
+    }
+    .calendar-day.selected .day-solar {
+        color: #ffffff !important;
+        -webkit-text-fill-color: #ffffff !important;
+    }
+    .calendar-day.selected .day-lunar,
+    .calendar-day.selected .day-ganzhi {
+        color: rgba(255, 255, 255, 0.85) !important;
+    }
+    /* ===== 周末样式 ===== */
+    .calendar-day.weekend .day-solar {
+        color: #CC0000 !important;
+    }
+    .calendar-day.selected.weekend .day-solar {
+        color: #ffffff !important;
+        -webkit-text-fill-color: #ffffff !important;
+    }
+    /* ===== 今天标记 ===== */
+    .calendar-day.today:not(.selected) {
+        border: 2px solid #1a73e8;
+        position: relative;
+    }
+    .calendar-day.today:not(.selected)::after {
+        content: '';
+        position: absolute;
+        bottom: 2px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 5px;
+        height: 5px;
+        background: #1a73e8;
+        border-radius: 50%;
+    }
+    .calendar-day .day-solar {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+    .calendar-day .day-lunar {
+        font-size: 10px;
+        color: var(--text-light);
+    }
+    .calendar-day .day-ganzhi {
+        font-size: 10px;
+        color: var(--text-light);
+    }
+    .calendar-day.other-month {
+        opacity: 0.35;
+        cursor: default;
+    }
+    .calendar-day.empty {
+        cursor: default;
+    }
+
+    /* ==================== 十二时辰选择栏 ==================== */
+    .shichen-bar {
+        background: #fff;
+        border-radius: 8px;
+        padding: 12px;
+        margin-bottom: 12px;
+        box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+        border-left: 4px solid #2E8B57;
+    }
+    .shichen-bar .shichen-title {
+        font-size: 14px;
+        font-weight: bold;
+        color: #333;
+        margin-bottom: 8px;
+    }
+    .shichen-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+    .shichen-btn {
+        min-width: 56px;
+        border-radius: 8px;
+        padding: 6px 8px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 1px;
+        border: 1px solid #ddd;
+        background: #fff;
+        font-size: 13px;
+        color: #555;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .shichen-btn .shichen-name { font-size: 13px; font-weight: 600; }
+    .shichen-btn .shichen-range { font-size: 9px; color: #999; white-space: nowrap; }
+    .shichen-btn:active { transform: scale(0.95); }
+    .shichen-btn.active {
+        background: #1a73e8;
+        color: #fff;
+        border-color: #1a73e8;
+    }
+    .shichen-btn.active .shichen-range { color: rgba(255, 255, 255, 0.75); }
+
+    /* ==================== 排盘结果卡片 ==================== */
+    .result-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        padding: 20px 15px;
+        margin-top: 12px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .result-title {
+        text-align: center;
+        font-size: 18px;
+        font-weight: 600;
+        color: var(--red-primary);
+        margin-bottom: 15px;
+        letter-spacing: 2px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    /* ==================== 日期信息栏 ==================== */
+    .info-bar {
+        background: var(--bg-card);
+        border-radius: 12px;
+        padding: 12px 15px;
+        margin-bottom: 12px;
+        box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px 16px;
+    }
+    .info-bar .info-item { font-size: 13px; }
+    .info-bar .info-label { color: var(--text-light); }
+    .info-bar .info-value { color: var(--text-primary); font-weight: 500; }
+
+    /* ==================== 四柱八字表格 ==================== */
+    .bazi-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 10px 0;
+        text-align: center;
+    }
+    .bazi-table th {
+        background: var(--red-primary);
+        color: #FFF;
+        padding: 8px 4px;
+        font-size: 13px;
+        font-weight: 500;
+        letter-spacing: 1px;
+    }
+    .bazi-table th:first-child { border-radius: 6px 0 0 0; }
+    .bazi-table th:last-child { border-radius: 0 6px 0 0; }
+    .bazi-table td {
+        padding: 6px 4px;
+        border: none;
+        font-size: 14px;
+        background: var(--bg-card);
+        vertical-align: middle;
+    }
+    .bazi-table .gan-cell,
+    .bazi-table .zhi-cell {
+        font-size: 22px;
+        font-weight: 700;
+        color: var(--text-primary);
+        padding: 10px 4px;
+    }
+    .bazi-table .shishen-cell {
+        font-size: 12px;
+        color: var(--red-primary);
+        font-weight: 500;
+    }
+    .bazi-table .canggan-cell {
+        font-size: 12px;
+        color: var(--text-secondary);
+        line-height: 1.4;
+        padding: 4px 2px;
+        text-align: center;
+        vertical-align: top;
+    }
+    .canggan-item { padding: 1px 0; white-space: nowrap; }
+    .canggan-ss { font-size: 10px; color: var(--text-light); margin-left: 1px; }
+    .bazi-table .nayin-cell { font-size: 11px; color: var(--gold); }
+    .label-cell {
+        font-size: 12px;
+        color: var(--text-light);
+        white-space: nowrap;
+        padding: 4px 6px;
+        text-align: center;
+        font-weight: 500;
+        width: 48px;
+    }
+    .bazi-bg-light td { background: #FAF6F0; }
+    .bazi-bg-dark td { background: #EDE8E0; }
+    .kongwang-cell {
+        font-size: 11px;
+        color: var(--text-secondary);
+        text-align: center;
+        padding: 4px 6px;
+    }
+    .shensha-cell {
+        font-size: 11px;
+        color: var(--text-secondary);
+        padding: 4px 2px;
+        line-height: 1.5;
+        text-align: center;
+        vertical-align: top;
+        max-width: 90px;
+    }
+    .shensha-item {
+        padding: 1px 0;
+        white-space: nowrap;
+        display: block;
+    }
+
+    /* ==================== 五行统计 ==================== */
+    .wuxing-bar {
+        display: flex;
+        justify-content: space-around;
+        padding: 12px 0;
+        margin-top: 10px;
+        border-top: 1px solid var(--border-color);
+    }
+    .wuxing-item { text-align: center; }
+    .wuxing-item .wx-name { font-size: 16px; font-weight: 700; margin-bottom: 2px; }
+    .wuxing-item .wx-count { font-size: 12px; color: var(--text-light); }
+    .wx-jin { color: #DAA520; }
+    .wx-mu { color: #2E8B57; }
+    .wx-shui { color: #4169E1; }
+    .wx-huo { color: #DC143C; }
+    .wx-tu { color: #8B4513; }
+    .wx-bar-chart {
+        width: 100%;
+        height: 6px;
+        background: #f0ebe3;
+        border-radius: 3px;
+        margin: 4px 0;
+        overflow: hidden;
+    }
+    .wx-bar-fill {
+        height: 100%;
+        border-radius: 3px;
+        transition: width 0.5s ease;
+    }
+    .wx-status { font-size: 10px; margin-left: 2px; font-weight: 600; }
+    .wx-status-missing { color: #999; }
+    .wx-status-strong { color: #DC143C; }
+
+    /* ==================== 黄历模块样式 ==================== */
+    .huangli-card {
+        border-left: 4px solid var(--gold) !important;
+    }
+    .huangli-section {
+        margin-bottom: 12px;
+    }
+    .huangli-section:last-of-type {
+        margin-bottom: 8px;
+    }
+    .huangli-section-title {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 6px;
+        padding-left: 10px;
+        border-left: 3px solid var(--gold);
+    }
+    .huangli-box {
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        padding: 10px 12px;
+    }
+    .huangli-yi-row,
+    .huangli-ji-row,
+    .huangli-star-row,
+    .huangli-desc-row {
+        display: flex;
+        align-items: flex-start;
+        padding: 4px 0;
+    }
+    .huangli-label {
+        display: inline-block;
+        width: 40px;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--text-secondary);
+        flex-shrink: 0;
+    }
+    .huangli-label-yi { color: #2E8B57 !important; }
+    .huangli-label-ji { color: #DC143C !important; }
+    .huangli-content {
+        font-size: 13px;
+        color: var(--text-primary);
+        line-height: 1.6;
+    }
+    .huangli-star-name {
+        display: inline-block;
+        padding: 2px 10px;
+        border-radius: 4px;
+        font-weight: 600;
+    }
+    .huangli-disclaimer {
+        text-align: center;
+        padding: 10px 8px 2px;
+        font-size: 11px;
+        color: var(--text-light);
+        line-height: 1.6;
+    }
+
+    /* ==================== 底部引导 ==================== */
+    .contact-guide {
+        text-align: center;
+        padding: 20px;
+        margin-top: 20px;
+        background: linear-gradient(135deg, #FFF8EE, #FFFCF5);
+        border: 2px solid var(--gold);
+        border-radius: 12px;
+    }
+    .contact-guide .guide-text {
+        font-size: 14px;
+        color: var(--text-secondary);
+        line-height: 1.8;
+    }
+    .contact-guide .wechat-id {
+        font-size: 16px;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-top: 8px;
+    }
+
+    /* ==================== 底部合规声明 ==================== */
+    .disclaimer-bar {
+        text-align: center;
+        padding: 16px 20px;
+        margin-top: 24px;
+        font-size: 12px;
+        color: var(--text-light);
+        line-height: 1.6;
+        border-top: 1px solid var(--border-color);
+    }
+
+    /* ==================== 响应式 ==================== */
+    @media (max-width: 420px) {
+        .page-container { padding: 10px; }
+        .result-card { padding: 12px 10px; border-radius: 8px; }
+        .result-title { font-size: 16px; margin-bottom: 10px; padding-bottom: 8px; }
+        .bazi-table .gan-cell,
+        .bazi-table .zhi-cell { font-size: 18px; padding: 6px 2px; }
+        .bazi-table th { font-size: 11px; padding: 6px 2px; }
+        .bazi-table td { padding: 4px 2px; font-size: 12px; }
+        .shichen-btn { min-width: 48px; padding: 4px 6px !important; }
+        .shichen-btn .shichen-name { font-size: 12px; }
+        .shichen-btn .shichen-range { font-size: 8px; }
+        .calendar-day { min-height: 44px; padding: 4px 1px; }
+        .calendar-day .day-solar { font-size: 12px; }
+        .calendar-day .day-lunar,
+        .calendar-day .day-ganzhi { font-size: 8px; }
+        .header h1 { font-size: 18px; }
+        .selector-row { flex-wrap: wrap; }
+        .selector-select { min-width: 0; flex: 1; }
+    }
+    </style>
+</head>
+<body>
+
+<!-- 顶部标题栏 -->
+<header class="header">
+    <a class="back-link" href="../index.html">&larr; 主页</a>
+    <h1>今日运势</h1>
+</header>
+
+<!-- 页面容器 -->
+<div class="page-container" id="appContainer">
+
+    <!-- 年月选择器 -->
+    <div class="selector-bar">
+        <div class="selector-row">
+            <label class="selector-label">选择年月：</label>
+            <select id="yearSelect" class="selector-select"></select>
+            <select id="monthSelect" class="selector-select"></select>
+        </div>
+    </div>
+
+    <!-- 日历网格 -->
+    <div id="calendarContainer" class="calendar-container"></div>
+
+    <!-- 十二时辰选择栏 -->
+    <div class="shichen-bar">
+        <div class="shichen-title">选择时辰</div>
+        <div class="shichen-list" id="shichenBar"></div>
+    </div>
+
+    <!-- 排盘结果区域 -->
+    <div id="resultArea"></div>
+
+    <!-- 底部引导 -->
+    <div class="contact-guide">
+        <div class="guide-text">如需了解详情，请添加站长微信</div>
+        <div class="wechat-id">DLing3313</div>
+    </div>
+
+    <!-- 底部合规声明 -->
+    <div class="disclaimer-bar">
+        本内容仅供传统民俗文化参考，非医疗及命运预测建议
+    </div>
+</div>
+
+<!-- 引入主站 JS 模块 -->
+<script src="../js/solar_terms.js"></script>
+<script src="../js/lunar.js"></script>
+<script src="../js/solar-time.js"></script>
+<script src="../js/bazi.js"></script>
+<script src="../js/relation-analyzer.js"></script>
+<script src="../js/huangli.js"></script>
+
+<script>
+(function() {
+    'use strict';
+
+    // ==================== 状态变量 ====================
+    var currentYear, currentMonth, currentDay, currentHour;
+
+    // ==================== 工具函数 ====================
+    function padZero(n) { return n < 10 ? '0' + n : '' + n; }
+
+    function getGanColor(ganIdx) {
+        var wx = Lunar.wuXingGan[ganIdx];
+        var colors = { '金': '#DAA520', '木': '#2E8B57', '水': '#4169E1', '火': '#DC143C', '土': '#8B4513' };
+        return colors[wx] || '#333';
+    }
+
+    function getZhiColor(zhiIdx) {
+        var wx = Lunar.wuXingZhi[zhiIdx];
+        var colors = { '金': '#DAA520', '木': '#2E8B57', '水': '#4169E1', '火': '#DC143C', '土': '#8B4513' };
+        return colors[wx] || '#333';
+    }
+
+    // ==================== 初始化 ====================
+    function init() {
+        var now = new Date();
+        var y = now.getFullYear(), m = now.getMonth() + 1, d = now.getDate(), h = now.getHours();
+
+        currentYear = y;
+        currentMonth = m;
+        currentDay = d;
+        currentHour = Math.floor(h / 2) * 2;
+
+        // 填充年月选择器
+        var yearSel = document.getElementById('yearSelect');
+        for (var sy = 1900; sy <= 2100; sy++) {
+            var opt = document.createElement('option');
+            opt.value = sy;
+            opt.textContent = sy + '年';
+            if (sy === y) opt.selected = true;
+            yearSel.appendChild(opt);
+        }
+
+        var monthSel = document.getElementById('monthSelect');
+        for (var sm = 1; sm <= 12; sm++) {
+            var opt2 = document.createElement('option');
+            opt2.value = sm;
+            opt2.textContent = padZero(sm) + '月';
+            if (sm === m) opt2.selected = true;
+            monthSel.appendChild(opt2);
+        }
+
+        // 渲染时辰栏
+        renderShiChenBar();
+
+        // 渲染日历
+        renderCalendar(y, m, d);
+
+        // 渲染初始排盘
+        renderPaipan(y, m, d, currentHour);
+
+        // 绑定事件
+        bindEvents();
+
+        console.log('[今日运势] 页面初始化完成');
+    }
+
+    // ==================== 渲染时辰栏 ====================
+    function renderShiChenBar() {
+        var container = document.getElementById('shichenBar');
+        var shiChenNames = ['子时', '丑时', '寅时', '卯时', '辰时', '巳时', '午时', '未时', '申时', '酉时', '戌时', '亥时'];
+        var shiChenHours = [0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22];
+        var shiChenRanges = ['23:00-01:00', '01:00-03:00', '03:00-05:00', '05:00-07:00', '07:00-09:00', '09:00-11:00', '11:00-13:00', '13:00-15:00', '15:00-17:00', '17:00-19:00', '19:00-21:00', '21:00-23:00'];
+
+        var html = '';
+        shiChenNames.forEach(function(sc, idx) {
+            var isActive = (shiChenHours[idx] === currentHour);
+            html += '<button class="shichen-btn' + (isActive ? ' active' : '') + '" data-hour="' + shiChenHours[idx] + '">';
+            html += '<span class="shichen-name">' + sc + '</span>';
+            html += '<span class="shichen-range">' + shiChenRanges[idx] + '</span>';
+            html += '</button>';
+        });
+        container.innerHTML = html;
+    }
+
+    // ==================== 渲染日历 ====================
+    function renderCalendar(year, month, selectedDay) {
+        var weekHeaders = ['日', '一', '二', '三', '四', '五', '六'];
+        var firstDay = new Date(year, month - 1, 1).getDay();
+        var daysInMonth = new Date(year, month, 0).getDate();
+        var today = new Date();
+        var isCurrentMonth = (year === today.getFullYear() && month === today.getMonth() + 1);
+
+        var prevMonth = month - 1;
+        var prevYear = year;
+        if (prevMonth < 1) { prevMonth = 12; prevYear--; }
+        var daysInPrevMonth = new Date(prevYear, prevMonth, 0).getDate();
+
+        var html = '<div class="calendar-grid">';
+        // 星期头
+        html += '<div class="calendar-weekday">';
+        weekHeaders.forEach(function(w, wi) {
+            var isWeekend = (wi === 0 || wi === 6);
+            html += '<div class="calendar-weekday-cell' + (isWeekend ? ' weekend' : '') + '">' + w + '</div>';
+        });
+        html += '</div>';
+
+        // 日期格子
+        html += '<div class="calendar-days">';
+        // 上月补位
+        for (var i = 0; i < firstDay; i++) {
+            var prevDay = daysInPrevMonth - firstDay + 1 + i;
+            html += '<div class="calendar-day empty other-month">';
+            html += '<div class="day-solar">' + prevDay + '</div>';
+            html += '</div>';
+        }
+
+        for (var d = 1; d <= daysInMonth; d++) {
+            var isSelected = (d === selectedDay);
+            var isToday = isCurrentMonth && (d === today.getDate());
+            var dow = new Date(year, month - 1, d).getDay();
+            var isWeekend = (dow === 0 || dow === 6);
+
+            var gzStr = '';
+            var lunarStr = '';
+            try {
+                var tpLunar = Lunar.solarToLunar(year, month, d);
+                var tpDayGZ = Lunar.getDayGanZhi(year, month, d);
+                if (tpLunar) lunarStr = Lunar.getLunarDayName(tpLunar.day);
+                if (tpDayGZ) gzStr = tpDayGZ.gan + tpDayGZ.zhi;
+            } catch(e) { /* 忽略 */ }
+
+            var classes = ['calendar-day'];
+            if (isSelected) classes.push('selected');
+            if (isToday) classes.push('today');
+            if (isWeekend) classes.push('weekend');
+
+            html += '<div class="' + classes.join(' ') + '" data-year="' + year + '" data-month="' + month + '" data-day="' + d + '">';
+            html += '<div class="day-solar">' + d + '</div>';
+            html += '<div class="day-lunar">' + lunarStr + '</div>';
+            html += '<div class="day-ganzhi">' + gzStr + '</div>';
+            html += '</div>';
+        }
+
+        // 下月补位
+        var totalCells = firstDay + daysInMonth;
+        var remaining = totalCells % 7 === 0 ? 0 : 7 - (totalCells % 7);
+        for (var j = 1; j <= remaining; j++) {
+            html += '<div class="calendar-day empty other-month">';
+            html += '<div class="day-solar">' + j + '</div>';
+            html += '</div>';
+        }
+
+        html += '</div></div>';
+
+        document.getElementById('calendarContainer').innerHTML = html;
+    }
+
+    // ==================== 渲染排盘结果 ====================
+    function renderPaipan(year, month, day, hour) {
+        console.log('[今日运势] 排盘参数：', { year: year, month: month, day: day, hour: hour });
+
+        var result = Bazi.generate(year, month, day, hour, 0, 1, 116.4);
+        if (!result) {
+            console.error('[今日运势] 排盘失败');
+            return;
+        }
+
+        console.log('[今日运势] 四柱八字：', result.pillars);
+
+        var p = result.pillars;
+        var shenSha = result.shenSha || {};
+        var kongWang = result.kongWang || {};
+        var wx = result.wuXing || {};
+        var sd = result.solarDate;
+        var ld = result.lunarDate;
+
+        var html = '';
+
+        // 日期信息栏
+        html += '<div class="info-bar">';
+        html += '<div class="info-item"><span class="info-label">公历：</span><span class="info-value">' + sd.year + '年' + padZero(sd.month) + '月' + padZero(sd.day) + '日 ' + padZero(hour) + '时</span></div>';
+        html += '<div class="info-item"><span class="info-label">农历：</span><span class="info-value">' + ld.year + '年' + ld.monthName + ld.dayName + '</span></div>';
+        html += '<div class="info-item"><span class="info-label">生肖：</span><span class="info-value">' + ld.shengXiao + '</span></div>';
+        if (result.solarTermInfo) {
+            var stText = '';
+            if (result.solarTermInfo.xiaohan) stText += '小寒 ' + result.solarTermInfo.xiaohan;
+            if (result.solarTermInfo.lichun) stText += (stText ? '  ' : '') + '立春 ' + result.solarTermInfo.lichun;
+            if (stText) {
+                html += '<div class="info-item"><span class="info-label">节气：</span><span class="info-value">' + stText + '</span></div>';
+            }
+        }
+        html += '</div>';
+
+        // 四柱八字表格
+        var pillarKeys = ['year', 'month', 'day', 'hour'];
+        var pillarLabels = ['年柱', '月柱', '日柱', '时柱'];
+
+        html += '<div class="result-card">';
+        html += '<div class="result-title">八字排盘</div>';
+        html += '<div style="overflow-x:auto;-webkit-overflow-scrolling:touch;"><table class="bazi-table"><thead><tr><th></th>';
+        pillarLabels.forEach(function(l) { html += '<th>' + l + '</th>'; });
+        html += '</tr></thead><tbody>';
+
+        // 十神行
+        html += '<tr>';
+        html += '<td class="label-cell">十神</td>';
+        pillarKeys.forEach(function(key) {
+            var ss = p[key].shiShen;
+            if (ss === '日主') ss = '元男';
+            html += '<td class="shishen-cell">' + ss + '</td>';
+        });
+        html += '</tr>';
+
+        // 天干行
+        html += '<tr class="bazi-bg-dark">';
+        html += '<td class="label-cell">天干</td>';
+        pillarKeys.forEach(function(key) {
+            html += '<td class="gan-cell" style="color:' + getGanColor(p[key].ganIndex) + '">' + p[key].gan + '</td>';
+        });
+        html += '</tr>';
+
+        // 地支行
+        html += '<tr>';
+        html += '<td class="label-cell">地支</td>';
+        pillarKeys.forEach(function(key) {
+            html += '<td class="zhi-cell" style="color:' + getZhiColor(p[key].zhiIndex) + '">' + p[key].zhi + '</td>';
+        });
+        html += '</tr>';
+
+        // 藏干行
+        html += '<tr class="bazi-bg-dark">';
+        html += '<td class="label-cell">藏干</td>';
+        pillarKeys.forEach(function(key) {
+            var cgHtml = p[key].cangGan.map(function(cg) {
+                var cgIdx = Lunar.tianGan.indexOf(cg.gan);
+                var ssName = Lunar.getShiShen(p.day.ganIndex, cgIdx);
+                return '<div class="canggan-item"><span style="color:' + getGanColor(cgIdx) + '">' + cg.gan + '</span><span class="canggan-ss">(' + ssName + ')</span></div>';
+            }).join('');
+            html += '<td class="canggan-cell">' + cgHtml + '</td>';
+        });
+        html += '</tr>';
+
+        // 纳音行
+        html += '<tr class="bazi-bg-light">';
+        html += '<td class="label-cell">纳音</td>';
+        pillarKeys.forEach(function(key) {
+            html += '<td class="nayin-cell">' + p[key].naiYin + '</td>';
+        });
+        html += '</tr>';
+
+        // 空亡行
+        if (kongWang) {
+            html += '<tr class="bazi-bg-dark">';
+            html += '<td class="label-cell">空亡</td>';
+            pillarKeys.forEach(function(key) {
+                var kw = kongWang[key] || [];
+                html += '<td class="kongwang-cell">' + kw.join(' ') + '</td>';
+            });
+            html += '</tr>';
+        }
+
+        // 神煞行
+        if (shenSha) {
+            html += '<tr>';
+            html += '<td class="label-cell">神煞</td>';
+            pillarKeys.forEach(function(key) {
+                var ssList = shenSha[key] || [];
+                var ssHtml = ssList.map(function(ss) {
+                    return '<div class="shensha-item">' + ss + '</div>';
+                }).join('');
+                html += '<td class="shensha-cell">' + ssHtml + '</td>';
+            });
+            html += '</tr>';
+        }
+
+        html += '</tbody></table></div></div>';
+
+        // 五行统计
+        html += '<div class="result-card">';
+        html += '<div class="result-title">五行统计</div>';
+        html += '<div class="wuxing-bar">';
+        var wxClassMap = { '金': 'wx-jin', '木': 'wx-mu', '水': 'wx-shui', '火': 'wx-huo', '土': 'wx-tu' };
+        var wxColorMap = { '金': '#DAA520', '木': '#2E8B57', '水': '#4169E1', '火': '#DC143C', '土': '#8B4513' };
+        var totalCount = 0;
+        ['木', '火', '土', '金', '水'].forEach(function(name) { totalCount += (wx[name] || 0); });
+        ['木', '火', '土', '金', '水'].forEach(function(name) {
+            var count = wx[name] || 0;
+            var pct = totalCount > 0 ? Math.round(count / totalCount * 100) : 0;
+            var statusLabel = '';
+            var statusClass = '';
+            if (count === 0) { statusLabel = '缺'; statusClass = 'wx-status-missing'; }
+            else if (count >= 4) { statusLabel = '旺'; statusClass = 'wx-status-strong'; }
+            html += '<div class="wuxing-item">';
+            html += '<div class="wx-name ' + wxClassMap[name] + '">' + name + '</div>';
+            html += '<div class="wx-bar-chart"><div class="wx-bar-fill" style="width:' + pct + '%;background:' + wxColorMap[name] + ';"></div></div>';
+            html += '<div class="wx-count">' + count + (statusLabel ? '<span class="wx-status ' + statusClass + '">' + statusLabel + '</span>' : '') + '</div>';
+            html += '</div>';
+        });
+        html += '</div></div>';
+
+        // ===== 天干留意 =====
+        if (result && result.pillars) {
+            var baziForAnalyze = {
+                year: { gan: result.pillars.year.gan, zhi: result.pillars.year.zhi },
+                month: { gan: result.pillars.month.gan, zhi: result.pillars.month.zhi },
+                day: { gan: result.pillars.day.gan, zhi: result.pillars.day.zhi },
+                hour: { gan: result.pillars.hour.gan, zhi: result.pillars.hour.zhi }
+            };
+            var analysis = RelationAnalyzer.analyzeRelations(baziForAnalyze);
+
+            console.log('[今日运势] 天干留意：', analysis.tianGanRelations);
+            console.log('[今日运势] 地支留意：', analysis.diZhiRelations);
+
+            // 天干留意
+            var tgHtml = '<div class="result-card"><div class="result-title">天干留意</div>';
+            if (analysis.tianGanRelations.length > 0) {
+                analysis.tianGanRelations.forEach(function(r) {
+                    var color = r.category === '冲' ? '#DC143C' : '#2E8B57';
+                    tgHtml += '<div style="padding:6px 0;font-size:13px;"><span style="color:' + color + ';font-weight:bold;">' + r.name + '</span> <span style="color:#999;">（' + r.pos1 + '柱' + r.gan1 + ' ↔ ' + r.pos2 + '柱' + r.gan2 + '）</span></div>';
+                });
+            } else {
+                tgHtml += '<div style="padding:6px 0;font-size:13px;color:#999;">天干无冲合关系</div>';
+            }
+            tgHtml += '</div>';
+            html += tgHtml;
+
+            // 地支留意
+            var dzHtml = '<div class="result-card"><div class="result-title">地支留意</div>';
+            if (analysis.diZhiRelations.length > 0) {
+                analysis.diZhiRelations.forEach(function(r) {
+                    var colors = { '刑': '#8B0000', '冲': '#DC143C', '害': '#FF6347', '破': '#FF8C00', '合': '#2E8B57', '会': '#4169E1', '自刑': '#8B0000', '半合': '#2E8B57' };
+                    var color = colors[r.category] || '#333';
+                    dzHtml += '<div style="padding:6px 0;font-size:13px;"><span style="color:' + color + ';font-weight:bold;">' + r.display + '</span></div>';
+                });
+            } else {
+                dzHtml += '<div style="padding:6px 0;font-size:13px;color:#999;">地支无特殊关系</div>';
+            }
+            dzHtml += '<div style="padding:6px 0;font-size:11px;color:#bbb;">以上为传统命理文化推演，仅供了解参考，不构成任何人生决策依据。</div></div>';
+            html += dzHtml;
+        }
+
+        // ===== 黄历 =====
+        if (typeof HuangliAnalyzer !== 'undefined') {
+            var huangliHtml = HuangliAnalyzer.render(result);
+            if (huangliHtml) {
+                html += huangliHtml;
+            }
+        }
+
+        // 返回顶部按钮
+        html += '<div style="text-align:center;margin:20px 0 10px;">';
+        html += '<button onclick="window.scrollTo({top:0,behavior:\'smooth\'})" style="padding:8px 24px;background:var(--bg-secondary);color:var(--text-secondary);border:1px solid var(--border-color);border-radius:20px;font-size:13px;cursor:pointer;">返回顶部</button>';
+        html += '</div>';
+
+        document.getElementById('resultArea').innerHTML = html;
+    }
+
+    // ==================== 事件绑定 ====================
+    function bindEvents() {
+        // 年月选择器变化
+        document.getElementById('yearSelect').addEventListener('change', function() {
+            currentYear = parseInt(this.value);
+            currentDay = 1;
+            renderCalendar(currentYear, currentMonth, currentDay);
+            renderPaipan(currentYear, currentMonth, currentDay, currentHour);
+        });
+        document.getElementById('monthSelect').addEventListener('change', function() {
+            currentMonth = parseInt(this.value);
+            currentDay = 1;
+            renderCalendar(currentYear, currentMonth, currentDay);
+            renderPaipan(currentYear, currentMonth, currentDay, currentHour);
+        });
+
+        // 日历日期点击
+        document.getElementById('calendarContainer').addEventListener('click', function(e) {
+            var dayEl = e.target.closest('.calendar-day');
+            if (!dayEl || dayEl.classList.contains('other-month') || dayEl.classList.contains('empty')) return;
+
+            var y = parseInt(dayEl.getAttribute('data-year'));
+            var m = parseInt(dayEl.getAttribute('data-month'));
+            var d = parseInt(dayEl.getAttribute('data-day'));
+            if (isNaN(y) || isNaN(m) || isNaN(d)) return;
+
+            currentYear = y;
+            currentMonth = m;
+            currentDay = d;
+
+            renderCalendar(y, m, d);
+            renderPaipan(y, m, d, currentHour);
+        });
+
+        // 时辰栏点击
+        document.getElementById('shichenBar').addEventListener('click', function(e) {
+            var btn = e.target.closest('.shichen-btn');
+            if (!btn) return;
+
+            var hour = parseInt(btn.getAttribute('data-hour'));
+            if (isNaN(hour)) return;
+
+            currentHour = hour;
+
+            var allBtns = this.querySelectorAll('.shichen-btn');
+            allBtns.forEach(function(b) { b.classList.remove('active'); });
+            btn.classList.add('active');
+
+            renderPaipan(currentYear, currentMonth, currentDay, currentHour);
+        });
+    }
+
+    // ==================== 启动 ====================
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    } else {
+        init();
+    }
+})();
+
+// 修复浏览器 BFCache 导致页面回退时显示旧版代码的问题
+window.addEventListener('pageshow', function(event) {
+    if (event.persisted || (window.performance && window.performance.navigation && window.performance.navigation.type === 2)) {
+        console.log('[反缓存] 检测到页面从缓存恢复，执行强制刷新...');
+        window.location.reload();
+    }
+});
+</script>
+
+</body>
+</html>
