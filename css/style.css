@@ -1649,7 +1649,7 @@ body {
 }
 /* ==================== 排盘表格阴影和增强 ==================== */
 .bazi-table-card {
-    box-shadow: 0 4px 16px rgba(61, 43, 31, 0.12) !important;
+    box-shadow: 0 4px 16px rgba(61, 43, 31, 0.12);
     border: 1px solid var(--border-color);
 }
 
@@ -1953,7 +1953,7 @@ body {
     transition: all 0.2s;
 }
 .btn-back-top:active {
-    background: var(--border-color) !important;
+    background: var(--border-color);
     transform: scale(0.97);
 }
 
