@@ -627,8 +627,6 @@
 
         // 绑定事件
         bindEvents();
-
-        console.log('[今日运势] 页面初始化完成');
     }
 
     // ==================== 渲染时辰栏 ====================
@@ -724,15 +722,12 @@
 
     // ==================== 渲染排盘结果 ====================
     function renderPaipan(year, month, day, hour) {
-        console.log('[今日运势] 排盘参数：', { year: year, month: month, day: day, hour: hour });
 
         var result = Bazi.generate(year, month, day, hour, 0, 1, 116.4);
         if (!result) {
             console.error('[今日运势] 排盘失败');
             return;
         }
-
-        console.log('[今日运势] 四柱八字：', result.pillars);
 
         var p = result.pillars;
         var shenSha = result.shenSha || {};
@@ -981,14 +976,6 @@
         init();
     }
 })();
-
-// 修复浏览器 BFCache 导致页面回退时显示旧版代码的问题
-window.addEventListener('pageshow', function(event) {
-    if (event.persisted || (window.performance && window.performance.navigation && window.performance.navigation.type === 2)) {
-        console.log('[反缓存] 检测到页面从缓存恢复，执行强制刷新...');
-        window.location.reload();
-    }
-});
 </script>
 
 </body>
