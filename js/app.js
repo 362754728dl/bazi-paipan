@@ -3155,9 +3155,13 @@ const App = (function () {
     var _recordsTotal = 0;
     var _recordsLoading = false;
     var _recordsAllLoaded = []; // 当前已加载的所有记录（用于点击查看详情）
+    var _recordsMaxDisplay = 50; // 列表最大同时显示条数
+    var _recordsTrackingMap = {}; // 记录状态映射表（高亮/选中等）
+    var _recordsRequestTimer = null; // 请求超时计时器
+    var _recordsRequestTimeout = 8000; // 8秒超时
 
     /**
-     * 渲染记录列表（分页版本）
+     * 渲染记录列表（分页版本，带状态保护和列表上限）
      */
     async function renderRecords(resetPage) {
         try {
@@ -3175,7 +3179,9 @@ const App = (function () {
         if (resetPage) {
             _recordsPage = 1;
             _recordsAllLoaded = [];
+            _recordsTrackingMap = {};
             recordList.innerHTML = '';
+            _clearRequestTimer();
         }
 
         if (!Storage.isLoggedIn()) {
@@ -3208,8 +3214,24 @@ const App = (function () {
             if (btn) { btn.disabled = true; btn.classList.add('loading'); btn.textContent = '加载中...'; }
         }
 
+        // 设置请求超时保护
+        _clearRequestTimer();
+        _recordsRequestTimer = setTimeout(function() {
+            _recordsLoading = false;
+            var btn2 = $('btnLoadMore');
+            if (btn2) { btn2.disabled = false; btn2.classList.remove('loading'); btn2.textContent = '加载更多'; }
+            showToast('加载超时，请点击重试');
+        }, _recordsRequestTimeout);
+
         // 分页请求
-        var result = await Storage.getRecordsPage(_recordsPage, _recordsPageSize);
+        var result;
+        try {
+            result = await Storage.getRecordsPage(_recordsPage, _recordsPageSize);
+        } catch(e) {
+            result = { list: [], total: 0, hasMore: false };
+        }
+        _clearRequestTimer();
+
         var records = result.list || [];
         _recordsHasMore = !!result.hasMore;
         _recordsTotal = result.total || 0;
@@ -3236,14 +3258,19 @@ const App = (function () {
 
         emptyState.style.display = 'none';
 
-        // 清除骨架屏（首次加载时骨架屏由 innerHTML 设置，追加前必须先清空）
-        if (_recordsPage === 1) {
-            recordList.innerHTML = '';
+        // 列表上限保护：超过_maxDisplay条时裁剪
+        if (_recordsAllLoaded.length > _recordsMaxDisplay) {
+            _recordsAllLoaded = _recordsAllLoaded.slice(0, _recordsMaxDisplay);
+            _recordsHasMore = false; // 不再允许加载更多
         }
 
-        // 使用 DocumentFragment 追加记录，减少 DOM 重排
+        // 保存当前状态到 trackingMap
+        _saveTrackingStates(recordList);
+
+        // 清空并重建整个列表（DocumentFragment）
+        recordList.innerHTML = '';
         var fragment = document.createDocumentFragment();
-        records.forEach(function (r) {
+        _recordsAllLoaded.forEach(function (r) {
             var date = new Date(r.createTime);
             var timeStr = date.getFullYear() + '/' + padZero(date.getMonth() + 1) + '/' + padZero(date.getDate()) + ' ' + padZero(date.getHours()) + ':' + padZero(date.getMinutes()) + ':' + padZero(date.getSeconds());
 
@@ -3264,6 +3291,9 @@ const App = (function () {
         });
         recordList.appendChild(fragment);
 
+        // 恢复 trackingMap 中的状态
+        _restoreTrackingStates(recordList);
+
         // 绑定删除按钮事件
         recordList.querySelectorAll('.btn-delete:not([data-bound])').forEach(function (btn) {
             btn.setAttribute('data-bound', '1');
@@ -3274,6 +3304,8 @@ const App = (function () {
                     if (confirm('确定要删除这条记录吗？')) {
                         var success = await Storage.deleteRecord(id);
                         if (success) {
+                            // 清理 trackingMap 状态
+                            delete _recordsTrackingMap[id];
                             // 局部刷新：从DOM移除该条记录
                             var itemEl = recordList.querySelector('.record-item[data-id="' + id + '"]');
                             if (itemEl) {
@@ -3291,10 +3323,7 @@ const App = (function () {
                                     _recordsAllLoaded = _recordsAllLoaded.filter(function(r) { return r.id !== id; });
                                     _recordsTotal = Math.max(0, _recordsTotal - 1);
                                     updateRecordsCount();
-                                    // 如果当前页已无记录且之前有更多，重新加载
-                                    if (_recordsAllLoaded.length === 0 && _recordsHasMore) {
-                                        renderRecords(true);
-                                    } else if (_recordsAllLoaded.length === 0) {
+                                    if (_recordsAllLoaded.length === 0) {
                                         renderRecords(true);
                                     }
                                 }, 400);
@@ -3331,7 +3360,7 @@ const App = (function () {
             });
         });
 
-        // 更新加载更多按钮
+        // 更新加载更多按钮和记录计数
         updateLoadMoreButton();
         updateRecordsCount();
 
@@ -3339,12 +3368,54 @@ const App = (function () {
         } catch (err) {
             console.error('[renderRecords] 渲染出错:', err);
             _recordsLoading = false;
+            _clearRequestTimer();
             try {
                 var recordList = $('recordList');
                 if (recordList && _recordsAllLoaded.length === 0) {
                     recordList.innerHTML = '<div style="text-align:center;padding:20px;color:#999;">记录加载异常，请刷新页面</div>';
                 }
             } catch(e) {}
+        }
+    }
+
+    /**
+     * 保存当前列表中所有记录的跟踪状态
+     */
+    function _saveTrackingStates(container) {
+        if (!container) return;
+        container.querySelectorAll('.record-item').forEach(function(item) {
+            var id = item.getAttribute('data-id');
+            if (id) {
+                _recordsTrackingMap[id] = {
+                    highlighted: item.classList.contains('highlighted'),
+                    selected: item.classList.contains('selected')
+                };
+            }
+        });
+    }
+
+    /**
+     * 从 trackingMap 恢复记录状态
+     */
+    function _restoreTrackingStates(container) {
+        if (!container) return;
+        Object.keys(_recordsTrackingMap).forEach(function(id) {
+            var state = _recordsTrackingMap[id];
+            var item = container.querySelector('.record-item[data-id="' + id + '"]');
+            if (item && state) {
+                if (state.highlighted) item.classList.add('highlighted');
+                if (state.selected) item.classList.add('selected');
+            }
+        });
+    }
+
+    /**
+     * 清除请求超时计时器
+     */
+    function _clearRequestTimer() {
+        if (_recordsRequestTimer) {
+            clearTimeout(_recordsRequestTimer);
+            _recordsRequestTimer = null;
         }
     }
 
@@ -3375,19 +3446,21 @@ const App = (function () {
         if (!btn) return;
 
         if (_recordsTotal <= 0) {
-            // 无记录，全部隐藏
             loadMoreWrap.style.display = 'none';
         } else if (_recordsTotal <= _recordsPageSize) {
-            // 记录数不超过一页：隐藏加载更多按钮（recordsCount由updateRecordsCount独立控制）
+            // 记录数不超过一页：隐藏加载更多按钮
             loadMoreWrap.style.display = 'none';
-        } else if (!_recordsHasMore) {
-            // 已加载全部
+        } else if (!_recordsHasMore || _recordsAllLoaded.length >= _recordsMaxDisplay) {
+            // 已加载全部 或 达到列表上限
             loadMoreWrap.style.display = 'block';
             btn.disabled = true;
             btn.classList.remove('loading');
-            btn.textContent = '已加载全部记录（共' + _recordsTotal + '条）';
+            if (_recordsAllLoaded.length >= _recordsMaxDisplay && _recordsTotal > _recordsMaxDisplay) {
+                btn.textContent = '已显示最近' + _recordsMaxDisplay + '条记录';
+            } else {
+                btn.textContent = '已加载全部记录（共' + _recordsTotal + '条）';
+            }
         } else {
-            // 还有更多
             loadMoreWrap.style.display = 'block';
             btn.disabled = false;
             btn.classList.remove('loading');
@@ -3403,7 +3476,11 @@ const App = (function () {
         if (!recordsCount) return;
         if (_recordsTotal > 0) {
             recordsCount.style.display = 'block';
-            recordsCount.textContent = '共 ' + _recordsTotal + ' 条记录';
+            if (_recordsTotal > _recordsMaxDisplay) {
+                recordsCount.textContent = '共 ' + _recordsTotal + ' 条记录（当前显示最近' + _recordsAllLoaded.length + '条）';
+            } else {
+                recordsCount.textContent = '共 ' + _recordsTotal + ' 条记录';
+            }
         } else {
             recordsCount.style.display = 'none';
         }
@@ -3414,8 +3491,20 @@ const App = (function () {
      */
     function loadMoreRecords() {
         if (_recordsLoading || !_recordsHasMore) return;
+        if (_recordsAllLoaded.length >= _recordsMaxDisplay) return;
         _recordsPage++;
         renderRecords(false);
+    }
+
+    /**
+     * 页面卸载时清理记录相关内存
+     */
+    function _cleanupRecordsMemory() {
+        _recordsAllLoaded = [];
+        _recordsTrackingMap = {};
+        _clearRequestTimer();
+        var recordList = $('recordList');
+        if (recordList) recordList.innerHTML = '';
     }
 
     /**
@@ -3941,6 +4030,9 @@ const App = (function () {
     window.selectLiuNian = selectLiuNian;
     window.selectLiuYue = selectLiuYue;
     window.selectLiuRi = selectLiuRi;
+
+    // 页面卸载时清理排盘记录内存
+    window.addEventListener('beforeunload', _cleanupRecordsMemory);
 
     // ==================== DOM加载完成后初始化 ====================
     if (document.readyState === 'loading') {
