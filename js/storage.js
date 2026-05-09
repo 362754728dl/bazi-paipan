@@ -169,6 +169,33 @@ const Storage = (function () {
   }
 
   /**
+   * 从 localStorage 读取本地备份的排盘记录（离线/未登录回退方案）
+   * @returns {Array}
+   */
+  function _getLocalRecords() {
+    try {
+      var raw = localStorage.getItem('paipan_records_local');
+      if (!raw) return [];
+      var records = JSON.parse(raw);
+      return Array.isArray(records) ? records : [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  /**
+   * 将排盘记录备份到 localStorage
+   * @param {Array} records
+   */
+  function _saveLocalRecords(records) {
+    try {
+      localStorage.setItem('paipan_records_local', JSON.stringify(records));
+    } catch (e) {
+      // 忽略存储满等异常
+    }
+  }
+
+  /**
    * 保存一条排盘记录（调用后端API）
    * @param {object} record - 排盘记录对象
    *   - id          {number}   时间戳作为唯一标识
@@ -185,8 +212,18 @@ const Storage = (function () {
   async function saveRecord(record) {
     const token = _getToken();
     if (!token) {
-      console.warn('[saveRecord] 未登录，无法保存记录');
-      return { success: false, message: '请先登录' };
+      // 未登录时保存到本地备份
+      console.log('[saveRecord] 未登录，保存到本地备份');
+      var localRecords = _getLocalRecords();
+      record.id = record.id || Date.now();
+      record.createTime = record.createTime || Date.now();
+      localRecords.unshift(record);
+      // 最多保留50条
+      if (localRecords.length > 50) localRecords = localRecords.slice(0, 50);
+      _saveLocalRecords(localRecords);
+      _recordsCache = localRecords;
+      _recordsCacheTime = Date.now();
+      return { success: true, data: record };
     }
 
     try {
@@ -203,6 +240,7 @@ const Storage = (function () {
           gender: record.gender === '男' ? 1 : 0,
           shengXiao: record.shengXiao || '',
           baziStr: record.baziStr || '',
+          birthHour: record.birthHour,
           formData: record.formData || {}
         })
       });
@@ -229,8 +267,11 @@ const Storage = (function () {
    */
   async function getRecords(forceRefresh) {
     const token = _getToken();
+
+    // 未登录时回退到本地备份
     if (!token) {
-      return [];
+      console.log('[getRecords] 未登录，回退到本地备份记录');
+      return _getLocalRecords();
     }
 
     // 检查缓存
@@ -258,6 +299,7 @@ const Storage = (function () {
             gender: item.gender === 1 ? '男' : '女',
             shengXiao: item.sheng_xiao,
             baziStr: item.bazi_str,
+            birthHour: item.birth_hour,
             formData: typeof item.form_data === 'string' ? JSON.parse(item.form_data) : (item.form_data || {}),
             createTime: new Date(item.created_at).getTime()
           };
@@ -267,14 +309,19 @@ const Storage = (function () {
         _recordsCache = records;
         _recordsCacheTime = Date.now();
 
+        // 同步备份到本地
+        _saveLocalRecords(records);
+
         return records;
       } else {
         console.error('[getRecords] 获取失败:', data.message);
-        return [];
+        // API失败时回退到本地备份
+        return _getLocalRecords();
       }
     } catch (err) {
       console.error('[getRecords] 请求失败:', err);
-      return [];
+      // 网络异常时回退到本地备份
+      return _getLocalRecords();
     }
   }
 
@@ -286,8 +333,13 @@ const Storage = (function () {
   async function deleteRecord(id) {
     const token = _getToken();
     if (!token) {
-      console.warn('[deleteRecord] 未登录，无法删除记录');
-      return false;
+      // 未登录时从本地备份删除
+      var localRecords = _getLocalRecords();
+      localRecords = localRecords.filter(function(r) { return r.id !== id; });
+      _saveLocalRecords(localRecords);
+      _recordsCache = localRecords;
+      _recordsCacheTime = Date.now();
+      return true;
     }
 
     try {
@@ -302,6 +354,10 @@ const Storage = (function () {
       if (data.code === 200) {
         // 清除缓存
         _recordsCache = null;
+        // 同步删除本地备份
+        var localRecords = _getLocalRecords();
+        localRecords = localRecords.filter(function(r) { return r.id !== id; });
+        _saveLocalRecords(localRecords);
         return true;
       } else {
         console.error('[deleteRecord] 删除失败:', data.message);
