@@ -851,7 +851,7 @@
         });
     }
 
-    function loadRecordOptions(party) {
+    async function loadRecordOptions(party) {
         var sel = document.getElementById('recordSelect' + party);
         if (!sel) return;
         // 记住当前选中值
@@ -860,7 +860,8 @@
         sel.innerHTML = '<option value="">-- 手动输入或选择记录 --</option>';
         // 复用现有Storage逻辑，只做读取
         try {
-            var records = Storage.getRecords();
+            var records = await Storage.getRecords(true);
+            console.log('[合配] 加载排盘记录成功，数量：', records.length);
             if (records && records.length > 0) {
                 records.forEach(function(r) {
                     var opt = document.createElement('option');
@@ -1217,6 +1218,15 @@ function copyHepeiText(textareaId) {
         alert('复制失败，请手动选择文本复制');
     }
 }
+</script>
+<script>
+// 修复浏览器BFCache导致页面回退时下拉菜单可能重复或为空的问题
+window.addEventListener('pageshow', function(event) {
+  if (event.persisted || (window.performance && window.performance.navigation && window.performance.navigation.type === 2)) {
+    console.log('[BFCache修复] 检测到页面从缓存恢复，执行强制刷新...');
+    window.location.reload();
+  }
+});
 </script>
 
 </body>

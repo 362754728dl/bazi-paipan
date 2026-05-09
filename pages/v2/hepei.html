@@ -1199,13 +1199,14 @@
         });
     }
 
-    function loadRecordOptions(party) {
+    async function loadRecordOptions(party) {
         var sel = document.getElementById('recordSelect' + party);
         if (!sel) return;
         var currentValue = sel.value;
         sel.innerHTML = '<option value="">-- 手动输入或选择记录 --</option>';
         try {
-            var records = Storage.getRecords();
+            var records = await Storage.getRecords(true);
+            console.log('[合配] 加载排盘记录成功，数量：', records.length);
             if (records && records.length > 0) {
                 records.forEach(function(r) {
                     var opt = document.createElement('option');
