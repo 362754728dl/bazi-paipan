@@ -836,11 +836,16 @@
         initProvinceDropdowns();
     }
 
-    // ==================== 排盘记录下拉（增量修改1） ====================
+    // ==================== 排盘记录预加载缓存 ====================
+    var _cachedRecords = null;
+    (async function preloadRecords() {
+        try { _cachedRecords = await Storage.getRecords(true); } catch(e) { _cachedRecords = []; }
+    })();
+
+    // ==================== 排盘记录下拉 ====================
     function initRecordDropdowns() {
         loadRecordOptions('A');
         loadRecordOptions('B');
-        // 下拉获得焦点时重新加载，确保新记录能及时显示
         ['A', 'B'].forEach(function(party) {
             var sel = document.getElementById('recordSelect' + party);
             if (sel) {
@@ -857,21 +862,25 @@
         var currentValue = sel.value;
         sel.innerHTML = '<option value="">-- 请选择排盘记录 --</option>';
         try {
-            var records = await Storage.getRecords(true);
+            var records = _cachedRecords || await Storage.getRecords(true);
+            if (!_cachedRecords) _cachedRecords = records;
             if (records && records.length > 0) {
+                var fragment = document.createDocumentFragment();
+                var existingTexts = {};
+                Array.from(sel.options).forEach(function(opt) { existingTexts[opt.textContent] = true; });
                 records.forEach(function(r) {
-                    var exists = Array.from(sel.options).some(function(opt) {
-                        return opt.textContent === (r.name || '未命名') + ' (' + (r.gender === 1 || r.gender === '男' ? '男' : (r.gender === 0 || r.gender === '女' ? '女' : '未知')) + ')';
-                    });
-                    if (!exists) {
+                    var genderLabel = r.gender === 1 || r.gender === '男' ? '男' : (r.gender === 0 || r.gender === '女' ? '女' : '未知');
+                    var text = (r.name || '未命名') + ' (' + genderLabel + ')';
+                    if (!existingTexts[text]) {
+                        existingTexts[text] = true;
                         var opt = document.createElement('option');
-                        var genderLabel = r.gender === 1 || r.gender === '男' ? '男' : (r.gender === 0 || r.gender === '女' ? '女' : '未知');
                         opt.value = r.id || '';
-                        opt.textContent = (r.name || '未命名') + ' (' + genderLabel + ')';
+                        opt.textContent = text;
                         opt.dataset.record = JSON.stringify(r);
-                        sel.appendChild(opt);
+                        fragment.appendChild(opt);
                     }
                 });
+                sel.appendChild(fragment);
                 if (currentValue) sel.value = currentValue;
             }
         } catch(e) {
