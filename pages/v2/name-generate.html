@@ -1658,7 +1658,6 @@
 
             if (cachedResult) {
                 // 命中缓存，直接展示结果，不调用大模型
-                console.log('[缓存] 命中姓名评测缓存');
                 var parsedHtml = parseAiContent(cachedResult);
                 resultArea.innerHTML = baziHtml +
                     '<div class="ai-result-card">' +
@@ -1758,7 +1757,6 @@
 
             if (cachedResult) {
                 // 命中缓存，直接展示结果，不调用大模型
-                console.log('[缓存] 命中取名缓存');
                 var parsedHtml = parseAiContent(cachedResult);
                 resultArea.innerHTML = baziHtml +
                     '<div class="ai-result-card">' +
@@ -1810,7 +1808,13 @@
         }
     }
 
-    // ==================== 评测界面排盘记录下拉（复用V1逻辑） ====================
+    // ==================== 排盘记录预加载缓存 ====================
+    var _cachedRecords = null;
+    (async function preloadRecords() {
+        try { _cachedRecords = await Storage.getRecords(true); } catch(e) { _cachedRecords = []; }
+    })();
+
+    // ==================== 评测界面排盘记录下拉 ====================
 
     function initEvalRecordDropdown() {
         loadEvalRecordOptions();
@@ -1825,27 +1829,31 @@
         }
     }
 
-        async function loadEvalRecordOptions() {
+    async function loadEvalRecordOptions() {
         var sel = $('evalRecordSelect');
         if (!sel) return;
         var currentValue = sel.value;
         sel.innerHTML = '<option value="">-- 请选择排盘记录 --</option>';
         try {
-            var records = await Storage.getRecords(true);
+            var records = _cachedRecords || await Storage.getRecords(true);
+            if (!_cachedRecords) _cachedRecords = records;
             if (records && records.length > 0) {
+                var fragment = document.createDocumentFragment();
+                var existingTexts = {};
+                Array.from(sel.options).forEach(function(opt) { existingTexts[opt.textContent] = true; });
                 records.forEach(function(r) {
-                    var exists = Array.from(sel.options).some(function(opt) {
-                        return opt.textContent === (r.name || '未命名') + ' (' + (r.gender === 1 || r.gender === '男' ? '男' : (r.gender === 0 || r.gender === '女' ? '女' : '未知')) + ')';
-                    });
-                    if (!exists) {
+                    var genderLabel = r.gender === 1 || r.gender === '男' ? '男' : (r.gender === 0 || r.gender === '女' ? '女' : '未知');
+                    var text = (r.name || '未命名') + ' (' + genderLabel + ')';
+                    if (!existingTexts[text]) {
+                        existingTexts[text] = true;
                         var opt = document.createElement('option');
-                        var genderLabel = r.gender === 1 || r.gender === '男' ? '男' : (r.gender === 0 || r.gender === '女' ? '女' : '未知');
                         opt.value = r.id || '';
-                        opt.textContent = (r.name || '未命名') + ' (' + genderLabel + ')';
+                        opt.textContent = text;
                         opt.dataset.record = JSON.stringify(r);
-                        sel.appendChild(opt);
+                        fragment.appendChild(opt);
                     }
                 });
+                sel.appendChild(fragment);
                 if (currentValue) sel.value = currentValue;
             }
         } catch(e) {
