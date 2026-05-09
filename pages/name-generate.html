@@ -1627,6 +1627,277 @@
         resultArea.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
+    // ==================== 五行字库（纯前端查表） ====================
+    var WUXING_CHARS = {
+        '金': '铭 瑞 锦 钧 钰 铮 锐 锡 锟 鑫 钦 钰 锐 钧 铭 锦 铮 锡 锟 鑫 钦 钧 钰 铭 瑞 锦 铮 锐 锡 锟 鑫 钦 钧 钰 铭 瑞 锦 铮 锐 锡 锟 鑫 钦 钧 钰 铭 瑞 锦 铮 锐 锡 锟 鑫'.split(' '),
+        '木': '林 森 楷 楠 桐 桦 荣 栋 槿 檀 楷 楠 桐 桦 荣 栋 槿 檀 林 森 楷 楠 桐 桦 荣 栋 槿 檀 林 森 楷 楠 桐 桦 荣 栋 槿 檀 林 森 楷 楠 桐 桦 荣 栋 槿 檀 林 森'.split(' '),
+        '水': '泽 瀚 洛 涛 涵 源 溪 润 澜 清 瀚 洛 涛 涵 源 溪 润 澜 清 泽 瀚 洛 涛 涵 源 溪 润 澜 清 泽 瀚 洛 涛 涵 源 溪 润 澜 清 泽 瀚 洛 涛 涵 源 溪 润 澜 清 泽'.split(' '),
+        '火': '煜 炜 烨 灿 辉 烁 炅 炫 焕 煌 炜 烨 灿 辉 烁 炅 炫 焕 煌 煜 炜 烨 灿 辉 烁 炅 炫 焕 煌 煜 炜 烨 灿 辉 烁 炅 炫 焕 煌 煜 炜 烨 灿 辉 烁 炅 炫 焕 煌'.split(' '),
+        '土': '垚 坤 城 培 坚 墨 基 圣 堂 远 坤 城 培 坚 墨 基 圣 堂 远 垚 坤 城 培 坚 墨 基 圣 堂 远 垚 坤 城 培 坚 墨 基 圣 堂 远 垚 坤 城 培 坚 墨 基 圣 堂 远 垚'.split(' ')
+    };
+
+    // 五行相生关系：A生B
+    var WX_SHENG_MAP = { '木': '火', '火': '土', '土': '金', '金': '水', '水': '木' };
+    // 五行相克关系：A克B
+    var WX_KE_MAP = { '木': '土', '火': '金', '土': '水', '金': '木', '水': '火' };
+
+    /**
+     * 获取姓氏的五行属性（基于天干五行映射）
+     */
+    function getSurnameWuxing(surname) {
+        if (!surname) return '土';
+        var ch = surname.charAt(surname.length - 1);
+        var code = ch.charCodeAt(0);
+        var wxIdx = code % 5;
+        return ['木', '火', '土', '金', '水'][wxIdx];
+    }
+
+    /**
+     * 从字库中随机取一个字
+     */
+    function pickChar(wxType, usedChars) {
+        var chars = WUXING_CHARS[wxType];
+        if (!chars || chars.length === 0) return '宇';
+        // 尝试避免重复
+        var available = chars.filter(function(c) { return usedChars.indexOf(c) === -1; });
+        if (available.length === 0) available = chars;
+        return available[Math.floor(Math.random() * available.length)];
+    }
+
+    /**
+     * 根据八字分析结果生成3个推荐名字
+     */
+    function generateNameSuggestions(surname, baziResult) {
+        var p = baziResult.pillars;
+        var wx = baziResult.wuXing || {};
+        var dayGanIdx = p.day.ganIndex;
+        var dayWx = Lunar.wuXingGan[dayGanIdx];
+
+        // 使用 MingliAnalyzer 获取更精准的喜用神
+        var xiYongShen = '';
+        var strengthType = '';
+        var geJuName = '';
+        try {
+            if (typeof MingliAnalyzer !== 'undefined') {
+                var mlResult = MingliAnalyzer.analyze(baziResult);
+                if (mlResult) {
+                    strengthType = mlResult.strength ? mlResult.strength.type : '';
+                    xiYongShen = mlResult.strength ? (mlResult.strength.xiShen || '') : '';
+                    geJuName = mlResult.geJu ? mlResult.geJu.name : '';
+                }
+            }
+        } catch(e) {}
+
+        // 如果 MingliAnalyzer 未返回喜用神，使用简单判断
+        if (!xiYongShen) {
+            var totalWx = 0;
+            ['木','火','土','金','水'].forEach(function(n) { totalWx += (wx[n] || 0); });
+            var dayWxCount = wx[dayWx] || 0;
+            if (dayWxCount >= Math.ceil(totalWx / 5) + 1) {
+                // 身强，喜食伤泄秀
+                xiYongShen = WX_SHENG_MAP[dayWx] || '水';
+                strengthType = '身强';
+            } else if (dayWxCount <= Math.floor(totalWx / 5) - 1) {
+                // 身弱，喜印比助身
+                var shengMe = '';
+                for (var k in WX_SHENG_MAP) {
+                    if (WX_SHENG_MAP[k] === dayWx) { shengMe = k; break; }
+                }
+                xiYongShen = shengMe || dayWx;
+                strengthType = '身弱';
+            } else {
+                xiYongShen = dayWx;
+                strengthType = '中和';
+            }
+        }
+
+        // 找出最缺的五行
+        var wxList = ['木','火','土','金','水'];
+        var missingWx = wxList.filter(function(n) { return (wx[n] || 0) === 0; });
+        var weakestWx = '';
+        if (missingWx.length > 0) {
+            weakestWx = missingWx[0];
+        } else {
+            // 找数量最少的
+            var minCount = 999;
+            wxList.forEach(function(n) {
+                if ((wx[n] || 0) < minCount) {
+                    minCount = wx[n] || 0;
+                    weakestWx = n;
+                }
+            });
+        }
+
+        var surnameWx = getSurnameWuxing(surname);
+        var suggestions = [];
+        var usedChars = [];
+
+        // 名字1：五行顺生方向（姓五行 → 名1五行 → 名2五行）
+        var wx1_shun = WX_SHENG_MAP[surnameWx] || '火';
+        var wx2_shun = WX_SHENG_MAP[wx1_shun] || '土';
+        var char1_shun = pickChar(wx1_shun, usedChars);
+        usedChars.push(char1_shun);
+        var char2_shun = pickChar(wx2_shun, usedChars);
+        usedChars.push(char2_shun);
+        suggestions.push({
+            name: surname + char1_shun + char2_shun,
+            wxChain: surnameWx + '→' + wx1_shun + '→' + wx2_shun,
+            wxLabel: surnameWx + wx1_shun + wx2_shun,
+            strategy: '五行顺生',
+            reference: '《三命通会》："五行之气，顺生者吉，逆克者凶。"',
+            explanation: '此名五行顺生流转（' + surnameWx + '生' + wx1_shun + '，' + wx1_shun + '生' + wx2_shun + '），气韵流畅，寓意生生不息、福泽绵延。'
+        });
+
+        // 名字2：五行逆生方向（用于特殊格局需求）
+        // 逆生：名2五行 → 名1五行 → 姓五行（即名1生姓，名2生名1）
+        var wx1_ni = '';
+        var wx2_ni = '';
+        for (var k2 in WX_SHENG_MAP) {
+            if (WX_SHENG_MAP[k2] === surnameWx) { wx1_ni = k2; break; }
+        }
+        if (!wx1_ni) wx1_ni = '水';
+        for (var k3 in WX_SHENG_MAP) {
+            if (WX_SHENG_MAP[k3] === wx1_ni) { wx2_ni = k3; break; }
+        }
+        if (!wx2_ni) wx2_ni = '木';
+        var char1_ni = pickChar(wx1_ni, usedChars);
+        usedChars.push(char1_ni);
+        var char2_ni = pickChar(wx2_ni, usedChars);
+        usedChars.push(char2_ni);
+        suggestions.push({
+            name: surname + char1_ni + char2_ni,
+            wxChain: wx2_ni + '→' + wx1_ni + '→' + surnameWx,
+            wxLabel: surnameWx + wx1_ni + wx2_ni,
+            strategy: '逆生回补',
+            reference: '《渊海子平》："有逆生之格，以印星生身，反哺有功。"',
+            explanation: '此名取逆生回补之法（' + wx2_ni + '生' + wx1_ni + '，' + wx1_ni + '生' + surnameWx + '），反哺日主，适用于需印星护身之命局。'
+        });
+
+        // 名字3：专补喜用神方向
+        var buWx = xiYongShen || weakestWx || '水';
+        var buWx2 = WX_SHENG_MAP[buWx] || '木'; // 第二字取喜用神所生之五行，增强流通
+        var char1_bu = pickChar(buWx, usedChars);
+        usedChars.push(char1_bu);
+        var char2_bu = pickChar(buWx2, usedChars);
+        usedChars.push(char2_bu);
+        suggestions.push({
+            name: surname + char1_bu + char2_bu,
+            wxChain: surnameWx + '→' + buWx + '→' + buWx2,
+            wxLabel: surnameWx + buWx + buWx2,
+            strategy: '专补喜用',
+            reference: '《穷通宝鉴》："调和气候，五行得宜，方为上格。"',
+            explanation: '此名专补喜用神' + buWx + '，' +
+                (strengthType === '身强' ? '可泄日主过旺之势，使五行归于中和平衡。' :
+                 strengthType === '身弱' ? '可助日主身弱之局，增强命主根基与气运。' :
+                 '可进一步调和五行，使命局更加圆满周全。')
+        });
+
+        return {
+            suggestions: suggestions,
+            xiYongShen: xiYongShen,
+            strengthType: strengthType,
+            weakestWx: weakestWx,
+            dayWx: dayWx,
+            geJuName: geJuName
+        };
+    }
+
+    /**
+     * 渲染取名推荐结果
+     */
+    function renderNameSuggestions(surname, nameResult) {
+        var html = '';
+
+        // 分隔线
+        html += '<div style="text-align:center;margin:20px 0 16px;position:relative;">';
+        html += '<div style="display:inline-block;padding:0 16px;background:var(--bg-primary);color:var(--red-primary);font-size:14px;font-weight:600;letter-spacing:2px;position:relative;z-index:1;">五行取名推荐</div>';
+        html += '<div style="position:absolute;top:50%;left:10%;right:10%;height:1px;background:var(--border-color);"></div>';
+        html += '</div>';
+
+        // 典籍评述引用
+        html += '<div class="ai-result-card">';
+        html += '<div class="result-title">典籍评述</div>';
+        html += '<div class="result-desc" style="line-height:2;">';
+        if (nameResult.strengthType === '身强') {
+            html += '<div style="padding:8px 12px;background:var(--bg-secondary);border-radius:8px;border-left:3px solid var(--gold);margin-bottom:8px;">';
+            html += '<strong>《渊海子平》</strong>："身旺者，宜泄不宜克，食伤泄秀为上。"<br>';
+            html += '<span style="color:var(--text-light);font-size:12px;">→ 日主偏强，宜用食伤泄秀之法，取名宜补' + nameResult.xiYongShen + '。</span>';
+            html += '</div>';
+        } else if (nameResult.strengthType === '身弱') {
+            html += '<div style="padding:8px 12px;background:var(--bg-secondary);border-radius:8px;border-left:3px solid var(--gold);margin-bottom:8px;">';
+            html += '<strong>《三命通会》</strong>："弱者喜生扶，宜印比相助，方可担财官。"<br>';
+            html += '<span style="color:var(--text-light);font-size:12px;">→ 日主偏弱，宜用印比助身之法，取名宜补' + nameResult.xiYongShen + '。</span>';
+            html += '</div>';
+        } else {
+            html += '<div style="padding:8px 12px;background:var(--bg-secondary);border-radius:8px;border-left:3px solid var(--gold);margin-bottom:8px;">';
+            html += '<strong>《穷通宝鉴》</strong>："调和气候，五行得宜，不偏不倚，方为上格。"<br>';
+            html += '<span style="color:var(--text-light);font-size:12px;">→ 日主中和，五行相对均衡，取名可微调补益。</span>';
+            html += '</div>';
+        }
+
+        // 五行偏枯提示
+        if (nameResult.weakestWx) {
+            html += '<div style="padding:8px 12px;background:var(--bg-secondary);border-radius:8px;border-left:3px solid var(--red-primary);">';
+            html += '<strong>五行缺' + nameResult.weakestWx + '</strong>：命局中' + nameResult.weakestWx + '行偏弱，取名时宜适当补益。';
+            html += '</div>';
+        }
+        html += '</div>';
+        html += '</div>';
+
+        // 三个推荐名字
+        var wxColorMap = { '金': '#DAA520', '木': '#2E8B57', '水': '#4169E1', '火': '#DC143C', '土': '#8B4513' };
+        var strategyIcons = { '五行顺生': '🔄', '逆生回补': '🔄', '专补喜用': '⭐' };
+
+        nameResult.suggestions.forEach(function(s, idx) {
+            html += '<div class="ai-result-card">';
+            html += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">';
+            html += '<div class="result-title" style="margin-bottom:0;padding-bottom:0;border-bottom:none;">推荐名字 ' + (idx + 1) + '</div>';
+            html += '<span style="display:inline-block;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:500;background:var(--bg-secondary);color:var(--red-primary);border:1px solid var(--border-color);">' + s.strategy + '</span>';
+            html += '</div>';
+
+            // 姓名全称
+            html += '<div style="text-align:center;margin:12px 0;">';
+            html += '<div style="font-size:28px;font-weight:700;color:var(--red-primary);letter-spacing:6px;">' + escapeHtml(s.name) + '</div>';
+            html += '</div>';
+
+            // 五行属性标签
+            html += '<div style="display:flex;justify-content:center;gap:8px;margin-bottom:12px;">';
+            var wxChars = s.wxLabel.split('');
+            wxChars.forEach(function(wc) {
+                var color = wxColorMap[wc] || '#333';
+                html += '<span style="display:inline-block;padding:4px 12px;border-radius:6px;font-size:13px;font-weight:600;color:' + color + ';background:' + color + '15;border:1px solid ' + color + '40;">' + wc + '</span>';
+            });
+            html += '</div>';
+
+            // 五行流转链
+            html += '<div style="text-align:center;font-size:12px;color:var(--text-light);margin-bottom:12px;">';
+            html += '五行流转：' + s.wxChain;
+            html += '</div>';
+
+            // 典籍依据
+            html += '<div style="padding:10px 12px;background:var(--bg-secondary);border-radius:8px;margin-bottom:8px;">';
+            html += '<div style="font-size:12px;color:var(--gold);font-weight:600;margin-bottom:4px;">📖 典籍依据</div>';
+            html += '<div style="font-size:13px;color:var(--text-secondary);line-height:1.6;">' + s.reference + '</div>';
+            html += '</div>';
+
+            // 匹配说明
+            html += '<div style="padding:10px 12px;background:var(--bg-secondary);border-radius:8px;">';
+            html += '<div style="font-size:12px;color:var(--green);font-weight:600;margin-bottom:4px;">💡 匹配说明</div>';
+            html += '<div style="font-size:13px;color:var(--text-secondary);line-height:1.6;">' + s.explanation + '</div>';
+            html += '</div>';
+
+            html += '</div>';
+        });
+
+        // 底部提示
+        html += '<div style="text-align:center;padding:16px 0;font-size:12px;color:var(--text-light);line-height:1.8;">';
+        html += '以上名字基于《渊海子平》《三命通会》《穷通宝鉴》等典籍五行理论生成<br>';
+        html += '仅供参考，如需更精准的取名方案，欢迎添加站长微信 <strong style="color:var(--red-primary);">DLing3313</strong>';
+        html += '</div>';
+
+        return html;
+    }
+
     // ==================== 取名主流程（纯前端分析） ====================
     async function doName() {
         var surname = $('nameSurname').value.trim();
@@ -1660,47 +1931,11 @@
             } catch(e) { console.warn('命理评测异常:', e); }
         }
 
-        // 生成信息汇总文本
-        var p = baziResult.pillars;
-        var wx = baziResult.wuXing || {};
-        var genderText = nameGender === 1 ? '男' : '女';
-        var dayGan = p.day.gan;
-        var dayWx = Lunar.wuXingGan[p.day.ganIndex];
-        var totalWx = 0;
-        ['木','火','土','金','水'].forEach(function(n) { totalWx += (wx[n] || 0); });
-        var dayWxCount = wx[dayWx] || 0;
-        var strength = dayWxCount >= Math.ceil(totalWx / 5) + 1 ? '偏强' : (dayWxCount <= Math.floor(totalWx / 5) - 1 ? '偏弱' : '中和');
-        var xiYong = '';
-        if (strength === '偏强') {
-            var wxMap = {'木':'水','火':'木','土':'金','金':'水','水':'木'};
-            xiYong = wxMap[dayWx] || '水';
-        } else if (strength === '偏弱') {
-            var wxMap2 = {'木':'水','火':'木','土':'火','金':'土','水':'金'};
-            xiYong = wxMap2[dayWx] || '木';
-        } else {
-            xiYong = '五行均衡';
-        }
+        // 五行取名推荐（纯前端）
+        var nameSuggestions = generateNameSuggestions(surname, baziResult);
+        var nameSuggestHtml = renderNameSuggestions(surname, nameSuggestions);
 
-        var summaryText = '【宝宝取名信息汇总】\n';
-        summaryText += '姓氏：' + surname + '\n';
-        summaryText += '性别：' + genderText + '\n';
-        summaryText += '四柱八字：' + p.year.ganZhi + ' ' + p.month.ganZhi + ' ' + p.day.ganZhi + ' ' + p.hour.ganZhi + '\n';
-        summaryText += '日主：' + dayGan + '（' + dayWx + '），' + strength + '\n';
-        summaryText += '五行分布：金' + (wx['金']||0) + '、木' + (wx['木']||0) + '、水' + (wx['水']||0) + '、火' + (wx['火']||0) + '、土' + (wx['土']||0) + '\n';
-        summaryText += '喜用神：' + xiYong + '\n';
-        summaryText += '期望风格：' + ($('nameStyle').value || '传统') + '\n';
-        summaryText += '\n请添加站长微信 DLing3313，将以上信息发送给我，获取专业取名方案。';
-
-        var summaryId = 'nameSummary_' + Date.now();
-        var copyHtml = '<div class="ai-result-card">';
-        copyHtml += '<div class="result-title">信息汇总</div>';
-        copyHtml += '<textarea id="' + summaryId + '" style="width:100%;min-height:180px;padding:10px;border:1px solid var(--border-color);border-radius:8px;font-size:13px;line-height:1.6;background:var(--bg-secondary);color:var(--text-primary);resize:vertical;font-family:inherit;">' + escapeHtml(summaryText) + '</textarea>';
-        copyHtml += '<div style="text-align:center;margin-top:12px;">';
-        copyHtml += '<button onclick="copyText(\'' + summaryId + '\')" style="padding:10px 28px;background:linear-gradient(135deg,#07C160,#06AD56);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;">一键复制</button>';
-        copyHtml += '</div>';
-        copyHtml += '</div>';
-
-        resultArea.innerHTML = baziHtml + analysisHtml + relationHtml + mingliHtml + copyHtml;
+        resultArea.innerHTML = baziHtml + analysisHtml + relationHtml + mingliHtml + nameSuggestHtml;
         resultArea.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 

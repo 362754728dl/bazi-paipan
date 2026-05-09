@@ -71,8 +71,8 @@
         margin: 0 auto;
     }
 
-    /* ==================== 账户信息卡片 ==================== */
-    .account-card {
+    /* ==================== 用户信息卡片 ==================== */
+    .user-card {
         background: #FFF;
         border-radius: 12px;
         padding: 20px 16px;
@@ -89,252 +89,154 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 22px;
+        font-size: 20px;
         font-weight: 700;
         color: #FFF;
         flex-shrink: 0;
+        background: linear-gradient(135deg, var(--red-dark), var(--red-primary));
     }
     .avatar.gray { background: #BFBFBF; }
-    .avatar.red { background: var(--red-primary); }
-    .account-info {
+    .user-info {
         flex: 1;
         min-width: 0;
     }
-    .account-info .username {
+    .user-info .username {
         font-size: 16px;
         font-weight: 600;
         color: var(--text-primary);
         margin-bottom: 4px;
     }
-    .account-info .tip {
+    .user-info .days-text {
         font-size: 12px;
         color: var(--text-light);
-        margin-bottom: 2px;
+        margin-bottom: 8px;
     }
-    .level-tag {
+    .btn-change-pwd {
         display: inline-block;
-        padding: 2px 8px;
-        border-radius: 10px;
-        font-size: 11px;
-        font-weight: 500;
-        margin-top: 4px;
-    }
-    .level-tag.normal {
-        background: #F0F0F0;
-        color: var(--text-secondary);
-    }
-    .level-tag.vip {
-        background: linear-gradient(135deg, var(--gold-light), var(--gold));
-        color: #FFF;
-    }
-    .account-actions {
-        display: flex;
-        gap: 8px;
-        margin-top: 12px;
-    }
-    .account-actions .btn {
-        flex: 1;
-        padding: 8px 0;
-        font-size: 13px;
-        letter-spacing: 1px;
-        height: auto;
-        line-height: 1.4;
-        text-align: center;
-        text-decoration: none;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-    .btn {
-        display: block;
-        width: 100%;
-        padding: 12px 0;
-        border: none;
-        border-radius: 8px;
-        font-size: 16px;
-        font-weight: 600;
-        cursor: pointer;
-        letter-spacing: 2px;
-        transition: all 0.2s;
-    }
-    .btn:active { transform: scale(0.98); }
-    .btn-primary {
-        background: linear-gradient(135deg, var(--red-dark), var(--red-primary));
-        color: #FFF;
-        box-shadow: 0 2px 6px rgba(168, 18, 22, 0.3);
-    }
-    .btn-outline {
-        background: transparent;
+        padding: 5px 14px;
+        font-size: 12px;
         color: var(--red-primary);
+        background: transparent;
         border: 1px solid var(--red-primary);
-    }
-    .btn-outline:active { background: var(--red-light); }
-    .btn-sm {
-        padding: 6px 14px;
-        font-size: 13px;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.2s;
         letter-spacing: 1px;
-        width: auto;
-        height: auto;
-        line-height: 1.4;
     }
+    .btn-change-pwd:active { background: var(--red-light); }
 
-    /* ==================== 功能列表 ==================== */
-    .func-card {
+    /* ==================== 通用卡片 ==================== */
+    .section-card {
         background: #FFF;
         border-radius: 12px;
         margin-bottom: 12px;
         box-shadow: 0 2px 8px var(--shadow);
         overflow: hidden;
     }
-    .func-item {
+    .section-title {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--text-primary);
+        padding: 14px 16px 8px;
         display: flex;
         align-items: center;
-        height: 48px;
-        padding: 0 14px;
+        gap: 6px;
+    }
+    .section-title .icon {
+        font-size: 16px;
+    }
+
+    /* ==================== 八字档案 ==================== */
+    .archive-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px 16px;
         cursor: pointer;
         transition: background 0.2s;
         text-decoration: none;
         color: var(--text-primary);
-        border-bottom: 1px solid #F5F0E8;
     }
-    .func-item:last-child { border-bottom: none; }
-    .func-item:active { background: #FAF6EE; }
-    .func-item .icon {
-        font-size: 18px;
-        margin-right: 10px;
-        flex-shrink: 0;
-    }
-    .func-item .label {
-        flex: 1;
+    .archive-item:active { background: #FAF6EE; }
+    .archive-item .label {
         font-size: 14px;
     }
-    .func-item .count {
-        font-size: 12px;
+    .archive-item .count {
+        font-size: 13px;
         color: var(--text-light);
-        margin-right: 8px;
     }
-    .func-item .arrow {
+    .archive-item .arrow {
         color: #CCC;
         font-size: 14px;
-        flex-shrink: 0;
+        margin-left: 6px;
     }
 
-    /* ==================== 姓名记录列表 ==================== */
-    .records-section {
-        background: #FFF;
-        border-radius: 12px;
-        margin-bottom: 12px;
-        box-shadow: 0 2px 8px var(--shadow);
-        overflow: hidden;
+    /* ==================== 使用足迹 ==================== */
+    .footprint-list {
+        padding: 0 16px 14px;
     }
-    .records-tab-bar {
-        display: flex;
-        border-bottom: 1px solid var(--border-color);
-    }
-    .records-tab-item {
-        flex: 1;
-        text-align: center;
-        padding: 11px 8px;
-        font-size: 14px;
-        color: var(--text-light);
-        cursor: pointer;
-        transition: all 0.3s;
-        border-bottom: 3px solid transparent;
-        font-weight: 500;
-        user-select: none;
-    }
-    .records-tab-item.active {
-        color: var(--red-primary);
-        border-bottom-color: var(--red-primary);
-        font-weight: 600;
-    }
-    .records-list {
-        padding: 0;
-    }
-    .record-item {
-        padding: 12px 14px;
-        border-bottom: 1px solid #F5F0E8;
-        cursor: pointer;
-    }
-    .record-item:last-child { border-bottom: none; }
-    .record-header {
+    .footprint-item {
         display: flex;
         align-items: center;
         justify-content: space-between;
+        padding: 10px 0;
+        border-bottom: 1px solid #F5F0E8;
     }
-    .record-left {
+    .footprint-item:last-child { border-bottom: none; }
+    .footprint-item .label {
+        font-size: 14px;
+        color: var(--text-primary);
         display: flex;
         align-items: center;
         gap: 8px;
-        flex: 1;
-        min-width: 0;
     }
-    .record-type-tag {
-        display: inline-block;
-        padding: 1px 6px;
-        border-radius: 4px;
-        font-size: 11px;
-        font-weight: 500;
-        flex-shrink: 0;
+    .footprint-item .label .fp-icon {
+        font-size: 16px;
     }
-    .record-type-tag.evaluate {
-        background: #E8F5E9;
-        color: var(--green);
-    }
-    .record-type-tag.name {
-        background: #FFF3E0;
-        color: #E6A23C;
-    }
-    .record-name {
-        font-size: 14px;
-        font-weight: 500;
-        color: var(--text-primary);
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-    }
-    .record-meta {
-        font-size: 11px;
+    .footprint-item .count {
+        font-size: 13px;
         color: var(--text-light);
-        margin-top: 4px;
-        padding-left: 2px;
     }
-    .record-detail {
-        display: none;
-        margin-top: 10px;
-        padding: 10px 12px;
-        background: var(--bg-secondary);
-        border-radius: 8px;
+
+    /* ==================== 暖心文案 ==================== */
+    .warm-text-card {
+        background: #FFF;
+        border-radius: 12px;
+        margin-bottom: 12px;
+        padding: 20px 16px;
+        box-shadow: 0 2px 8px var(--shadow);
+        text-align: center;
+    }
+    .warm-text-card .warm-icon {
+        font-size: 28px;
+        margin-bottom: 8px;
+    }
+    .warm-text-card .warm-content {
+        font-size: 14px;
+        color: #888;
+        line-height: 1.8;
+        font-style: italic;
+    }
+
+    /* ==================== 底部微信入口 ==================== */
+    .wechat-card {
+        background: #FFF;
+        border-radius: 12px;
+        margin-bottom: 12px;
+        padding: 16px;
+        box-shadow: 0 2px 8px var(--shadow);
+        text-align: center;
+    }
+    .wechat-card .wechat-label {
         font-size: 13px;
         color: var(--text-secondary);
-        line-height: 1.8;
-        white-space: pre-wrap;
-        word-break: break-all;
-        max-height: 300px;
-        overflow-y: auto;
+        margin-bottom: 8px;
     }
-    .record-detail.expanded { display: block; }
-    .record-actions {
-        display: flex;
-        justify-content: flex-end;
-        margin-top: 8px;
-    }
-    .btn-delete {
-        padding: 4px 12px;
-        font-size: 12px;
+    .wechat-card .wechat-id {
+        font-size: 16px;
+        font-weight: 600;
         color: var(--red-primary);
-        background: var(--red-light);
-        border: none;
-        border-radius: 6px;
-        cursor: pointer;
-        transition: all 0.2s;
-    }
-    .btn-delete:active { background: #D4A0A0; }
-    .empty-state {
-        text-align: center;
-        padding: 30px 16px;
-        color: var(--text-light);
-        font-size: 13px;
+        letter-spacing: 1px;
     }
 
     /* ==================== 退出登录 ==================== */
@@ -364,6 +266,50 @@
         font-size: 11px;
         color: var(--text-light);
         line-height: 1.8;
+    }
+
+    /* ==================== 登录/注册按钮组 ==================== */
+    .auth-actions {
+        display: flex;
+        gap: 8px;
+        margin-top: 10px;
+    }
+    .btn {
+        display: block;
+        width: 100%;
+        padding: 12px 0;
+        border: none;
+        border-radius: 8px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        letter-spacing: 2px;
+        transition: all 0.2s;
+    }
+    .btn:active { transform: scale(0.98); }
+    .btn-primary {
+        background: linear-gradient(135deg, var(--red-dark), var(--red-primary));
+        color: #FFF;
+        box-shadow: 0 2px 6px rgba(168, 18, 22, 0.3);
+    }
+    .btn-outline {
+        background: transparent;
+        color: var(--red-primary);
+        border: 1px solid var(--red-primary);
+    }
+    .btn-outline:active { background: var(--red-light); }
+    .auth-actions .btn {
+        flex: 1;
+        padding: 8px 0;
+        font-size: 13px;
+        letter-spacing: 1px;
+        height: auto;
+        line-height: 1.4;
+        text-align: center;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
 
     /* ==================== 修改密码弹窗 ==================== */
@@ -438,11 +384,13 @@
     .fade-in { animation: fadeIn 0.3s ease-out; }
 
     /* ==================== 响应式 ==================== */
-    @media (max-width: 480px) {
-        .page-container { padding: 10px; }
-        .account-card { padding: 16px 12px; }
-        .func-item { padding: 0 12px; }
-        .record-item { padding: 10px 12px; }
+    @media (max-width: 375px) {
+        .page-container { padding: 8px; }
+        .user-card { padding: 16px 12px; gap: 10px; }
+        .avatar { width: 48px; height: 48px; font-size: 18px; }
+        .section-title { padding: 12px 12px 6px; }
+        .footprint-list { padding: 0 12px 12px; }
+        .archive-item { padding: 10px 12px; }
     }
     </style>
 </head>
@@ -456,76 +404,64 @@
 
 <div class="page-container">
 
-    <!-- 账户信息卡片 -->
-    <div class="account-card fade-in" id="accountCard">
+    <!-- 第一区：用户信息卡片 -->
+    <div class="user-card fade-in" id="userCard">
         <!-- 由 JS 动态渲染 -->
     </div>
 
-    <!-- 功能列表 -->
-    <div class="func-card fade-in">
-        <!-- 排盘记录：仅显示统计，不可点击跳转 -->
-        <div class="func-item" id="funcPaipan" style="cursor:default;">
+    <!-- 第二区：八字档案 -->
+    <div class="section-card fade-in" id="archiveCard">
+        <div class="section-title">
             <span class="icon">&#x1F4CB;</span>
-            <span class="label">排盘记录</span>
-            <span class="count" id="paipanCount">0 条</span>
+            <span>八字档案</span>
         </div>
-        <!-- 姓名评测记录 -->
-        <div class="func-item" id="funcEval">
-            <span class="icon">&#x270D;&#xFE0F;</span>
-            <span class="label">姓名评测记录</span>
-            <span class="count" id="evalCount">0 条</span>
-            <span class="arrow" id="evalArrow">&gt;</span>
-        </div>
-        <!-- 取名记录 -->
-        <div class="func-item" id="funcName">
-            <span class="icon">&#x1F476;</span>
-            <span class="label">取名记录</span>
-            <span class="count" id="nameCount">0 条</span>
-            <span class="arrow" id="nameArrow">&gt;</span>
-        </div>
+        <a class="archive-item" href="my.html" id="archiveLink">
+            <span class="label" id="archiveText">已保存 0 条排盘记录</span>
+            <span>
+                <span class="count" id="archiveCount">查看</span>
+                <span class="arrow">&gt;</span>
+            </span>
+        </a>
+    </div>
 
-        <!-- 合配记录 -->
-        <div class="func-item" id="funcHepei">
-            <span class="icon">&#x1F48D;</span>
-            <span class="label">合配记录</span>
-            <span class="count" id="hepeiCount">0 条</span>
-            <span class="arrow" id="hepeiArrow">&gt;</span>
+    <!-- 第三区：使用足迹 -->
+    <div class="section-card fade-in" id="footprintCard">
+        <div class="section-title">
+            <span class="icon">&#x1F3C3;</span>
+            <span>使用足迹</span>
         </div>
-
-        <!-- 六爻记录 -->
-        <div class="func-item" id="funcLiuyao">
-            <span class="icon">&#x1F52E;</span>
-            <span class="label">六爻记录</span>
-            <span class="count" id="liuyaoCount">0 条</span>
-            <span class="arrow" id="liuyaoArrow">&gt;</span>
+        <div class="footprint-list">
+            <div class="footprint-item">
+                <span class="label"><span class="fp-icon">&#x270D;&#xFE0F;</span> 姓名评测</span>
+                <span class="count" id="evalCount">0 次</span>
+            </div>
+            <div class="footprint-item">
+                <span class="label"><span class="fp-icon">&#x1F476;</span> 宝宝取名</span>
+                <span class="count" id="nameCount">0 次</span>
+            </div>
+            <div class="footprint-item">
+                <span class="label"><span class="fp-icon">&#x1F48D;</span> 合配分析</span>
+                <span class="count" id="hepeiCount">0 次</span>
+            </div>
+            <div class="footprint-item">
+                <span class="label"><span class="fp-icon">&#x1F52E;</span> 六爻排盘</span>
+                <span class="count" id="liuyaoCount">0 次</span>
+            </div>
         </div>
     </div>
 
-    <!-- 记录展开面板 -->
-    <div id="recordPanel" style="display:none;margin:12px 16px;padding:16px;background:#fff;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-            <span id="recordPanelTitle" style="font-size:16px;font-weight:bold;color:#333;">记录详情</span>
-            <button id="closeRecordPanel" style="background:none;border:none;font-size:20px;color:#999;cursor:pointer;">&times;</button>
-        </div>
-        <div id="recordPanelContent" style="max-height:400px;overflow-y:auto;">
-            <div style="text-align:center;color:#999;padding:20px;">加载中...</div>
-        </div>
-    </div>
-
-    <!-- 姓名记录列表 -->
-    <div class="records-section fade-in" id="recordsSection">
-        <div class="records-tab-bar">
-            <div class="records-tab-item active" data-tab="evaluate">评测记录</div>
-            <div class="records-tab-item" data-tab="name">取名记录</div>
-        </div>
-        <div class="records-list" id="recordsList">
+    <!-- 第四区：暖心引导文案 -->
+    <div class="warm-text-card fade-in" id="warmCard">
+        <div class="warm-icon">&#x2728;</div>
+        <div class="warm-content" id="warmText">
             <!-- 由 JS 动态渲染 -->
         </div>
     </div>
 
-    <!-- 管理员入口（仅管理员可见） -->
-    <div id="adminEntry" style="display:none;margin:20px 16px;text-align:center;">
-        <a href="admin/members.html" style="display:inline-block;padding:12px 32px;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;border-radius:8px;text-decoration:none;font-size:15px;font-weight:bold;">管理后台</a>
+    <!-- 底部：微信联系入口 -->
+    <div class="wechat-card fade-in">
+        <div class="wechat-label">如需了解更多，欢迎添加站长微信</div>
+        <div class="wechat-id">DLing3313</div>
     </div>
 
     <!-- 退出登录 -->
@@ -536,14 +472,6 @@
     <!-- 底部合规声明 -->
     <div class="disclaimer">
         本内容仅供传统民俗文化参考，基于《三命通会》《渊海子平》等传统命理典籍整理，不构成命运判定、不做吉凶预测、不作为任何人生决策依据。
-    </div>
-
-    <!-- 底部微信引导 -->
-    <div style="text-align:center;padding:16px 20px;margin-top:12px;">
-        <div style="background:#FFF;border-radius:12px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
-            <div style="font-size:14px;color:var(--text-secondary);margin-bottom:10px;">如需帮助，请添加站长微信</div>
-            <div style="font-size:16px;font-weight:bold;color:var(--red-primary);">DLing3313</div>
-        </div>
     </div>
 </div>
 
@@ -608,8 +536,9 @@
 
     var user = Storage.getCurrentUser();
     var currentUsername = user ? user.username : '';
-    var baziRecords = []; // 异步加载，初始化为空
+    var baziRecords = []; // 异步加载
 
+    // 读取姓名记录
     var nameRecords = JSON.parse(localStorage.getItem('bazi_name_records') || '[]');
     var myNameRecords = nameRecords.filter(function (r) {
         return r.username === currentUsername;
@@ -617,27 +546,41 @@
     var evalRecords = myNameRecords.filter(function (r) { return r.type === 'evaluate'; });
     var nameGenRecords = myNameRecords.filter(function (r) { return r.type === 'name'; });
 
-    // 当前激活的记录 tab
-    var activeTab = 'evaluate';
+    // ==================== 暖心文案（根据时间段） ====================
 
-    // ==================== 渲染账户卡片 ====================
+    function getWarmText() {
+        var hour = new Date().getHours();
+        if (hour >= 5 && hour < 8) {
+            return '一日之计在于晨，愿你今天元气满满。';
+        } else if (hour >= 8 && hour < 12) {
+            return '上午好，命理探索正当时。';
+        } else if (hour >= 12 && hour < 14) {
+            return '午安，稍作休息，蓄力前行。';
+        } else if (hour >= 14 && hour < 18) {
+            return '下午好，静能生慧，慧能生明。';
+        } else if (hour >= 18 && hour < 22) {
+            return '晚间好，一天的奔波辛苦了。';
+        } else {
+            return '夜深了，身体健康是第一福田，早些休息。';
+        }
+    }
 
-    function renderAccountCard() {
-        var card = document.getElementById('accountCard');
+    // ==================== 渲染用户信息卡片 ====================
+
+    function renderUserCard() {
+        var card = document.getElementById('userCard');
         if (!user) {
-            // 未登录
             card.innerHTML =
                 '<div class="avatar gray">未</div>' +
-                '<div class="account-info">' +
+                '<div class="user-info">' +
                     '<div class="username">未登录</div>' +
-                    '<div class="tip">登录后查看更多功能</div>' +
-                    '<div class="account-actions">' +
+                    '<div class="days-text">登录后查看更多功能</div>' +
+                    '<div class="auth-actions">' +
                         '<button class="btn btn-primary" id="btnMyLogin">登录</button>' +
                         '<button class="btn btn-outline" id="btnMyRegister">注册</button>' +
                     '</div>' +
                 '</div>';
             document.getElementById('logoutSection').style.display = 'none';
-            // 绑定登录/注册按钮 → 弹出登录弹窗
             document.getElementById('btnMyLogin').addEventListener('click', function () {
                 openLoginModal('login');
             });
@@ -645,44 +588,55 @@
                 openLoginModal('register');
             });
         } else {
-            // 已登录
-            var firstChar = user.username.charAt(0).toUpperCase();
-            var levelHtml = '<span class="level-tag normal">注册用户</span>';
+            // 取用户名前两个字符作为头像文字
+            var avatarText = user.username.length >= 2
+                ? user.username.substring(0, 2)
+                : user.username.charAt(0);
+
+            // 计算注册天数
+            var days = 0;
+            if (user.createTime) {
+                var regDate = new Date(user.createTime);
+                var now = new Date();
+                days = Math.floor((now - regDate) / (1000 * 60 * 60 * 24));
+                if (days < 0) days = 0;
+            }
+
             card.innerHTML =
-                '<div class="avatar red">' + firstChar + '</div>' +
-                '<div class="account-info">' +
+                '<div class="avatar">' + escapeHtml(avatarText) + '</div>' +
+                '<div class="user-info">' +
                     '<div class="username">' + escapeHtml(user.username) + '</div>' +
-                    levelHtml +
-                    '<div class="account-actions">' +
-                        '<button class="btn btn-outline btn-sm" id="btnChangePwd">修改密码</button>' +
-                    '</div>' +
+                    '<div class="days-text">已陪伴你 ' + days + ' 天</div>' +
+                    '<button class="btn-change-pwd" id="btnChangePwd">修改密码</button>' +
                 '</div>';
             document.getElementById('logoutSection').style.display = 'block';
-            // 绑定修改密码按钮
             document.getElementById('btnChangePwd').addEventListener('click', function () {
                 openPwdModal();
             });
         }
     }
 
-    // ==================== 渲染功能列表计数 ====================
+    // ==================== 渲染统计数据 ====================
 
-    function renderFuncCounts() {
-        document.getElementById('paipanCount').textContent = baziRecords.length + ' 条';
-        document.getElementById('evalCount').textContent = evalRecords.length + ' 条';
-        document.getElementById('nameCount').textContent = nameGenRecords.length + ' 条';
+    function renderStats() {
+        // 八字档案
+        document.getElementById('archiveText').textContent = '已保存 ' + baziRecords.length + ' 条排盘记录';
+
+        // 使用足迹
+        document.getElementById('evalCount').textContent = evalRecords.length + ' 次';
+        document.getElementById('nameCount').textContent = nameGenRecords.length + ' 次';
 
         // 合配记录计数
         var hepeiCountEl = document.getElementById('hepeiCount');
-        if (hepeiCountEl && user) {
+        if (user) {
             var hepeiKey = 'bazi_hepei_records_' + user.username;
             var hepeiRecords = JSON.parse(localStorage.getItem(hepeiKey) || '[]');
-            hepeiCountEl.textContent = hepeiRecords.length + ' 条';
+            hepeiCountEl.textContent = hepeiRecords.length + ' 次';
         }
 
         // 六爻记录计数（异步从后端加载）
         var liuyaoCountEl = document.getElementById('liuyaoCount');
-        if (liuyaoCountEl && user) {
+        if (user) {
             var token = localStorage.getItem('v2_token');
             if (token) {
                 fetch('/api/liuyao/list?pageSize=1', {
@@ -691,7 +645,7 @@
                 .then(function(res) { return res.json(); })
                 .then(function(data) {
                     if (data.code === 200 && data.data) {
-                        liuyaoCountEl.textContent = data.data.total + ' 条';
+                        liuyaoCountEl.textContent = data.data.total + ' 次';
                     }
                 })
                 .catch(function() {});
@@ -699,315 +653,10 @@
         }
     }
 
-    // ==================== 渲染姓名记录列表 ====================
+    // ==================== 渲染暖心文案 ====================
 
-    function renderRecords() {
-        var list = document.getElementById('recordsList');
-        var records = activeTab === 'evaluate' ? evalRecords : nameGenRecords;
-
-        // 重新读取最新数据
-        nameRecords = JSON.parse(localStorage.getItem('bazi_name_records') || '[]');
-        myNameRecords = nameRecords.filter(function (r) {
-            return r.username === currentUsername;
-        });
-        evalRecords = myNameRecords.filter(function (r) { return r.type === 'evaluate'; });
-        nameGenRecords = myNameRecords.filter(function (r) { return r.type === 'name'; });
-        records = activeTab === 'evaluate' ? evalRecords : nameGenRecords;
-
-        if (records.length === 0) {
-            list.innerHTML = '<div class="empty-state">暂无记录</div>';
-            return;
-        }
-
-        var html = '';
-        records.forEach(function (r) {
-            var typeLabel = r.type === 'evaluate' ? '评测' : '取名';
-            var typeClass = r.type === 'evaluate' ? 'evaluate' : 'name';
-            var genderText = r.gender === '1' ? '男' : (r.gender === '0' ? '女' : (r.gender || '未知'));
-            var timeStr = formatTime(r.time);
-            var nameText = r.name || '未知';
-
-            html +=
-                '<div class="record-item" data-id="' + r.id + '">' +
-                    '<div class="record-header">' +
-                        '<div class="record-left">' +
-                            '<span class="record-type-tag ' + typeClass + '">' + typeLabel + '</span>' +
-                            '<span class="record-name">' + escapeHtml(nameText) + '</span>' +
-                        '</div>' +
-                    '</div>' +
-                    '<div class="record-meta">' + genderText + ' &middot; ' + timeStr + '</div>' +
-                    '<div class="record-detail" id="detail_' + r.id + '">' + escapeHtml(r.result || '') + '</div>' +
-                    '<div class="record-actions">' +
-                        '<button class="btn-delete" data-id="' + r.id + '">删除</button>' +
-                    '</div>' +
-                '</div>';
-        });
-
-        list.innerHTML = html;
-
-        // 绑定事件：点击展开/收起详情
-        list.querySelectorAll('.record-item').forEach(function (item) {
-            item.addEventListener('click', function (e) {
-                // 如果点击的是删除按钮，不触发展开
-                if (e.target.classList.contains('btn-delete')) return;
-                var id = item.getAttribute('data-id');
-                var detail = document.getElementById('detail_' + id);
-                if (detail) {
-                    detail.classList.toggle('expanded');
-                }
-            });
-        });
-
-        // 绑定事件：删除按钮
-        list.querySelectorAll('.btn-delete').forEach(function (btn) {
-            btn.addEventListener('click', function (e) {
-                e.stopPropagation();
-                var id = parseInt(btn.getAttribute('data-id'));
-                if (confirm('确定删除该记录？')) {
-                    deleteNameRecord(id);
-                }
-            });
-        });
-    }
-
-    // ==================== Tab 切换 ====================
-
-    document.querySelectorAll('.records-tab-item').forEach(function (tab) {
-        tab.addEventListener('click', function () {
-            document.querySelectorAll('.records-tab-item').forEach(function (t) {
-                t.classList.remove('active');
-            });
-            tab.classList.add('active');
-            activeTab = tab.getAttribute('data-tab');
-            renderRecords();
-        });
-    });
-
-    // ==================== 功能列表点击事件 ====================
-
-    // 排盘记录：不可点击，仅显示统计
-    var funcPaipan = document.getElementById('funcPaipan');
-    if (funcPaipan) {
-        funcPaipan.style.cursor = 'default';
-        funcPaipan.style.opacity = '0.8';
-    }
-
-    // 姓名评测记录
-    var funcEval = document.getElementById('funcEval');
-    if (funcEval) {
-        funcEval.addEventListener('click', function() {
-            toggleRecordPanel('evaluate');
-        });
-    }
-
-    // 取名记录
-    var funcName = document.getElementById('funcName');
-    if (funcName) {
-        funcName.addEventListener('click', function() {
-            toggleRecordPanel('name');
-        });
-    }
-
-    // 合配记录
-    var funcHepei = document.getElementById('funcHepei');
-    if (funcHepei) {
-        funcHepei.addEventListener('click', function() {
-            toggleRecordPanel('hepei');
-        });
-    }
-
-    // 六爻记录
-    var funcLiuyao = document.getElementById('funcLiuyao');
-    if (funcLiuyao) {
-        funcLiuyao.addEventListener('click', function() {
-            toggleRecordPanel('liuyao');
-        });
-    }
-
-    // ==================== 记录展开面板逻辑 ====================
-
-    // 当前展开的面板类型
-    var currentPanelType = null;
-
-    // 切换记录面板
-    function toggleRecordPanel(type) {
-        var panel = document.getElementById('recordPanel');
-        var title = document.getElementById('recordPanelTitle');
-        var content = document.getElementById('recordPanelContent');
-        
-        if (!panel) return;
-        
-        // 如果点击的是当前已展开的面板，则关闭
-        if (currentPanelType === type && panel.style.display !== 'none') {
-            panel.style.display = 'none';
-            currentPanelType = null;
-            // 恢复箭头方向
-            updateArrows(null);
-            return;
-        }
-        
-        currentPanelType = type;
-        panel.style.display = 'block';
-        updateArrows(type);
-        
-        // 设置标题
-        var titles = { evaluate: '姓名评测记录', name: '取名记录', hepei: '合配记录', liuyao: '六爻记录' };
-        title.textContent = titles[type] || '记录详情';
-        
-        // 加载数据
-        loadRecordData(type);
-    }
-
-    // 更新箭头方向
-    function updateArrows(activeType) {
-        ['evalArrow', 'nameArrow', 'hepeiArrow', 'liuyaoArrow'].forEach(function(id) {
-            var el = document.getElementById(id);
-            if (el) el.textContent = '>';
-        });
-        var arrowMap = { evaluate: 'evalArrow', name: 'nameArrow', hepei: 'hepeiArrow', liuyao: 'liuyaoArrow' };
-        if (activeType && arrowMap[activeType]) {
-            var activeArrow = document.getElementById(arrowMap[activeType]);
-            if (activeArrow) activeArrow.textContent = '\u2228';
-        }
-    }
-
-    // 加载记录数据
-    function loadRecordData(type) {
-        var content = document.getElementById('recordPanelContent');
-        if (!content) return;
-        
-        content.innerHTML = '<div style="text-align:center;color:#999;padding:20px;">加载中...</div>';
-        
-        // 从 localStorage 加载记录
-        var username = user ? user.username : '';
-        
-        if (type === 'evaluate') {
-            // 姓名评测记录 - 从 localStorage 的 bazi_name_eval_records_{username} 读取
-            var key = 'bazi_name_eval_records_' + username;
-            var records = JSON.parse(localStorage.getItem(key) || '[]');
-            renderRecordList(content, records, '暂无姓名评测记录');
-        } else if (type === 'name') {
-            // 取名记录 - 从 localStorage 的 bazi_name_records_{username} 读取
-            var key = 'bazi_name_records_' + username;
-            var records = JSON.parse(localStorage.getItem(key) || '[]');
-            renderRecordList(content, records, '暂无取名记录');
-        } else if (type === 'hepei') {
-            // 合配记录 - 从 localStorage 的 bazi_hepei_records_{username} 读取
-            var key = 'bazi_hepei_records_' + username;
-            var records = JSON.parse(localStorage.getItem(key) || '[]');
-            renderRecordList(content, records, '暂无合配记录');
-        } else if (type === 'liuyao') {
-            // 六爻记录 - 从后端API加载
-            _loadLiuyaoRecords(content);
-        }
-    }
-
-    // 渲染记录列表
-    function renderRecordList(container, records, emptyText) {
-        if (!records || records.length === 0) {
-            container.innerHTML = '<div style="text-align:center;color:#999;padding:30px 0;">' + emptyText + '</div>';
-            return;
-        }
-        
-        var html = '';
-        records.forEach(function(r, i) {
-            var date = r.createTime ? new Date(r.createTime).toLocaleString('zh-CN') : '未知时间';
-            var name = r.name || r.personName || '未知';
-            var summary = r.result ? (r.result.substring(0, 80) + '...') : '';
-            
-            html += '<div style="padding:12px 0;border-bottom:1px solid #f0f0f0;' + (i === 0 ? 'border-top:none;' : '') + '">';
-            html += '<div style="display:flex;justify-content:space-between;align-items:center;">';
-            html += '<span style="font-weight:bold;color:#333;">' + escapeHtml(name) + '</span>';
-            html += '<span style="font-size:12px;color:#999;">' + date + '</span>';
-            html += '</div>';
-            if (summary) {
-                html += '<div style="margin-top:6px;font-size:13px;color:#666;line-height:1.5;">' + escapeHtml(summary) + '</div>';
-            }
-            html += '</div>';
-        });
-        
-        container.innerHTML = html;
-    }
-
-    // 加载六爻记录（从后端API）
-    function _loadLiuyaoRecords(container) {
-        var token = localStorage.getItem('v2_token');
-        if (!token || !user) {
-            container.innerHTML = '<div style="text-align:center;color:#999;padding:30px 0;">请先登录后查看六爻记录</div>';
-            return;
-        }
-
-        fetch('/api/liuyao/list?pageSize=50', {
-            headers: { 'Authorization': 'Bearer ' + token }
-        })
-        .then(function(res) { return res.json(); })
-        .then(function(data) {
-            if (data.code === 200 && data.data && data.data.list) {
-                var records = data.data.list;
-                if (records.length === 0) {
-                    container.innerHTML = '<div style="text-align:center;color:#999;padding:30px 0;">暂无六爻记录</div>';
-                    return;
-                }
-
-                var html = '';
-                records.forEach(function(r, i) {
-                    var date = r.gua_time ? new Date(r.gua_time).toLocaleString('zh-CN') : (r.created_at ? new Date(r.created_at).toLocaleString('zh-CN') : '未知时间');
-                    var guaName = r.gua_name || '未知卦';
-                    var matter = r.matter || '未指定事项';
-
-                    // 解析六爻详情
-                    var detailHtml = '';
-                    if (r.hex_data) {
-                        try {
-                            var hexData = typeof r.hex_data === 'string' ? JSON.parse(r.hex_data) : r.hex_data;
-                            if (hexData.lines && hexData.lines.length > 0) {
-                                var yaoNames = ['初爻', '二爻', '三爻', '四爻', '五爻', '上爻'];
-                                detailHtml += '<div style="margin-top:8px;font-size:12px;color:#888;line-height:1.8;">';
-                                for (var j = 0; j < hexData.lines.length; j++) {
-                                    var l = hexData.lines[j];
-                                    var tag = '';
-                                    if (hexData.shiIndex === j) tag += ' [世]';
-                                    if (hexData.yingIndex === j) tag += ' [应]';
-                                    if (l.isDong) tag += ' [动]';
-                                    detailHtml += yaoNames[j] + ': ' + (l.yaoType || '') + ' ' + (l.gan || '') + (l.zhi || '') + '(' + (l.wuXing || '') + ') ' + (l.liuQin || '') + tag + '<br>';
-                                }
-                                if (hexData.fuShen) {
-                                    detailHtml += '伏神: ' + hexData.fuShen + '<br>';
-                                }
-                                detailHtml += '</div>';
-                            }
-                        } catch(e) {}
-                    }
-
-                    html += '<div style="padding:12px 0;border-bottom:1px solid #f0f0f0;' + (i === 0 ? 'border-top:none;' : '') + '">';
-                    html += '<div style="display:flex;justify-content:space-between;align-items:center;">';
-                    html += '<span style="font-weight:bold;color:#333;">' + escapeHtml(guaName) + '</span>';
-                    html += '<span style="font-size:12px;color:#999;">' + date + '</span>';
-                    html += '</div>';
-                    html += '<div style="margin-top:4px;font-size:13px;color:#666;">事项: ' + escapeHtml(matter) + '</div>';
-                    html += detailHtml;
-                    html += '</div>';
-                });
-
-                container.innerHTML = html;
-            } else {
-                container.innerHTML = '<div style="text-align:center;color:#999;padding:30px 0;">加载六爻记录失败</div>';
-            }
-        })
-        .catch(function() {
-            container.innerHTML = '<div style="text-align:center;color:#999;padding:30px 0;">网络错误，请稍后重试</div>';
-        });
-    }
-
-    // 关闭面板按钮
-    var closeBtn = document.getElementById('closeRecordPanel');
-    if (closeBtn) {
-        closeBtn.addEventListener('click', function() {
-            var panel = document.getElementById('recordPanel');
-            if (panel) panel.style.display = 'none';
-            currentPanelType = null;
-            updateArrows(null);
-        });
+    function renderWarmText() {
+        document.getElementById('warmText').textContent = getWarmText();
     }
 
     // ==================== 退出登录 ====================
@@ -1060,47 +709,13 @@
         }
     });
 
-    // ==================== 删除姓名记录 ====================
-
-    function deleteNameRecord(id) {
-        var records = JSON.parse(localStorage.getItem('bazi_name_records') || '[]');
-        records = records.filter(function (r) { return r.id !== id; });
-        localStorage.setItem('bazi_name_records', JSON.stringify(records));
-        renderRecords();
-        renderFuncCounts();
-    }
-
     // ==================== 工具函数 ====================
-
-    function formatTime(timestamp) {
-        if (!timestamp) return '';
-        var d = new Date(timestamp);
-        var year = d.getFullYear();
-        var month = String(d.getMonth() + 1).padStart(2, '0');
-        var day = String(d.getDate()).padStart(2, '0');
-        var hour = String(d.getHours()).padStart(2, '0');
-        var min = String(d.getMinutes()).padStart(2, '0');
-        return year + '-' + month + '-' + day + ' ' + hour + ':' + min;
-    }
 
     function escapeHtml(str) {
         if (!str) return '';
         var div = document.createElement('div');
         div.appendChild(document.createTextNode(str));
         return div.innerHTML;
-    }
-
-    function showToast(msg) {
-        var toast = document.createElement('div');
-        toast.textContent = msg;
-        toast.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,0.75);color:#fff;padding:10px 24px;border-radius:8px;font-size:14px;z-index:9999;pointer-events:none;transition:opacity 0.3s;';
-        document.body.appendChild(toast);
-        setTimeout(function() {
-            toast.style.opacity = '0';
-            setTimeout(function() {
-                if (toast.parentNode) toast.parentNode.removeChild(toast);
-            }, 300);
-        }, 1500);
     }
 
     // ==================== 登录/注册弹窗逻辑 ====================
@@ -1175,7 +790,6 @@
             var captchaValue = captchaInput ? captchaInput.value.trim() : '';
             if (!captchaValue) { alert('请输入验证码'); return; }
 
-            // 使用 fetch 调用注册接口
             fetch('/api/user/register', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -1184,7 +798,6 @@
             .then(function (res) { return res.json(); })
             .then(function (data) {
                 if (data.code === 200 || data.success) {
-                    // 注册成功后自动登录：使用后端API登录获取token
                     fetch('/api/user/login', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
@@ -1193,13 +806,11 @@
                     .then(function (res) { return res.json(); })
                     .then(function (loginData) {
                         if (loginData.code === 200 && loginData.data && loginData.data.token) {
-                            // 保存V2登录凭证
                             localStorage.setItem('v2_token', loginData.data.token);
                             localStorage.setItem('v2_user', JSON.stringify({
                                 username: loginData.data.username || username,
                                 role: loginData.data.role || ''
                             }));
-                            // 保存V1登录凭证
                             localStorage.setItem('bazi_current_user', JSON.stringify({
                                 username: loginData.data.username || username,
                                 createTime: Date.now()
@@ -1218,7 +829,6 @@
                     });
                 } else {
                     alert(data.message || '注册失败');
-                    // 刷新验证码
                     var img = document.getElementById('loginCaptchaImg');
                     if (img) img.src = '/api/captcha?t=' + Date.now();
                     if (captchaInput) captchaInput.value = '';
@@ -1228,7 +838,6 @@
                 alert('注册失败，请检查网络');
             });
         } else {
-            // 登录：使用后端API统一路径
             fetch('/api/user/login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -1237,13 +846,11 @@
             .then(function (res) { return res.json(); })
             .then(function (data) {
                 if (data.code === 200 && data.data && data.data.token) {
-                    // 保存V2登录凭证
                     localStorage.setItem('v2_token', data.data.token);
                     localStorage.setItem('v2_user', JSON.stringify({
                         username: data.data.username || username,
                         role: data.data.role || ''
                     }));
-                    // 保存V1登录凭证
                     localStorage.setItem('bazi_current_user', JSON.stringify({
                         username: data.data.username || username,
                         createTime: Date.now()
@@ -1261,28 +868,19 @@
         }
     });
 
-    // ==================== 初始化（异步加载排盘记录） ====================
+    // ==================== 初始化 ====================
 
-    renderAccountCard();
-    renderFuncCounts();
-    renderRecords();
+    renderUserCard();
+    renderWarmText();
+    renderStats();
 
-    // 异步加载排盘记录（后端API）
+    // 异步加载排盘记录
     (async function() {
         if (Storage.isLoggedIn()) {
             baziRecords = await Storage.getRecords();
-            document.getElementById('paipanCount').textContent = baziRecords.length + ' 条';
+            document.getElementById('archiveText').textContent = '已保存 ' + baziRecords.length + ' 条排盘记录';
         }
     })();
-
-    // ==================== 管理员入口 ====================
-
-    var adminEntry = document.getElementById('adminEntry');
-    if (adminEntry && user && (user.role === 'admin' || user.username === 'admin')) {
-        adminEntry.style.display = 'block';
-    }
-
-
 
 })();
 </script>
