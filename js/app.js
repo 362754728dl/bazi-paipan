@@ -3374,15 +3374,20 @@ const App = (function () {
         var btn = $('btnLoadMore');
         if (!btn) return;
 
-        if (_recordsTotal <= _recordsPageSize) {
-            // 总记录不超过一页，不显示按钮
+        if (_recordsTotal <= 0) {
+            // 无记录，全部隐藏
+            loadMoreWrap.style.display = 'none';
+        } else if (_recordsTotal <= _recordsPageSize) {
+            // 记录数不超过一页：隐藏加载更多按钮（recordsCount由updateRecordsCount独立控制）
             loadMoreWrap.style.display = 'none';
         } else if (!_recordsHasMore) {
+            // 已加载全部
             loadMoreWrap.style.display = 'block';
             btn.disabled = true;
             btn.classList.remove('loading');
             btn.textContent = '已加载全部记录（共' + _recordsTotal + '条）';
         } else {
+            // 还有更多
             loadMoreWrap.style.display = 'block';
             btn.disabled = false;
             btn.classList.remove('loading');
