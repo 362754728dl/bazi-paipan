@@ -954,6 +954,32 @@ var MingliAnalyzer = (function() {
             addSS('阴阳差错', riGanZhi, riSrc);
         }
 
+        // 金神：乙丑[1,1]、己巳[5,5]、癸酉[9,9]三日
+        var jinShenList = ['1,1', '5,5', '9,9'];
+        if (jinShenList.indexOf(dayGanIdx + ',' + dayZhiIdx) !== -1) {
+            addSS('金神', riGanZhi, riSrc);
+        }
+
+        // 词馆：年柱纳音为金，见巳[5]；为木，见亥[11]；为水，见申[8]；为火，见寅[2]；为土，见寅[2]
+        var naiYinWxMap = { '金': 5, '木': 11, '水': 8, '火': 2, '土': 2 };
+        var yearNaiYin = bazi.pillars.year.naiYin || '';
+        var ciGuanWx = null;
+        if (yearNaiYin.indexOf('金') !== -1) ciGuanWx = '金';
+        else if (yearNaiYin.indexOf('木') !== -1) ciGuanWx = '木';
+        else if (yearNaiYin.indexOf('水') !== -1) ciGuanWx = '水';
+        else if (yearNaiYin.indexOf('火') !== -1) ciGuanWx = '火';
+        else if (yearNaiYin.indexOf('土') !== -1) ciGuanWx = '土';
+        if (ciGuanWx) {
+            var ciGuanTarget = naiYinWxMap[ciGuanWx];
+            if (ciGuanTarget !== undefined) {
+                ['year', 'month', 'day', 'hour'].forEach(function(key) {
+                    if (bazi.pillars[key].zhiIndex === ciGuanTarget) {
+                        addSS('词馆', DZ[ciGuanTarget], '年柱纳音查');
+                    }
+                });
+            }
+        }
+
         return { list: list };
     }
 
