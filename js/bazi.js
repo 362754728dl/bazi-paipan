@@ -53,8 +53,8 @@ const Bazi = (function() {
         }
 
         // 四柱干支（使用真太阳时或北京时间）
-        let yearGZ = Lunar.getYearGanZhi(adjYear, adjMonth, adjDay);
-        let monthGZ = Lunar.getMonthGanZhi(adjYear, adjMonth, adjDay);
+        let yearGZ = Lunar.getYearGanZhi(adjYear, adjMonth, adjDay, actualHour, actualMinute);
+        let monthGZ = Lunar.getMonthGanZhi(adjYear, adjMonth, adjDay, actualHour, actualMinute);
         let dayGZ = Lunar.getDayGanZhi(adjYear, adjMonth, adjDay);
         let hourGZ = Lunar.getHourGanZhi(dayGZ.ganIndex, Math.floor(actualHour));
 
@@ -412,7 +412,7 @@ const Bazi = (function() {
         var liuYueList = [];
         for (var m = 1; m <= 12; m++) {
             // 每月以节气为界，简化取每月15日
-            var monthGZ = Lunar.getMonthGanZhi(year, m, 15);
+            var monthGZ = Lunar.getMonthGanZhi(year, m, 15, 12, 0);
             liuYueList.push({
                 month: m,
                 gan: monthGZ.gan,

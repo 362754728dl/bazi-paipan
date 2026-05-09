@@ -312,15 +312,23 @@ const Lunar = (function() {
     // ==================== 年柱干支 ====================
     // 以立春为年界（不是农历正月初一！）
     // 立春前出生的，年柱用上一年
-    function getYearGanZhi(year, month, day) {
-        // 确定是否已过立春
-        let lichunDay = decodeTermDay(year, 2); // 立春 index=2
+    function getYearGanZhi(year, month, day, hour, minute) {
+        // 确定是否已过立春（使用精确节气时间）
         let actualYear = year;
-        
-        if (month < 2 || (month === 2 && day < lichunDay)) {
-            actualYear = year - 1;
+        let lichunInfo = getSolarTermTime(year, 2);
+        if (lichunInfo) {
+            let lichunTs = new Date(lichunInfo.year, lichunInfo.month - 1, lichunInfo.day, lichunInfo.hour, lichunInfo.minute).getTime();
+            let curTs = new Date(year, month - 1, day, hour || 0, minute || 0).getTime();
+            if (curTs < lichunTs) {
+                actualYear = year - 1;
+            }
+        } else {
+            let lichunDay = decodeTermDay(year, 2);
+            if (month < 2 || (month === 2 && day < lichunDay)) {
+                actualYear = year - 1;
+            }
         }
-        
+
         let idx = (actualYear - 4) % 10;
         let zdx = (actualYear - 4) % 12;
         return {
@@ -334,46 +342,49 @@ const Lunar = (function() {
 
     // ==================== 月柱干支 ====================
     // 以节气为界，立春后为寅月(正月)
-    function getMonthGanZhi(year, month, day) {
-        // 确定当前节气月支
-        // 节气对应月支：小寒大寒→丑(1), 立春雨水→寅(2), 惊蛰春分→卯(3)...
+    function getMonthGanZhi(year, month, day, hour, minute) {
+        // 确定当前节气月支（使用精确节气时间，解决节气当天时分导致的月柱错误）
         const termZhiMap = [1,1,2,2,3,3,4,4,5,5,6,6,7,7,8,8,9,9,10,10,11,11,0,0];
-        
+
         let currentZhi = -1;
-        
+        let curTs = new Date(year, month - 1, day, hour || 0, minute || 0).getTime();
+
         for (let i = 0; i < 24; i++) {
-            let termDay = decodeTermDay(year, i);
-            let termMonth = solarTermMonths[i];
-            
-            let termDate = new Date(year, termMonth - 1, termDay);
-            let curDate = new Date(year, month - 1, day);
-            
-            if (curDate >= termDate) {
+            let termInfo = getSolarTermTime(year, i);
+            if (!termInfo) continue;
+            let termTs = new Date(termInfo.year, termInfo.month - 1, termInfo.day, termInfo.hour, termInfo.minute).getTime();
+            if (curTs >= termTs) {
                 currentZhi = termZhiMap[i];
             }
         }
-        
+
         // 如果还没找到，看上一年的大雪/冬至
         if (currentZhi === -1) {
-            // 上一年大雪(22)或冬至(23)
             for (let i = 22; i < 24; i++) {
-                let termDay = decodeTermDay(year - 1, i);
-                let termMonth = solarTermMonths[i];
-                let termDate = new Date(year - 1, termMonth - 1, termDay);
-                let curDate = new Date(year, month - 1, day);
-                if (curDate >= termDate) {
+                let termInfo = getSolarTermTime(year - 1, i);
+                if (!termInfo) continue;
+                let termTs = new Date(termInfo.year, termInfo.month - 1, termInfo.day, termInfo.hour, termInfo.minute).getTime();
+                if (curTs >= termTs) {
                     currentZhi = termZhiMap[i];
                 }
             }
-            if (currentZhi === -1) currentZhi = 0; // 默认子月
+            if (currentZhi === -1) currentZhi = 0;
         }
 
         // 确定年干（以立春为界，与年柱一致）
         let yearGanIdx;
-        let lichunDay = decodeTermDay(year, 2);
+        let lichunInfo = getSolarTermTime(year, 2);
         let actualYear = year;
-        if (month < 2 || (month === 2 && day < lichunDay)) {
-            actualYear = year - 1;
+        if (lichunInfo) {
+            let lichunTs = new Date(lichunInfo.year, lichunInfo.month - 1, lichunInfo.day, lichunInfo.hour, lichunInfo.minute).getTime();
+            if (curTs < lichunTs) {
+                actualYear = year - 1;
+            }
+        } else {
+            let lichunDay = decodeTermDay(year, 2);
+            if (month < 2 || (month === 2 && day < lichunDay)) {
+                actualYear = year - 1;
+            }
         }
         yearGanIdx = (actualYear - 4) % 10;
         if (yearGanIdx < 0) yearGanIdx += 10;
