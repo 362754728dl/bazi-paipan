@@ -204,6 +204,7 @@ async function initPg() {
     );
   `);
   await query(`CREATE INDEX IF NOT EXISTS idx_paipan_records_user ON paipan_records(user_id);`);
+  await query(`CREATE INDEX IF NOT EXISTS idx_paipan_records_user_created ON paipan_records(user_id, created_at DESC);`);
 
   // registration_logs 表
   await query(`

@@ -351,6 +351,7 @@ async function initSqlite() {
       FOREIGN KEY (user_id) REFERENCES users(id)
     );
     CREATE INDEX IF NOT EXISTS idx_paipan_records_user ON paipan_records(user_id);
+    CREATE INDEX IF NOT EXISTS idx_paipan_records_user_created ON paipan_records(user_id, created_at DESC);
   `);
 
   compatDb.exec(`
