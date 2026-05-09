@@ -1825,13 +1825,15 @@
         }
     }
 
-    function loadEvalRecordOptions() {
+        async function loadEvalRecordOptions() {
         var sel = $('evalRecordSelect');
         if (!sel) return;
         var currentValue = sel.value;
         sel.innerHTML = '<option value="">-- 手动输入或选择记录 --</option>';
         try {
-            var records = Storage.getRecords();
+            console.log('[姓名拟定] 开始加载排盘记录');
+            var records = await Storage.getRecords(true);
+            console.log('[姓名拟定] 排盘记录数据：', records);
             if (records && records.length > 0) {
                 records.forEach(function(r) {
                     var opt = document.createElement('option');
