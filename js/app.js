@@ -3923,8 +3923,6 @@ const App = (function () {
 
     // ==================== 暴露showToast到全局（供HTML onclick使用） ====================
     window.showToast = showToast;
-    window.adminAdjustQuota = adminAdjustQuota;
-
     // 暴露到全局
     window.switchPage = switchPage;
 
