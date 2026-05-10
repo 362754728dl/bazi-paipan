@@ -462,12 +462,31 @@ const App = (function () {
             });
         }
 
-        // 管理员入口
+        // 管理员入口（仅admin可见，点击直接跳转后台）
         var adminEntry = document.getElementById('adminEntry');
         if (adminEntry) {
-            adminEntry.addEventListener('click', function () {
-                showAdminLoginModal();
-            });
+            function updateAdminButton() {
+                try {
+                    var v2User = JSON.parse(localStorage.getItem('v2_user') || '{}');
+                    if (v2User.role === 'admin') {
+                        adminEntry.style.display = 'inline';
+                        adminEntry.onclick = function() {
+                            window.location.href = 'pages/admin.html';
+                        };
+                    } else {
+                        adminEntry.style.display = 'none';
+                    }
+                } catch (e) {
+                    adminEntry.style.display = 'none';
+                }
+            }
+            updateAdminButton();
+            // 登录状态变化时更新
+            var origLoginSuccess = window._onLoginSuccess;
+            window._onLoginSuccess = function() {
+                updateAdminButton();
+                if (origLoginSuccess) origLoginSuccess();
+            };
         }
 
         // 管理员登录
