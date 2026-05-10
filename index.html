@@ -249,8 +249,8 @@
 
 <!-- 底部三栏导航 -->
 <nav class="bottom-nav" id="bottomNav">
-    <button class="nav-item active" data-page="pagePaipan">☰ 排盘</button>
-    <button class="nav-item" data-page="pageRecords">📋 排盘记录</button>
+    <button class="nav-item active" data-page="pagePaipan" onclick="switchPage('pagePaipan')">☰ 排盘</button>
+    <button class="nav-item" onclick="window.location.href='pages/my.html?tab=records'">📋 排盘记录</button>
     <button class="nav-item" id="btnMore" onclick="toggleDrawer(event)">⋯ 更多</button>
 </nav>
 
@@ -292,6 +292,27 @@ function closeDrawer() {
         menu.style.display = 'none';
     }, 300);
 }
+// 底部导航快速绑定（确保DOM加载后立即生效）
+(function() {
+    function bindNavItems() {
+        var navItems = document.querySelectorAll('.nav-item[data-page]');
+        navItems.forEach(function(item) {
+            var pageId = item.getAttribute('data-page');
+            if (pageId && !item.onclick) {
+                item.onclick = function() {
+                    if (typeof switchPage === 'function') {
+                        switchPage(pageId);
+                    }
+                };
+            }
+        });
+    }
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', bindNavItems);
+    } else {
+        bindNavItems();
+    }
+})();
 </script>
 
 <!-- ==================== 登录弹窗 ==================== -->
@@ -378,8 +399,7 @@ function closeDrawer() {
 <script src="js/app.js?v=20"></script>
 <script src="js/liuyao.js"></script>
 <script src="js/liuyao-ui.js"></script>
-<script src="js/relation-analyzer.js"></script>
-<script src="js/mingli-analyzer.js"></script>
+<!-- relation-analyzer.js 和 mingli-analyzer.js 改为懒加载，见底部脚本 -->
 <script>
 // switchTab 桥接函数：将 tab 名称映射到 pageId 并调用 switchPage
 function switchTab(tabName) {
@@ -417,6 +437,45 @@ function switchTab(tabName) {
 function showWechatGuide() {
     document.getElementById('wechatGuideModal').style.display = 'flex';
 }
+
+// ==================== 重型分析器懒加载 ====================
+// 这些分析器只在需要时加载，避免阻塞首页交互
+var LazyLoader = {
+    loaded: {},
+    load: function(src) {
+        if (this.loaded[src]) return Promise.resolve();
+        return new Promise(function(resolve, reject) {
+            var script = document.createElement('script');
+            script.src = src;
+            script.onload = function() {
+                LazyLoader.loaded[src] = true;
+                resolve();
+            };
+            script.onerror = reject;
+            document.head.appendChild(script);
+        });
+    },
+    // 预加载关键资源（在页面空闲时）
+    preload: function(src) {
+        if (this.loaded[src]) return;
+        if ('requestIdleCallback' in window) {
+            requestIdleCallback(function() {
+                LazyLoader.load(src);
+            }, { timeout: 5000 });
+        } else {
+            setTimeout(function() {
+                LazyLoader.load(src);
+            }, 2000);
+        }
+    }
+};
+
+// 页面加载完成后，空闲时预加载重型分析器
+window.addEventListener('load', function() {
+    // 预加载关系分析器和命理分析器（用于姓名拟定、合配等功能）
+    LazyLoader.preload('js/relation-analyzer.js');
+    LazyLoader.preload('js/mingli-analyzer.js');
+});
 </script>
 
 </body>
