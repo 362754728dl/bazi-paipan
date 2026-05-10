@@ -7,7 +7,18 @@ const cookieParser = require('cookie-parser');
 const { initDb, getDb, saveDb } = require('./db/init');
 
 const app = express();
-app.use(cors({ origin: true, credentials: true }));
+
+// CORS 配置：credentials: true 时，origin 必须是具体域名，不能是 * 或 true
+app.use(cors({
+  origin: function(origin, callback) {
+    // 允许无 origin 的请求（如同站请求、移动端）
+    if (!origin) return callback(null, true);
+    // 允许所有来源（生产环境可限制为具体域名）
+    return callback(null, true);
+  },
+  credentials: true
+}));
+
 app.use(express.json({ limit: '1mb' }));
 app.use(cookieParser());
 

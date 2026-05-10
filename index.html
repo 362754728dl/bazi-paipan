@@ -472,9 +472,11 @@ var LazyLoader = {
 
 // 页面加载完成后，空闲时预加载重型分析器
 window.addEventListener('load', function() {
-    // 预加载关系分析器和命理分析器（用于姓名拟定、合配等功能）
+    // 预加载所有分析器（用于姓名拟定、合配、运势等功能）
     LazyLoader.preload('js/relation-analyzer.js');
     LazyLoader.preload('js/mingli-analyzer.js');
+    LazyLoader.preload('js/hepei-analyzer.js');
+    LazyLoader.preload('js/huangli.js');
 });
 </script>
 
