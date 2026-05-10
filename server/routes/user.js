@@ -247,7 +247,7 @@ router.post('/login', checkLoginRateLimit, async (req, res) => {
     res.cookie('auth_token', token, {
       httpOnly: true,
       secure: isProduction, // 生产环境使用 HTTPS
-      sameSite: 'strict',
+      sameSite: 'lax', // lax 允许同站请求和从外部链接进入时携带 Cookie
       maxAge: 14 * 24 * 60 * 60 * 1000 // 14天
     });
 

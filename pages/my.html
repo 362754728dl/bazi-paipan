@@ -790,6 +790,7 @@
             fetch('/api/user/register', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
+                credentials: 'same-origin',
                 body: JSON.stringify({ username: username, password: password, captcha: captchaValue })
             })
             .then(function (res) { return res.json(); })
@@ -798,6 +799,7 @@
                     fetch('/api/user/login', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
+                        credentials: 'same-origin',
                         body: JSON.stringify({ username: username, password: password })
                     })
                     .then(function (res) { return res.json(); })
