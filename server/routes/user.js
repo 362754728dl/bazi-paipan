@@ -8,6 +8,44 @@ const config = require('../config');
 
 const router = express.Router();
 
+// ==================== 登录频率限制（内存级） ====================
+const loginAttempts = new Map(); // IP -> { count, firstAttempt }
+const LOGIN_LIMIT = 5; // 1分钟内最多5次尝试
+const LOGIN_WINDOW = 60000; // 1分钟窗口
+
+function checkLoginRateLimit(req, res, next) {
+  const ip = req.ip || req.connection.remoteAddress || 'unknown';
+  const now = Date.now();
+  const attempt = loginAttempts.get(ip);
+  
+  if (attempt) {
+    // 清理过期记录
+    if (now - attempt.firstAttempt > LOGIN_WINDOW) {
+      loginAttempts.set(ip, { count: 1, firstAttempt: now });
+      return next();
+    }
+    // 检查是否超限
+    if (attempt.count >= LOGIN_LIMIT) {
+      return res.json({ code: 429, message: '登录尝试过于频繁，请1分钟后再试' });
+    }
+    // 增加计数
+    attempt.count++;
+  } else {
+    loginAttempts.set(ip, { count: 1, firstAttempt: now });
+  }
+  next();
+}
+
+// 每5分钟清理过期登录记录
+setInterval(function() {
+  const now = Date.now();
+  for (const [ip, attempt] of loginAttempts.entries()) {
+    if (now - attempt.firstAttempt > LOGIN_WINDOW) {
+      loginAttempts.delete(ip);
+    }
+  }
+}, 300000);
+
 // ==================== 数学验证码（内存存储） ====================
 const mathCaptchaStore = new Map();
 
@@ -152,7 +190,7 @@ router.post('/register', async (req, res) => {
 });
 
 // POST /api/user/login
-router.post('/login', async (req, res) => {
+router.post('/login', checkLoginRateLimit, async (req, res) => {
   try {
     const { username, password } = req.body;
     const db = getDb();

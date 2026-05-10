@@ -1,7 +1,22 @@
 const path = require('path');
+
+// 生产环境安全检测
+const isProduction = process.env.NODE_ENV === 'production';
+const defaultSecret = 'change-this-in-production';
+const defaultPassword = 'admin123456';
+
+if (isProduction) {
+  if (process.env.JWT_SECRET === defaultSecret || !process.env.JWT_SECRET) {
+    console.warn('\n[安全警告] 生产环境未设置 JWT_SECRET 环境变量，使用默认值存在安全风险！\n');
+  }
+  if (process.env.ADMIN_PASSWORD === defaultPassword || !process.env.ADMIN_PASSWORD) {
+    console.warn('\n[安全警告] 生产环境未设置 ADMIN_PASSWORD 环境变量，使用默认密码存在安全风险！\n');
+  }
+}
+
 module.exports = {
   port: process.env.PORT || 3000,
-  jwtSecret: process.env.JWT_SECRET || 'change-this-in-production',
+  jwtSecret: process.env.JWT_SECRET || defaultSecret,
   jwtExpiresIn: '7d',
   dbPath: path.resolve(__dirname, '../data/bazi.db'),
   // 免费次数限制
@@ -14,7 +29,7 @@ module.exports = {
   vipDuration: 30,
   // 管理员默认账号（生产环境请通过环境变量设置）
   adminUser: process.env.ADMIN_USER || 'admin',
-  adminPassword: process.env.ADMIN_PASSWORD || 'admin123456',
+  adminPassword: process.env.ADMIN_PASSWORD || defaultPassword,
   // AI 大模型配置（仅后端持有，不暴露给前端）
   ai: {
     deepseek: {
