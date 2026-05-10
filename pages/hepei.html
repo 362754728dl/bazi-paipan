@@ -926,26 +926,21 @@
                     if (daySel) daySel.value = parseInt(parts[2]);
                 }
             }
-            // 填充出生时间（优先从 record.birthHour 读取，fallback 到 formData.birthHour）
-            var birthHour = record.birthHour;
-            if (birthHour === undefined || birthHour === null) {
-                var formData = record.formData || {};
-                birthHour = formData.birthHour !== undefined ? formData.birthHour : formData.birth_hour;
-            }
+            // 填充出生时间（从 record.formData 中读取 hour/minute，兼容多种字段名）
+            var formData = record.formData || {};
+            var birthHour = formData.hour !== undefined ? formData.hour
+                          : formData.birthHour !== undefined ? formData.birthHour
+                          : formData.birth_hour !== undefined ? formData.birth_hour
+                          : record.birthHour;
             if (birthHour !== undefined && birthHour !== null) {
                 var hourSel = document.getElementById('hour' + party);
                 if (hourSel) hourSel.value = birthHour;
             }
-            // 填充出生分钟
-            var birthMinute = record.birthMinute;
-            if (birthMinute === undefined || birthMinute === null) {
-                var formData2 = record.formData || {};
-                birthMinute = formData2.birthMinute !== undefined ? formData2.birthMinute : formData2.birth_minute;
-            }
-            if (birthMinute !== undefined && birthMinute !== null) {
-                var minuteSel = document.getElementById('minute' + party);
-                if (minuteSel) minuteSel.value = birthMinute;
-            }
+            // 填充出生分钟（合配页面暂无分钟选择器，仅保留数据供未来扩展）
+            var birthMinute = formData.minute !== undefined ? formData.minute
+                            : formData.birthMinute !== undefined ? formData.birthMinute
+                            : formData.birth_minute !== undefined ? formData.birth_minute
+                            : record.birthMinute;
             // 填充地址（省份/城市）
             var formData = record.formData || record;
             if (formData.province) {
