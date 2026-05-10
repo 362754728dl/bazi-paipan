@@ -1582,6 +1582,231 @@
         return html;
     }
 
+    // ==================== 吉字列表（用于字义寓意评分） ====================
+    var AUSPICIOUS_CHARS = '福德吉祥瑞安康宁顺达昌盛兴隆明智慧才文俊英华清雅正和仁义礼智信忠孝廉耻勇毅博达远见卓识超群杰出伟业宏图大展鹏程万里一帆风顺二龙腾飞三羊开泰四季平安五福临门六六大顺七星高照八方来财九九同心十全十美'.split('');
+
+    // ==================== 姓名与八字匹配度分析（纯前端） ====================
+    function renderNameMatchingAnalysis(name, baziResult) {
+        if (!name || name.length < 1) return '';
+
+        var p = baziResult.pillars;
+        var wx = baziResult.wuXing || {};
+        var dayGanIdx = p.day.ganIndex;
+        var dayGan = p.day.gan;
+        var dayWx = Lunar.wuXingGan[dayGanIdx];
+
+        // 一、解析姓名五行（使用字库查询）
+        var nameWuxing = [];
+        var nameChars = name.split('');
+        for (var i = 0; i < nameChars.length; i++) {
+            var ch = nameChars[i];
+            var foundWx = null;
+            // 在五行字库中查找
+            for (var wxType in WUXING_CHARS) {
+                if (WUXING_CHARS[wxType].indexOf(ch) !== -1) {
+                    foundWx = wxType;
+                    break;
+                }
+            }
+            // 未找到则使用笔画数映射
+            if (!foundWx) {
+                var code = ch.charCodeAt(0);
+                var wxIdx = code % 5;
+                foundWx = ['木', '火', '土', '金', '水'][wxIdx];
+            }
+            nameWuxing.push({ char: ch, wx: foundWx });
+        }
+
+        // 二、提取八字喜用神（使用MingliAnalyzer）
+        var xiYongShen = [];
+        var jiShen = '';
+        var strengthType = '';
+        try {
+            if (typeof MingliAnalyzer !== 'undefined') {
+                var mlResult = MingliAnalyzer.analyze(baziResult);
+                if (mlResult && mlResult.strength) {
+                    strengthType = mlResult.strength.type;
+                    var xiShenStr = mlResult.strength.xiShen || '';
+                    // 解析喜用神（可能是"金水"这样的组合）
+                    if (xiShenStr) {
+                        for (var k = 0; k < xiShenStr.length; k++) {
+                            if ('金木水火土'.indexOf(xiShenStr[k]) !== -1) {
+                                xiYongShen.push(xiShenStr[k]);
+                            }
+                        }
+                    }
+                    // 忌神为克日主的五行
+                    var keMap = { '木': '金', '火': '水', '土': '木', '金': '火', '水': '土' };
+                    jiShen = keMap[dayWx] || '';
+                }
+            }
+        } catch(e) {}
+
+        // 如果MingliAnalyzer未返回，使用简单判断
+        if (xiYongShen.length === 0) {
+            var totalWx = 0;
+            ['木','火','土','金','水'].forEach(function(n) { totalWx += (wx[n] || 0); });
+            var dayWxCount = wx[dayWx] || 0;
+            strengthType = dayWxCount >= Math.ceil(totalWx / 5) + 1 ? '身强' : (dayWxCount <= Math.floor(totalWx / 5) - 1 ? '身弱' : '中和');
+            if (strengthType === '身强') {
+                var wxMap = {'木':'金','火':'水','土':'木','金':'火','水':'土'};
+                xiYongShen = [wxMap[dayWx] || '金'];
+            } else if (strengthType === '身弱') {
+                var wxMap2 = {'木':'水','火':'木','土':'火','金':'土','水':'金'};
+                xiYongShen = [wxMap2[dayWx] || '水'];
+            } else {
+                xiYongShen = [dayWx];
+            }
+            var keMap2 = { '木': '金', '火': '水', '土': '木', '金': '火', '水': '土' };
+            jiShen = keMap2[dayWx] || '';
+        }
+
+        // 三、五行匹配度分析
+        var matchCount = 0;
+        var jiCount = 0;
+        for (var m = 0; m < nameWuxing.length; m++) {
+            if (xiYongShen.indexOf(nameWuxing[m].wx) !== -1) matchCount++;
+            if (nameWuxing[m].wx === jiShen) jiCount++;
+        }
+
+        var matchLevel = '需关注';
+        var matchDesc = '';
+        if (matchCount >= nameWuxing.length) {
+            matchLevel = '精准契合';
+            matchDesc = '名字五行精准补益八字，搭配得当';
+        } else if (matchCount >= Math.ceil(nameWuxing.length / 2)) {
+            matchLevel = '较契合';
+            matchDesc = '名字五行与八字喜用神契合，可补益命局所需';
+        } else if (jiCount > 0) {
+            matchLevel = '需关注';
+            matchDesc = '名字中存在与命局相忌的五行，建议关注';
+        } else {
+            matchLevel = '一般';
+            matchDesc = '名字五行与八字喜用神关系一般';
+        }
+
+        // 四、姓与名五行生克分析
+        var shengKeResult = '';
+        var shengKeLevel = '';
+        if (nameWuxing.length >= 2) {
+            var xingWx = nameWuxing[0].wx;
+            var ming1Wx = nameWuxing[1].wx;
+            var ming2Wx = nameWuxing.length > 2 ? nameWuxing[2].wx : null;
+
+            // 检查顺生：姓生名1，名1生名2
+            var isShunSheng = false;
+            var hasKe = false;
+
+            if (WX_SHENG_MAP[xingWx] === ming1Wx) {
+                if (!ming2Wx || WX_SHENG_MAP[ming1Wx] === ming2Wx) {
+                    isShunSheng = true;
+                }
+            }
+
+            // 检查相克
+            if (WX_KE_MAP[xingWx] === ming1Wx || WX_KE_MAP[ming1Wx] === xingWx) hasKe = true;
+            if (ming2Wx && (WX_KE_MAP[ming1Wx] === ming2Wx || WX_KE_MAP[ming2Wx] === ming1Wx)) hasKe = true;
+            if (ming2Wx && (WX_KE_MAP[xingWx] === ming2Wx || WX_KE_MAP[ming2Wx] === xingWx)) hasKe = true;
+
+            if (isShunSheng && !hasKe) {
+                shengKeResult = '姓与名五行顺生流转，气韵通畅';
+                shengKeLevel = '顺畅';
+            } else if (hasKe) {
+                shengKeResult = '姓与名之间存在五行相克，流转有阻';
+                shengKeLevel = '有阻';
+            } else {
+                shengKeResult = '姓与名五行关系平和';
+                shengKeLevel = '平和';
+            }
+        } else {
+            shengKeResult = '单字名，无内部生克关系';
+            shengKeLevel = '平和';
+        }
+
+        // 五、综合评分（固定公式）
+        // 五行匹配度 60分
+        var wuxingScore = Math.round((matchCount / nameWuxing.length) * 60);
+        // 生克结构 20分
+        var shengkeScore = shengKeLevel === '顺畅' ? 20 : (shengKeLevel === '平和' ? 15 : 10);
+        // 字义寓意 15分
+        var meaningScore = 0;
+        for (var c = 0; c < nameChars.length; c++) {
+            if (AUSPICIOUS_CHARS.indexOf(nameChars[c]) !== -1) meaningScore += Math.round(15 / nameChars.length);
+        }
+        meaningScore = Math.min(15, meaningScore);
+        // 音律字形 5分（基于名字长度合理性）
+        var yinluScore = nameChars.length >= 2 && nameChars.length <= 4 ? 5 : 3;
+        // 总分
+        var totalScore = wuxingScore + shengkeScore + meaningScore + yinluScore;
+
+        // 六、专业评述
+        var comment = '';
+        if (matchLevel === '精准契合' || matchLevel === '较契合') {
+            comment = '《三命通会》："五行之气，顺生者吉，相济者美。"';
+        } else if (shengKeLevel === '顺畅') {
+            comment = '《渊海子平》："五行相生，则生生不息，运自亨通。"';
+        } else if (matchCount > 0) {
+            comment = '《穷通宝鉴》："调和气候，五行得宜。"';
+        } else {
+            comment = '从传统命理角度，可考虑适当补益' + xiYongShen.join('、') + '以助命局平衡。';
+        }
+
+        // 七、生成HTML
+        var html = '<div class="ai-result-card">';
+        html += '<div class="result-title">姓名五行分析</div>';
+
+        // 姓名五行解析
+        html += '<div class="result-subtitle">姓名五行属性</div>';
+        html += '<div class="result-desc">';
+        var wxDisplay = nameWuxing.map(function(item) {
+            return '<span style="display:inline-block;padding:4px 10px;margin:4px;border-radius:6px;background:var(--bg-secondary);border:1px solid var(--border-color);"><strong>' + escapeHtml(item.char) + '</strong>（' + item.wx + '）</span>';
+        }).join('');
+        html += wxDisplay;
+        html += '<br>名字五行组合：' + nameWuxing.map(function(item) { return item.wx; }).join(' ');
+        html += '</div>';
+
+        // 八字喜用神
+        html += '<div class="result-subtitle">八字喜用神</div>';
+        html += '<div class="result-desc">';
+        html += '日主：' + dayGan + '（' + dayWx + '），' + strengthType + '<br>';
+        html += '喜用五行：' + xiYongShen.join('、') + '<br>';
+        html += '忌用五行：' + (jiShen || '无');
+        html += '</div>';
+
+        // 五行匹配度
+        html += '<div class="result-subtitle">五行匹配度</div>';
+        html += '<div class="result-desc">';
+        html += '名字五行与八字喜用神匹配度：<strong>' + matchLevel + '</strong><br>';
+        html += matchDesc + '<br>';
+        html += '姓与名五行流转：<strong>' + shengKeLevel + '</strong>（' + shengKeResult + '）';
+        html += '</div>';
+
+        // 综合评分
+        html += '<div class="result-subtitle">综合评分</div>';
+        html += '<div class="result-desc">';
+        html += '<div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:10px;">';
+        html += '<span style="flex:1;min-width:120px;padding:8px 12px;background:var(--bg-secondary);border-radius:6px;text-align:center;">五行匹配度<br><strong>' + wuxingScore + '</strong>/60</span>';
+        html += '<span style="flex:1;min-width:120px;padding:8px 12px;background:var(--bg-secondary);border-radius:6px;text-align:center;">生克结构<br><strong>' + shengkeScore + '</strong>/20</span>';
+        html += '<span style="flex:1;min-width:120px;padding:8px 12px;background:var(--bg-secondary);border-radius:6px;text-align:center;">字义寓意<br><strong>' + meaningScore + '</strong>/15</span>';
+        html += '<span style="flex:1;min-width:120px;padding:8px 12px;background:var(--bg-secondary);border-radius:6px;text-align:center;">音律字形<br><strong>' + yinluScore + '</strong>/5</span>';
+        html += '</div>';
+        html += '<div style="text-align:center;padding:12px;background:linear-gradient(135deg,var(--red-light),#fff);border-radius:8px;border:1px solid var(--red-primary);">';
+        html += '<span style="font-size:14px;color:var(--text-secondary);">总分</span><br>';
+        html += '<span style="font-size:28px;font-weight:700;color:var(--red-primary);">' + totalScore + '</span><span style="font-size:16px;color:var(--text-light);">/100</span>';
+        html += '</div>';
+        html += '</div>';
+
+        // 专业评述
+        html += '<div class="result-subtitle">专业评述</div>';
+        html += '<div class="result-desc" style="font-style:italic;color:var(--text-secondary);">';
+        html += comment;
+        html += '<div style="margin-top:8px;font-size:12px;color:var(--text-light);">以上分析基于传统命理典籍，仅供文化参考，不构成人生决策依据。</div>';
+        html += '</div>';
+
+        html += '</div>';
+        return html;
+    }
+
     // ==================== 评测主流程（纯前端分析） ====================
     async function doEvaluate() {
         var name = $('evalName').value.trim();
@@ -1617,13 +1842,16 @@
             } catch(e) { console.warn('命理评测异常:', e); }
         }
 
+        // 姓名与八字匹配度分析
+        var nameMatchHtml = renderNameMatchingAnalysis(name, baziResult);
+
         // 专业评测引导按钮
         var proHtml = '<div style="text-align:center;margin-top:16px;">' +
             '<button onclick="showProEvalModal()" style="padding:12px 32px;background:linear-gradient(135deg,#07C160,#06AD56);color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;letter-spacing:1px;">专业姓名评测</button>' +
             '<div style="font-size:12px;color:var(--text-light);margin-top:8px;">由专业命理师一对一深度分析</div>' +
             '</div>';
 
-        resultArea.innerHTML = baziHtml + analysisHtml + relationHtml + mingliHtml + proHtml;
+        resultArea.innerHTML = baziHtml + analysisHtml + relationHtml + mingliHtml + nameMatchHtml + proHtml;
         resultArea.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
