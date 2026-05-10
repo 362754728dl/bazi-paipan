@@ -3033,8 +3033,29 @@ const App = (function () {
         // 绑定分享按钮事件
         var shareBtn = document.getElementById('btnShareEval');
         if (shareBtn) {
-            shareBtn.addEventListener('click', function() {
-                showToast('分享功能开发中');
+            shareBtn.addEventListener('click', async function() {
+                var shareData = {
+                    title: '八字排盘结果',
+                    text: '查看我的八字排盘分析',
+                    url: window.location.href
+                };
+                // 优先使用 Web Share API（手机端调起系统分享面板）
+                if (navigator.share) {
+                    try {
+                        await navigator.share(shareData);
+                    } catch (err) {
+                        // 用户取消分享，不做处理
+                    }
+                } else {
+                    // 降级方案：复制链接到剪贴板
+                    try {
+                        await navigator.clipboard.writeText(window.location.href);
+                        showToast('链接已复制，可粘贴分享给好友');
+                    } catch (e) {
+                        // 最后的降级：手动复制
+                        prompt('复制以下链接分享给好友：', window.location.href);
+                    }
+                }
             });
         }
     }
