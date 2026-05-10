@@ -212,7 +212,7 @@
                 <option value="yearly">年度会员(1年)</option>
                 <option value="lifetime">永久</option>
             </select>
-            <button onclick="adminActivateVip()" style="padding:8px 16px;background:var(--red-primary);color:#fff;border:none;border-radius:8px;font-size:14px;cursor:pointer;">管理功能</button>
+            <button onclick="showToast('会员管理功能已移除')" style="padding:8px 16px;background:var(--red-primary);color:#fff;border:none;border-radius:8px;font-size:14px;cursor:pointer;">管理功能</button>
         </div>
         <div style="margin-bottom:16px;display:flex;gap:10px;flex-wrap:wrap;">
             <input type="text" id="quotaUsername" placeholder="用户名" style="flex:1;padding:8px 12px;border:1px solid var(--border-color);border-radius:8px;font-size:14px;">
@@ -230,10 +230,7 @@
     </div>
 </div>
 
-<!-- 会员充值套餐页面 -->
-<div id="pageVip" class="page">
-    <div id="vipContent"></div>
-</div>
+
 
 <!-- 六爻页面 -->
 <div id="pageLiuyao" class="page">

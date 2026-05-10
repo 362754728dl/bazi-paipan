@@ -455,111 +455,7 @@
         to { opacity: 1; transform: translateY(0); }
     }
 
-    /* ==================== 会员弹窗 ==================== */
-    .modal-overlay {
-        display: none;
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0, 0, 0, 0.5);
-        z-index: 1000;
-        justify-content: center;
-        align-items: center;
-    }
-    .modal-overlay.show {
-        display: flex;
-    }
-    .modal-box {
-        background: #FFF;
-        border-radius: 12px;
-        width: 90%;
-        max-width: 380px;
-        max-height: 80vh;
-        overflow-y: auto;
-        padding: 24px 20px;
-        position: relative;
-        box-shadow: 0 8px 32px rgba(0,0,0,0.2);
-    }
-    .modal-title {
-        font-size: 18px;
-        font-weight: 700;
-        color: var(--red-primary);
-        text-align: center;
-        margin-bottom: 16px;
-    }
-    .modal-body {
-        font-size: 13px;
-        color: var(--text-secondary);
-        line-height: 1.8;
-    }
-    .modal-body .vip-list {
-        margin: 12px 0;
-        padding-left: 4px;
-    }
-    .modal-body .vip-list div {
-        padding: 3px 0;
-    }
-    .modal-body .vip-highlight {
-        background: var(--bg-secondary);
-        border: 1px solid var(--border-color);
-        border-radius: 8px;
-        padding: 12px;
-        margin: 12px 0;
-        font-size: 12px;
-        line-height: 1.8;
-    }
-    .modal-body .vip-highlight-title {
-        font-weight: 600;
-        color: var(--text-primary);
-        font-size: 13px;
-        margin-bottom: 6px;
-    }
-    .modal-body .vip-price {
-        text-align: center;
-        font-size: 16px;
-        font-weight: 700;
-        color: var(--red-primary);
-        margin: 16px 0 12px;
-    }
-    .modal-body .pay-btns {
-        display: flex;
-        gap: 10px;
-        margin-bottom: 16px;
-    }
-    .modal-body .pay-btn {
-        flex: 1;
-        padding: 10px 0;
-        text-align: center;
-        border-radius: 8px;
-        font-size: 14px;
-        font-weight: 600;
-        cursor: pointer;
-        border: none;
-    }
-    .pay-btn-wechat {
-        background: #07C160;
-        color: #FFF;
-    }
-    .pay-btn-alipay {
-        background: #1677FF;
-        color: #FFF;
-    }
-    .modal-close {
-        position: absolute;
-        top: 12px;
-        right: 16px;
-        font-size: 22px;
-        color: var(--text-light);
-        cursor: pointer;
-        line-height: 1;
-        background: none;
-        border: none;
-    }
-    .modal-close:hover {
-        color: var(--text-primary);
-    }
+
 
     /* ==================== 底部合规声明 ==================== */
     .disclaimer-bar {
@@ -816,32 +712,7 @@
 <!-- Toast 提示 -->
 <div class="toast" id="toast"></div>
 
-<!-- 会员提示弹窗 -->
-<div class="modal-overlay" id="memberModal">
-    <div class="modal-box">
-        <button class="modal-close" id="modalClose">&times;</button>
-        <div class="modal-title">会员专属特权</div>
-        <div class="modal-body">
-            <div class="vip-list">
-                <div>&#10004; 每天可进行 5 次专业取名</div>
-                <div>&#10004; 每天可进行 20 次详细姓名评测</div>
-                <div>&#10004; 无广告干扰</div>
-                <div>&#10004; 优先客服支持</div>
-            </div>
-            <div class="vip-highlight">
-                <div class="vip-highlight-title">【本站大模型优势】</div>
-                市面上绝大多数免费取名工具使用通用大模型，没有经过专业命理知识训练，结果随意、不准确。<br><br>
-                本站大模型经过《三命通会》《渊海子平》等传统命理典籍知识库专项优化，配合专业命理师编写的高精度提示词，能够给出更符合正统子平命理理论的姓名建议，准确率远超普通免费工具。
-            </div>
-            <div style="text-align:center;font-weight:600;font-size:14px;color:var(--text-primary);margin:12px 0 8px;">添加站长微信了解更多</div>
-            <div class="vip-price">微信号：DLing3313</div>
-            <div class="pay-btns">
-                <button class="pay-btn pay-btn-wechat">微信支付</button>
-                <button class="pay-btn pay-btn-alipay">支付宝支付</button>
-            </div>
-        </div>
-    </div>
-</div>
+
 
 <!-- 引入主站 JS 模块（只读复用） -->
 <script src="../js/solar_terms.js"></script>
@@ -1235,23 +1106,6 @@
         return Bazi.generate(year, month, day, hour, minute, gender, longitude);
     }
 
-    // ==================== 会员次数限制 ====================
-    async function checkUsageLimit(type) { return true; }
-
-    // ==================== 会员弹窗 ====================
-    function showMemberModal() {
-        $('memberModal').classList.add('show');
-    }
-
-    function hideMemberModal() {
-        $('memberModal').classList.remove('show');
-    }
-
-    // ==================== DeepSeek API 调用（通过后端代理） ====================
-    // AI接口已移除，保留空函数防止报错
-    async function callDeepSeek(systemPrompt, userMessage) {
-        throw new Error('AI功能已下线，请使用纯前端分析');
-    }
 
     // ==================== 评测专用提示词 ====================
     var SYSTEM_PROMPT_EVALUATE = '';
@@ -2230,12 +2084,6 @@
         // 按钮 - 直接调用（纯前端分析，无需会员检查）
         $('btnEvaluate').addEventListener('click', function() { doEvaluate(); });
         $('btnName').addEventListener('click', function() { doName(); });
-
-        // 会员弹窗关闭
-        $('modalClose').addEventListener('click', hideMemberModal);
-        $('memberModal').addEventListener('click', function(e) {
-            if (e.target === this) hideMemberModal();
-        });
     }
 
     // ==================== 启动 ====================

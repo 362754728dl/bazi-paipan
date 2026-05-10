@@ -689,11 +689,6 @@ const App = (function () {
             renderTodayPage();
         }
 
-        // 切换到会员页面时渲染
-        if (pageId === 'pageVip') {
-            renderVipPage();
-        }
-
         // 切换到排盘页面时，恢复显示输入表单并隐藏返回按钮
         if (pageId === 'pagePaipan') {
             var formSection = document.querySelector('.form-section');
@@ -1610,9 +1605,6 @@ const App = (function () {
 
         // ====== 入口按钮 ======
         html += '<div style="display:flex;gap:12px;margin-top:20px;padding:0 16px;">';
-        html += '<button onclick="switchPage(\'pageVip\')" style="flex:1;padding:14px;border:2px solid var(--gold);background:linear-gradient(135deg,#FFF8EE,#FFF);border-radius:12px;color:var(--text-primary);font-size:15px;font-weight:600;cursor:pointer;">';
-        html += '👑 会员套餐';
-        html += '</button>';
         html += '</div>';
 
         container.innerHTML = html;
@@ -2762,29 +2754,7 @@ const App = (function () {
     }
 
     function showAIEval() {
-        // 先检查AI次数限制
-        if (typeof window.V2Member !== 'undefined' && window.V2Member.checkAndUse) {
-            var token = localStorage.getItem('v2_token');
-            if (!token) {
-                // 未登录用户：弹出会员弹窗提示登录
-                window.V2Member.showMemberModal('请先登录后再使用专业命理评测功能');
-                return;
-            }
-            // 已登录，走统一会员检查
-            window.V2Member.checkAndUse().then(function(result) {
-                if (!result.allowed) {
-                    if (result.data && result.data.reason === 'daily_limit') {
-                        window.V2Member.showDailyLimitModal();
-                    } else {
-                        window.V2Member.showMemberModal(result.message);
-                    }
-                    return;
-                }
-                _doAIEval();
-            });
-            return;
-        }
-        // 未登录或V2Member未加载，直接执行
+        // 直接执行基础免费评测
         _doAIEval();
     }
 
@@ -3678,19 +3648,10 @@ const App = (function () {
                             // API 登录成功，保存 token 到 localStorage
                             localStorage.setItem('v2_token', json.data.token);
 
-                            // 稳健获取 member_level：优先从 member_level 取，再用 level 兜底
-                            var memberLevel = (json.data && json.data.member_level !== undefined) ? json.data.member_level : -1;
-                            if (memberLevel === -1) {
-                                memberLevel = (json.data && json.data.level === 'vip') ? 1 : 0;
-                            }
-
                             localStorage.setItem('v2_user', JSON.stringify({
                                 username: json.data.username,
                                 level: json.data.level,
-                                role: json.data.role || (json.data.username === 'admin' ? 'admin' : ''),
-                                member_level: memberLevel,
-                                member_expire_time: json.data.member_expire_time || 0,
-                                vip_expire_time: json.data.vip_expire_time || ''
+                                role: json.data.role || (json.data.username === 'admin' ? 'admin' : '')
                             }));
 
                             localStorage.setItem('bazi_current_user', JSON.stringify({
@@ -3831,9 +3792,6 @@ const App = (function () {
         });
         if (!recordHtml) recordHtml = '<div style="text-align:center;color:var(--text-light);padding:20px;">暂无排盘记录</div>';
         $('adminRecordList').innerHTML = recordHtml;
-
-        // 会员列表
-        renderMembershipList();
     }
 
     function doAdminChangePwd() {
@@ -3850,60 +3808,6 @@ const App = (function () {
             $('adminNewPwd').value = '';
             $('adminConfirmPwd').value = '';
         }
-    }
-
-    // ==================== 会员管理 ====================
-
-    /**
-     * 管理员功能
-     */
-    function adminActivateVip() {
-        var username = $('vipUsername').value.trim();
-        var plan = $('vipPlan').value;
-        if (!username) { showToast('请输入用户名'); return; }
-        var expireDate = new Date();
-        if (plan === 'trial') expireDate.setMonth(expireDate.getMonth() + 1);
-        else if (plan === 'yearly') expireDate.setFullYear(expireDate.getFullYear() + 1);
-        var expireStr = expireDate.toISOString().split('T')[0];
-        Storage.activateMembership(username, plan, expireStr);
-        showToast('已为 ' + username + ' 开通' + (plan === 'trial' ? '体验' : plan === 'yearly' ? '年度' : '终身') + '会员');
-        renderMembershipList();
-    }
-
-    /**
-     * 管理员调整AI次数
-     */
-    function adminAdjustQuota() {
-        var username = $('quotaUsername').value.trim();
-        var quota = parseInt($('quotaNumber').value);
-        if (!username) { showToast('请输入用户名'); return; }
-        if (isNaN(quota)) { showToast('请输入有效次数'); return; }
-        Storage.adjustAiQuota(username, quota);
-        showToast('已调整 ' + username + ' 的AI次数为 ' + (quota === -1 ? '无限' : quota));
-        renderMembershipList();
-    }
-
-    /**
-     * 渲染会员列表
-     */
-    function renderMembershipList() {
-        var members = Storage.getAllMemberships();
-        var container = $('membershipList');
-        if (!container) return;
-        if (members.length === 0) {
-            container.innerHTML = '<div style="text-align:center;color:var(--text-light);padding:30px;">暂无会员数据</div>';
-            return;
-        }
-        var planNames = { trial: '体验', yearly: '年度', lifetime: '永久' };
-        var html = '<table style="width:100%;border-collapse:collapse;font-size:13px;"><thead><tr style="background:var(--bg-secondary);"><th style="padding:8px;border:1px solid var(--border-color);">用户名</th><th style="padding:8px;border:1px solid var(--border-color);">套餐</th><th style="padding:8px;border:1px solid var(--border-color);">开通日期</th><th style="padding:8px;border:1px solid var(--border-color);">到期日期</th><th style="padding:8px;border:1px solid var(--border-color);">AI次数</th><th style="padding:8px;border:1px solid var(--border-color);">状态</th></tr></thead><tbody>';
-        for (var i = 0; i < members.length; i++) {
-            var m = members[i];
-            var statusText = m.isActive ? '有效' : '过期';
-            var statusColor = m.isActive ? 'var(--green)' : 'var(--red-primary)';
-            html += '<tr><td style="padding:8px;border:1px solid var(--border-color);">' + escapeHtml(m.username) + '</td><td style="padding:8px;border:1px solid var(--border-color);">' + planNames[m.plan] + '</td><td style="padding:8px;border:1px solid var(--border-color);">' + m.activateDate + '</td><td style="padding:8px;border:1px solid var(--border-color);">' + m.expireDate + '</td><td style="padding:8px;border:1px solid var(--border-color);">' + (m.aiQuota === -1 ? '无限' : m.aiQuota) + '</td><td style="padding:8px;border:1px solid var(--border-color);color:' + statusColor + ';">' + statusText + '</td></tr>';
-        }
-        html += '</tbody></table>';
-        container.innerHTML = html;
     }
 
     // ==================== Toast提示 ====================
@@ -3984,25 +3888,25 @@ const App = (function () {
         html += '</div>';
 
         // 核心说明文案
-        html += '<div class="vip-desc-card">';
-        html += '<p>本平台不搞迷信、不恐吓、不改运，仅以正统子平命理、五行旺衰、十神逻辑为基础，结合主流大模型（Kimi/DeepSeek/豆包/智谱）专业命理提示词，为用户提供五行缺失测算、日主强弱分析、喜忌判定、大运流年理性疏导、心理情绪引导，帮助用户认清自身命理结构，做到顺势而为、生活顺遂。</p>';
+        html += '<div style="background:var(--bg-card);border:1px solid var(--border-color);border-radius:12px;padding:16px;margin-bottom:20px;box-shadow:0 2px 8px var(--shadow);">';
+        html += '<p style="font-size:13px;color:var(--text-secondary);line-height:1.8;margin:0;">本平台不搞迷信、不恐吓、不改运，仅以正统子平命理、五行旺衰、十神逻辑为基础，为用户提供五行缺失测算、日主强弱分析、喜忌判定、大运流年理性疏导、心理情绪引导，帮助用户认清自身命理结构，做到顺势而为、生活顺遂。</p>';
         html += '</div>';
 
         // 微信引导卡片
-        html += '<div class="vip-card featured">';
-        html += '<div class="vip-card-header">';
-        html += '<span class="vip-tag vip-tag-red">联系站长</span>';
-        html += '<span class="vip-card-title">添加站长微信了解更多</span>';
+        html += '<div style="background:var(--bg-card);border:2px solid var(--gold);border-radius:12px;padding:20px 16px;margin-bottom:16px;box-shadow:0 4px 20px rgba(200,168,78,0.3);">';
+        html += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">';
+        html += '<span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600;background:var(--red-primary);color:#fff;">联系站长</span>';
+        html += '<span style="font-size:16px;font-weight:600;color:var(--text-primary);">添加站长微信了解更多</span>';
         html += '</div>';
         html += '<div style="font-size:16px;font-weight:bold;color:#333;text-align:center;margin:16px 0 8px;">微信号：DLing3313</div>';
-        html += '<div class="vip-qr-area">';
-        html += '<div class="vip-qr-img"><img src="images/wechat-qr.jpg" alt="站长微信二维码"><span>站长微信二维码</span></div>';
+        html += '<div style="display:flex;gap:12px;margin-bottom:10px;">';
+        html += '<div style="flex:1;text-align:center;"><img src="images/wechat-qr.jpg" alt="站长微信二维码" style="width:120px;height:120px;border-radius:8px;border:1px solid #e8e0d0;object-fit:cover;"><span style="display:block;font-size:12px;color:var(--text-light);margin-top:4px;">站长微信二维码</span></div>';
         html += '</div>';
         html += '<p style="text-align:center;color:#666;font-size:14px;margin-top:12px;">了解更多，请添加微信</p>';
         html += '</div>';
 
         // 底部合规说明
-        html += '<p class="vip-disclaimer">以上服务均为民俗文化咨询与命理知识解读，不涉及封建迷信。如有心理疾病请及时就医。</p>';
+        html += '<p style="font-size:11px;color:var(--text-light);text-align:center;margin-top:16px;line-height:1.6;">以上服务均为民俗文化咨询与命理知识解读，不涉及封建迷信。如有心理疾病请及时就医。</p>';
 
         container.innerHTML = html;
     }
@@ -4019,7 +3923,6 @@ const App = (function () {
 
     // ==================== 暴露showToast到全局（供HTML onclick使用） ====================
     window.showToast = showToast;
-    window.adminActivateVip = adminActivateVip;
     window.adminAdjustQuota = adminAdjustQuota;
 
     // 暴露到全局
