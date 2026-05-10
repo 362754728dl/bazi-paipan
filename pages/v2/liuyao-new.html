@@ -1085,6 +1085,7 @@
         fetch('/api/liuyao/save', {
             method: 'POST',
             headers: _getAuthHeaders(),
+            credentials: 'same-origin',
             body: JSON.stringify(saveData)
         })
         .then(function(res) { return res.json(); })
@@ -1536,21 +1537,27 @@
     var _aiCountInfo = null;  // 次数信息缓存
 
     function _getAuthHeaders() {
-        var token = localStorage.getItem('v2_token');
-        return { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + (token || '') };
+        // Cookie 由浏览器自动携带，无需手动设置 Authorization
+        return { 'Content-Type': 'application/json' };
     }
 
     function _isV2LoggedIn() {
-        return !!localStorage.getItem('v2_token');
+        // 登录状态通过后端验证，前端无法直接判断
+        // 返回 true 让后端验证，401 时按未登录处理
+        return true;
     }
 
     async function _fetchAiCount() {
-        if (!_isV2LoggedIn()) {
-            _aiCountInfo = { used: 0, limit: 1, remaining: 1, is_vip: false };
-            return _aiCountInfo;
-        }
         try {
-            var resp = await fetch('/api/liuyao/count', { headers: _getAuthHeaders() });
+            var resp = await fetch('/api/liuyao/count', {
+                headers: _getAuthHeaders(),
+                credentials: 'same-origin'
+            });
+            // 401 未登录，按未登录状态处理
+            if (resp.status === 401) {
+                _aiCountInfo = { used: 0, limit: 1, remaining: 1, is_vip: false };
+                return _aiCountInfo;
+            }
             var json = await resp.json();
             if (json.code === 200) {
                 _aiCountInfo = json.data;
@@ -1646,6 +1653,7 @@
             var resp = await fetch('/api/liuyao/ai-analyze', {
                 method: 'POST',
                 headers: _getAuthHeaders(),
+                credentials: 'same-origin',
                 body: JSON.stringify({
                     hex_binary: hexData.original ? hexData.original.binary : '',
                     hex_name: hexData.name || '',

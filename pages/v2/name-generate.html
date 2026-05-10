@@ -1579,13 +1579,14 @@
     // ==================== 检查姓名评测缓存 ====================
     async function checkNameEvalCache(name, baziCacheKey) {
         try {
-            var token = localStorage.getItem('v2_token') || '';
-            if (!token) return null;
             var resp = await fetch('/api/name/check-cache', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'same-origin',
                 body: JSON.stringify({ name: name, baziData: baziCacheKey, type: 'evaluate' })
             });
+            // 401 未登录，直接返回 null
+            if (resp.status === 401) return null;
             var json = await resp.json();
             if (json.code === 200 && json.data && json.data.cached) {
                 return json.data.evaluation_result;
@@ -1600,11 +1601,10 @@
     // ==================== 保存姓名评测缓存 ====================
     async function saveNameEvalCache(name, baziCacheKey, evaluationResult) {
         try {
-            var token = localStorage.getItem('v2_token') || '';
-            if (!token) return;
             fetch('/api/name/save-cache', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'same-origin',
                 body: JSON.stringify({ name: name, baziData: baziCacheKey, evaluation_result: evaluationResult, type: 'evaluate' })
             }).catch(function(e) { console.error('缓存保存失败:', e); });
         } catch (e) {}

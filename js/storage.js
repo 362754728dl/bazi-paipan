@@ -122,11 +122,19 @@ const Storage = (function () {
   /**
    * 退出登录，清除当前用户状态（同时清除V1和V2登录数据）
    */
-  function logout() {
+  async function logout() {
     remove(CURRENT_USER_KEY);
-    // 同时清除V2登录凭证，确保全站退出彻底
-    localStorage.removeItem('v2_token');
+    // 清除V2本地缓存数据
     localStorage.removeItem('v2_user');
+    // 调用后端退出接口清除 HttpOnly Cookie
+    try {
+      await fetch('/api/user/logout', {
+        method: 'POST',
+        credentials: 'same-origin'
+      });
+    } catch (e) {
+      // 忽略网络错误
+    }
   }
 
   /**
@@ -147,10 +155,15 @@ const Storage = (function () {
 
   /**
    * 判断是否已登录（兼容V1和V2）
+   * V2改为通过后端验证Cookie，不再检查localStorage token
    * @returns {boolean}
    */
   function isLoggedIn() {
-    return !!load(CURRENT_USER_KEY, null) || !!localStorage.getItem('v2_token');
+    // V1本地登录状态
+    if (!!load(CURRENT_USER_KEY, null)) return true;
+    // V2通过后端验证Cookie（异步，这里返回缓存状态）
+    // 实际登录状态以后端验证为准
+    return false;
   }
 
   // ==================== 排盘记录管理（后端API版） ====================
@@ -161,11 +174,12 @@ const Storage = (function () {
   var _recordsCacheTTL = 30000; // 缓存30秒
 
   /**
-   * 获取当前用户的token
-   * @returns {string|null}
+   * 获取当前用户的token（已废弃，Cookie由浏览器自动携带）
+   * @returns {null}
    */
   function _getToken() {
-    return localStorage.getItem('v2_token');
+    // HttpOnly Cookie 由浏览器自动携带，前端无法读取
+    return null;
   }
 
   /**
@@ -210,29 +224,14 @@ const Storage = (function () {
    * @returns {Promise<object>}
    */
   async function saveRecord(record) {
-    const token = _getToken();
-    if (!token) {
-      // 未登录时保存到本地备份
-      console.log('[saveRecord] 未登录，保存到本地备份');
-      var localRecords = _getLocalRecords();
-      record.id = record.id || Date.now();
-      record.createTime = record.createTime || Date.now();
-      localRecords.unshift(record);
-      // 最多保留50条
-      if (localRecords.length > 50) localRecords = localRecords.slice(0, 50);
-      _saveLocalRecords(localRecords);
-      _recordsCache = localRecords;
-      _recordsCacheTime = Date.now();
-      return { success: true, data: record };
-    }
-
+    // 尝试通过 Cookie 认证保存到后端（浏览器自动携带 Cookie）
     try {
       const response = await fetch('/api/paipan/save', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + token
+          'Content-Type': 'application/json'
         },
+        credentials: 'same-origin',
         body: JSON.stringify({
           name: record.name || '',
           solarDate: record.solarDate || '',
@@ -246,6 +245,20 @@ const Storage = (function () {
       });
 
       const data = await response.json();
+      if (data.code === 401) {
+        // 未登录，保存到本地备份
+        console.log('[saveRecord] 未登录，保存到本地备份');
+        var localRecords = _getLocalRecords();
+        record.id = record.id || Date.now();
+        record.createTime = record.createTime || Date.now();
+        localRecords.unshift(record);
+        if (localRecords.length > 50) localRecords = localRecords.slice(0, 50);
+        _saveLocalRecords(localRecords);
+        _recordsCache = localRecords;
+        _recordsCacheTime = Date.now();
+        return { success: true, data: record };
+      }
+
       if (data.code === 200) {
         // 清除缓存，下次读取时重新加载
         _recordsCache = null;
@@ -266,14 +279,6 @@ const Storage = (function () {
    * @returns {Promise<Array>} 排盘记录数组
    */
   async function getRecords(forceRefresh) {
-    const token = _getToken();
-
-    // 未登录时回退到本地备份
-    if (!token) {
-      console.log('[getRecords] 未登录，回退到本地备份记录');
-      return _getLocalRecords();
-    }
-
     // 检查缓存
     if (!forceRefresh && _recordsCache && (Date.now() - _recordsCacheTime) < _recordsCacheTTL) {
       return _recordsCache;
@@ -282,10 +287,14 @@ const Storage = (function () {
     try {
       const response = await fetch('/api/paipan/records?page=1&pageSize=100', {
         method: 'GET',
-        headers: {
-          'Authorization': 'Bearer ' + token
-        }
+        credentials: 'same-origin'
       });
+
+      // 401 未登录，回退到本地备份
+      if (response.status === 401) {
+        console.log('[getRecords] 未登录，回退到本地备份记录');
+        return _getLocalRecords();
+      }
 
       const data = await response.json();
       if (data.code === 200 && data.data && data.data.list) {
@@ -332,24 +341,21 @@ const Storage = (function () {
    * @returns {Promise<boolean>}
    */
   async function deleteRecord(id) {
-    const token = _getToken();
-    if (!token) {
-      // 未登录时从本地备份删除
-      var localRecords = _getLocalRecords();
-      localRecords = localRecords.filter(function(r) { return r.id !== id; });
-      _saveLocalRecords(localRecords);
-      _recordsCache = localRecords;
-      _recordsCacheTime = Date.now();
-      return true;
-    }
-
     try {
       const response = await fetch('/api/paipan/record/' + id, {
         method: 'DELETE',
-        headers: {
-          'Authorization': 'Bearer ' + token
-        }
+        credentials: 'same-origin'
       });
+
+      // 401 未登录，从本地备份删除
+      if (response.status === 401) {
+        var localRecords = _getLocalRecords();
+        localRecords = localRecords.filter(function(r) { return r.id !== id; });
+        _saveLocalRecords(localRecords);
+        _recordsCache = localRecords;
+        _recordsCacheTime = Date.now();
+        return true;
+      }
 
       const data = await response.json();
       if (data.code === 200) {
@@ -387,24 +393,21 @@ const Storage = (function () {
   async function getRecordsPage(page, pageSize) {
     page = Math.max(1, page || 1);
     pageSize = Math.min(50, Math.max(1, pageSize || 10));
-    const token = _getToken();
-
-    // 未登录时回退到本地备份（模拟分页）
-    if (!token) {
-      var allRecords = _getLocalRecords();
-      var total = allRecords.length;
-      var offset = (page - 1) * pageSize;
-      var list = allRecords.slice(offset, offset + pageSize);
-      return { list: list, total: total, page: page, pageSize: pageSize, hasMore: offset + pageSize < total };
-    }
 
     try {
       const response = await fetch('/api/paipan/records?page=' + page + '&pageSize=' + pageSize, {
         method: 'GET',
-        headers: {
-          'Authorization': 'Bearer ' + token
-        }
+        credentials: 'same-origin'
       });
+
+      // 401 未登录，回退到本地备份（模拟分页）
+      if (response.status === 401) {
+        var allRecords = _getLocalRecords();
+        var total = allRecords.length;
+        var offset = (page - 1) * pageSize;
+        var list = allRecords.slice(offset, offset + pageSize);
+        return { list: list, total: total, page: page, pageSize: pageSize, hasMore: offset + pageSize < total };
+      }
 
       const data = await response.json();
       if (data.code === 200 && data.data && data.data.list) {

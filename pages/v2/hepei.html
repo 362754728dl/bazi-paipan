@@ -1033,14 +1033,13 @@
 
         // 检查AI次数限制（使用统一的会员系统）
         if (typeof window.V2Member !== 'undefined' && window.V2Member.checkAndUse) {
-            var token = localStorage.getItem('v2_token');
-            if (!token) {
-                // 未登录用户：弹出会员弹窗提示登录
-                window.V2Member.showMemberModal('请先登录后再使用八字合配分析功能');
-                return;
-            }
+            // 通过后端验证登录状态（Cookie 自动携带）
             var checkResult = await window.V2Member.checkAndUse();
             if (!checkResult.allowed) {
+                if (checkResult.data && checkResult.data.reason === 'not_logged_in') {
+                    window.V2Member.showMemberModal('请先登录后再使用八字合配分析功能');
+                    return;
+                }
                 if (checkResult.data && checkResult.data.reason === 'daily_limit') {
                     window.V2Member.showDailyLimitModal();
                 } else {

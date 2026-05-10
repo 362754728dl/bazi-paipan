@@ -403,7 +403,6 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC"
 <script>
 // ========== 全局变量 ==========
 var API_BASE = '/api';
-var adminToken = localStorage.getItem('admin_token');
 var currentPage = 'dashboard';
 
 // 用户管理分页状态
@@ -424,11 +423,9 @@ async function apiCall(method, path, data) {
         method: method,
         headers: {
             'Content-Type': 'application/json'
-        }
+        },
+        credentials: 'same-origin'
     };
-    if (adminToken) {
-        opts.headers['Authorization'] = 'Bearer ' + adminToken;
-    }
     if (data && method !== 'GET') opts.body = JSON.stringify(data);
 
     var res = await fetch(API_BASE + path, opts);
@@ -484,8 +481,6 @@ document.getElementById('modalOverlay').addEventListener('click', function(e) {
 
 // ========== 登录相关 ==========
 function showLoginPage() {
-    adminToken = null;
-    localStorage.removeItem('admin_token');
     document.getElementById('loginPage').style.display = 'flex';
     document.getElementById('adminPanel').style.display = 'none';
 }
@@ -516,13 +511,13 @@ async function handleLogin() {
         var res = await fetch(API_BASE + '/admin/login', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
+            credentials: 'same-origin',
             body: JSON.stringify({ username: username, password: password })
         });
         var data = await res.json();
 
-        if (data.code === 200 && data.data && data.data.token) {
-            adminToken = data.data.token;
-            localStorage.setItem('admin_token', data.data.token);
+        if (data.code === 200 && data.data) {
+            // admin_token 已通过 HttpOnly Cookie 设置，前端不存储
             showAdminPanel();
             showToast('登录成功', 'success');
         } else {

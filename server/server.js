@@ -2,12 +2,14 @@ const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const svgCaptcha = require('svg-captcha');
+const cookieParser = require('cookie-parser');
 
 const { initDb, getDb, saveDb } = require('./db/init');
 
 const app = express();
-app.use(cors());
+app.use(cors({ origin: true, credentials: true }));
 app.use(express.json({ limit: '1mb' }));
+app.use(cookieParser());
 
 // 频率限制
 const { rateLimitMiddleware } = require('./middleware/rateLimit');

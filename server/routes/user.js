@@ -242,10 +242,19 @@ router.post('/login', checkLoginRateLimit, async (req, res) => {
 
     console.log('[登录返回] 用户名: ' + user.username + ', level: ' + user.level + ', member_level: ' + (user.member_level || 0) + ', member_expire_time: ' + (user.member_expire_time || 0));
 
+    // 设置 HttpOnly Cookie（安全：XSS无法窃取，浏览器自动携带）
+    const isProduction = process.env.NODE_ENV === 'production';
+    res.cookie('auth_token', token, {
+      httpOnly: true,
+      secure: isProduction, // 生产环境使用 HTTPS
+      sameSite: 'strict',
+      maxAge: 14 * 24 * 60 * 60 * 1000 // 14天
+    });
+
     res.json({
       code: 200,
       data: {
-        token,
+        // token 不再返回给前端，通过 HttpOnly Cookie 传递
         user_id: user.id,
         username: user.username,
         level: user.level,
@@ -264,6 +273,12 @@ router.post('/login', checkLoginRateLimit, async (req, res) => {
     console.error('登录失败:', err);
     res.json({ code: 500, message: '登录失败' });
   }
+});
+
+// POST /api/user/logout（退出登录，清除Cookie）
+router.post('/logout', (req, res) => {
+  res.clearCookie('auth_token');
+  res.json({ code: 200, message: '退出成功' });
 });
 
 // GET /api/user/info（需登录）

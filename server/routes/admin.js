@@ -37,9 +37,18 @@ router.post('/login', async (req, res) => {
       { expiresIn: config.jwtExpiresIn }
     );
 
+    // 设置 HttpOnly Cookie（安全：XSS无法窃取，浏览器自动携带）
+    const isProduction = process.env.NODE_ENV === 'production';
+    res.cookie('auth_token', token, {
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: 'strict',
+      maxAge: 14 * 24 * 60 * 60 * 1000 // 14天
+    });
+
     res.json({
       code: 200,
-      data: { token, username: user.username },
+      data: { username: user.username },
       message: '登录成功'
     });
   } catch (err) {

@@ -637,19 +637,16 @@
         // 六爻记录计数（异步从后端加载）
         var liuyaoCountEl = document.getElementById('liuyaoCount');
         if (user) {
-            var token = localStorage.getItem('v2_token');
-            if (token) {
-                fetch('/api/liuyao/list?pageSize=1', {
-                    headers: { 'Authorization': 'Bearer ' + token }
-                })
-                .then(function(res) { return res.json(); })
-                .then(function(data) {
-                    if (data.code === 200 && data.data) {
-                        liuyaoCountEl.textContent = data.data.total + ' 次';
-                    }
-                })
-                .catch(function() {});
-            }
+            fetch('/api/liuyao/list?pageSize=1', {
+                credentials: 'same-origin'
+            })
+            .then(function(res) { return res.json(); })
+            .then(function(data) {
+                if (data.code === 200 && data.data) {
+                    liuyaoCountEl.textContent = data.data.total + ' 次';
+                }
+            })
+            .catch(function() {});
         }
     }
 
@@ -805,8 +802,8 @@
                     })
                     .then(function (res) { return res.json(); })
                     .then(function (loginData) {
-                        if (loginData.code === 200 && loginData.data && loginData.data.token) {
-                            localStorage.setItem('v2_token', loginData.data.token);
+                        if (loginData.code === 200 && loginData.data) {
+                            // token 已通过 HttpOnly Cookie 设置，前端不存储
                             localStorage.setItem('v2_user', JSON.stringify({
                                 username: loginData.data.username || username,
                                 role: loginData.data.role || ''
@@ -841,12 +838,13 @@
             fetch('/api/user/login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
+                credentials: 'same-origin',
                 body: JSON.stringify({ username: username, password: password })
             })
             .then(function (res) { return res.json(); })
             .then(function (data) {
-                if (data.code === 200 && data.data && data.data.token) {
-                    localStorage.setItem('v2_token', data.data.token);
+                if (data.code === 200 && data.data) {
+                    // token 已通过 HttpOnly Cookie 设置，前端不存储
                     localStorage.setItem('v2_user', JSON.stringify({
                         username: data.data.username || username,
                         role: data.data.role || ''

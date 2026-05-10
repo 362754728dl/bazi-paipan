@@ -3641,13 +3641,13 @@ const App = (function () {
                         var resp = await fetch('/api/user/login', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
+                            credentials: 'same-origin',
                             body: JSON.stringify({ username: username, password: password })
                         });
                         var json = await resp.json();
-                        if (json.code === 200 && json.data && json.data.token) {
-                            // API 登录成功，保存 token 到 localStorage
-                            localStorage.setItem('v2_token', json.data.token);
-
+                        if (json.code === 200 && json.data) {
+                            // API 登录成功，token 已通过 HttpOnly Cookie 设置，前端不存储
+                            // 仅保存非敏感用户信息到 localStorage
                             localStorage.setItem('v2_user', JSON.stringify({
                                 username: json.data.username,
                                 level: json.data.level,
