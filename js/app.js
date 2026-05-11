@@ -3938,7 +3938,7 @@ const App = (function () {
         html += '<span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600;background:var(--red-primary);color:#fff;">联系站长</span>';
         html += '<span style="font-size:16px;font-weight:600;color:var(--text-primary);">添加站长微信了解更多</span>';
         html += '</div>';
-        html += '<div style="font-size:16px;font-weight:bold;color:#333;text-align:center;margin:16px 0 8px;">微信号：DLing3313</div>';
+        html += '<div style="font-size:16px;font-weight:bold;color:#E8F4F8;text-align:center;margin:16px 0 8px;">微信号：DLing3313</div>';
         html += '<div style="display:flex;gap:12px;margin-bottom:10px;">';
         html += '<div style="flex:1;text-align:center;"><img src="images/wechat-qr.jpg" alt="站长微信二维码" style="width:120px;height:120px;border-radius:8px;border:1px solid #e8e0d0;object-fit:cover;"><span style="display:block;font-size:12px;color:var(--text-light);margin-top:4px;">站长微信二维码</span></div>';
         html += '</div>';

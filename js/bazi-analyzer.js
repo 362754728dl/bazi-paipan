@@ -196,7 +196,7 @@ var BaziAnalyzer = (function() {
         if (analysis.strength) {
             var s = analysis.strength;
             html += '<div style="margin-bottom:12px;">';
-            html += '<div style="font-size:13px;font-weight:bold;color:#333;margin-bottom:6px;">【日元强弱】</div>';
+            html += '<div style="font-size:13px;font-weight:bold;color:#E8F4F8;margin-bottom:6px;">【日元强弱】</div>';
             html += '<div style="font-size:12px;color:#555;line-height:1.8;">';
             html += '日主<strong>' + s.riZhuGan + '</strong>（' + s.riZhuWuXing + '），生于<strong>' + baziResult.pillars.month.zhi + '</strong>月，' + (s.deLing ? '得月令' : '失月令') + '。';
             html += '天干' + (s.deShi ? '得势' : '失势') + '，地支' + (s.deDi ? '有根' : '无根') + '。';
@@ -206,7 +206,7 @@ var BaziAnalyzer = (function() {
 
         // 五行统计
         html += '<div style="margin-bottom:12px;">';
-        html += '<div style="font-size:13px;font-weight:bold;color:#333;margin-bottom:6px;">【五行统计】</div>';
+        html += '<div style="font-size:13px;font-weight:bold;color:#E8F4F8;margin-bottom:6px;">【五行统计】</div>';
         html += '<div style="font-size:12px;color:#555;line-height:1.8;">';
         var wxParts = [];
         for (var i = 0; i < WU_XING_NAMES.length; i++) {
@@ -220,7 +220,7 @@ var BaziAnalyzer = (function() {
         // 命理提示
         if (analysis.tips.length > 0) {
             html += '<div>';
-            html += '<div style="font-size:13px;font-weight:bold;color:#333;margin-bottom:6px;">【命理提示】</div>';
+            html += '<div style="font-size:13px;font-weight:bold;color:#E8F4F8;margin-bottom:6px;">【命理提示】</div>';
             html += '<div style="font-size:12px;color:#666;line-height:1.8;">';
             for (var j = 0; j < analysis.tips.length; j++) {
                 html += '<div style="padding:4px 0;border-bottom:1px dashed var(--border, #eee);">' + (j + 1) + '. ' + analysis.tips[j] + '</div>';
