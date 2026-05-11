@@ -22,6 +22,26 @@ app.use(cors({
 app.use(express.json({ limit: '1mb' }));
 app.use(cookieParser());
 
+// ==================== 安全头中间件 ====================
+app.use((req, res, next) => {
+  // 点击劫持防护
+  res.setHeader('X-Frame-Options', 'DENY');
+
+  // 内容安全策略（CSP）
+  res.setHeader('Content-Security-Policy',
+    "default-src 'self'; " +
+    "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; " +
+    "style-src 'self' 'unsafe-inline'; " +
+    "img-src 'self' data: blob:; " +
+    "font-src 'self'; " +
+    "connect-src 'self' https://api.deepseek.com https://ark.cn-beijing.volces.com https://dashscope.aliyuncs.com; " +
+    "frame-ancestors 'none';"
+  );
+
+  next();
+});
+// ==================== 安全头中间件结束 ====================
+
 // 频率限制
 const { rateLimitMiddleware } = require('./middleware/rateLimit');
 app.use(rateLimitMiddleware);
