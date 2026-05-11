@@ -9,9 +9,11 @@ const { initDb, getDb, saveDb } = require('./db/init');
 const app = express();
 
 // CORS 配置：动态origin，解决credentials: true时跨域Cookie失效
+// 注意：credentials: true 时，origin 必须是具体值，不能是 '*'
 app.use(cors({
   origin: function (origin, callback) {
-    callback(null, origin || '*');
+    // 允许所有origin，但返回具体值（不能是'*'）
+    callback(null, origin || 'https://bazi-app-production-dc37.up.railway.app');
   },
   credentials: true
 }));
