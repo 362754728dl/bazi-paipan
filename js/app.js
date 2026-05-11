@@ -1078,71 +1078,23 @@ const App = (function () {
     }
 
     /**
-     * 渲染天干留意 / 地支留意
-     * @param {object} result - 排盘结果
-     * @param {string} type - 'gan' 或 'zhi'
-     */
-    function renderGanZhiRelations(result, type) {
-        var p = result.pillars;
-        var ganIndices = [p.year.ganIndex, p.month.ganIndex, p.day.ganIndex, p.hour.ganIndex];
-        var zhiIndices = [p.year.zhiIndex, p.month.zhiIndex, p.day.zhiIndex, p.hour.zhiIndex];
-        var pillarNames = ['年柱', '月柱', '日柱', '时柱'];
-        var relations = [];
-
-        if (type === 'gan') {
-            // 天干合化
-            for (var i = 0; i < ganIndices.length; i++) {
-                for (var j = i + 1; j < ganIndices.length; j++) {
-                    var he = Lunar.getTianGanHe(ganIndices[i], ganIndices[j]);
-                    if (he) relations.push(pillarNames[i] + pillarNames[j] + '：' + he);
-                }
-            }
-            var title = '天干留意';
-        } else {
-            // 地支冲合破
-            for (var i = 0; i < zhiIndices.length; i++) {
-                for (var j = i + 1; j < zhiIndices.length; j++) {
-                    var chong = Lunar.getDiZhiChong(zhiIndices[i], zhiIndices[j]);
-                    if (chong) relations.push(pillarNames[i] + pillarNames[j] + '：' + chong);
-                    var po = Lunar.getDiZhiPo(zhiIndices[i], zhiIndices[j]);
-                    if (po) relations.push(pillarNames[i] + pillarNames[j] + '：' + po);
-                }
-            }
-            var title = '地支留意';
-        }
-
-        var html = '<div class="result-card ' + (type === 'gan' ? 'gan-relations-card' : 'zhi-relations-card') + '">';
-        html += '<div class="result-title">' + title + '</div>';
-        html += '<div class="paipan-desc">';
-        html += relations.length > 0 ? relations.join('；') : '无';
-        html += '</div></div>';
-
-        var ra = $('resultArea');
-        if (ra) {
-            var div = document.createElement('div');
-            div.innerHTML = html;
-            ra.appendChild(div);
-        }
-    }
-
-    /**
      * 渲染天干地支关系（统一分析器）
+     * 全站唯一的地支分析入口，通过 RelationAnalyzer.getDizhiRelations 获取结果
      */
     function renderGanZhiRelationsUnified(result) {
         if (!result || !result.pillars) return;
         var p = result.pillars;
-        var baziForAnalyze = {
-            year: { gan: p.year.gan, zhi: p.year.zhi },
-            month: { gan: p.month.gan, zhi: p.month.zhi },
-            day: { gan: p.day.gan, zhi: p.day.zhi },
-            hour: { gan: p.hour.gan, zhi: p.hour.zhi }
-        };
-        var analysis = RelationAnalyzer.analyzeRelations(baziForAnalyze);
+        var ganList = [p.year.gan, p.month.gan, p.day.gan, p.hour.gan];
+        var zhiList = [p.year.zhi, p.month.zhi, p.day.zhi, p.hour.zhi];
+        var posLabels = ['年', '月', '日', '时'];
+
+        // 统一使用 getTGDZRelations（与大运流年表同一个函数）
+        var analysis = RelationAnalyzer.getTGDZRelations(ganList, zhiList, posLabels, posLabels);
 
         // 天干留意
         var tgHtml = '<div class="result-card gan-relations-card"><div class="result-title">天干留意</div>';
-        if (analysis.tianGanRelations.length > 0) {
-            analysis.tianGanRelations.forEach(function(r) {
+        if (analysis.tianGan.length > 0) {
+            analysis.tianGan.forEach(function(r) {
                 var color = r.category === '冲' ? '#DC143C' : '#2E8B57';
                 tgHtml += '<div style="padding:6px 0;font-size:13px;"><span style="color:' + color + ';font-weight:bold;">' + r.name + '</span> <span style="color:#999;">（' + r.pos1 + '柱' + r.gan1 + ' ↔ ' + r.pos2 + '柱' + r.gan2 + '）</span></div>';
             });
@@ -1153,8 +1105,8 @@ const App = (function () {
 
         // 地支留意
         var dzHtml = '<div class="result-card zhi-relations-card"><div class="result-title">地支留意</div>';
-        if (analysis.diZhiRelations.length > 0) {
-            analysis.diZhiRelations.forEach(function(r) {
+        if (analysis.diZhi.length > 0) {
+            analysis.diZhi.forEach(function(r) {
                 var colors = { '刑': '#8B0000', '冲': '#DC143C', '害': '#FF6347', '破': '#FF8C00', '合': '#2E8B57', '会': '#4169E1' };
                 var color = colors[r.category] || '#333';
                 dzHtml += '<div style="padding:6px 0;font-size:13px;"><span style="color:' + color + ';font-weight:bold;">[' + r.category + '] ' + r.display + '</span></div>';
@@ -1517,47 +1469,28 @@ const App = (function () {
     }
 
     /**
-     * 渲染天干留意、地支留意信息
+     * 渲染天干留意、地支留意信息（今日运势页面）
+     * 统一使用 RelationAnalyzer
      */
     function renderTodayGanZhiInfo(result) {
         var p = result.pillars;
-        var dayGanIdx = p.day.ganIndex;
-        var zhiIndices = [p.year.zhiIndex, p.month.zhiIndex, p.day.zhiIndex, p.hour.zhiIndex];
-        var ganIndices = [p.year.ganIndex, p.month.ganIndex, p.day.ganIndex, p.hour.ganIndex];
-        var pillarNames = ['年柱', '月柱', '日柱', '时柱'];
+        var ganList = [p.year.gan, p.month.gan, p.day.gan, p.hour.gan];
+        var zhiList = [p.year.zhi, p.month.zhi, p.day.zhi, p.hour.zhi];
+        var posLabels = ['年柱', '月柱', '日柱', '时柱'];
 
-        // 天干刑冲合害
-        var tgRelations = [];
-        for (var i = 0; i < ganIndices.length; i++) {
-            for (var j = i + 1; j < ganIndices.length; j++) {
-                var he = Lunar.getTianGanHe(ganIndices[i], ganIndices[j]);
-                if (he) tgRelations.push(pillarNames[i] + pillarNames[j] + '：' + he);
-            }
-        }
-
-        // 地支刑冲合害
-        var dzRelations = [];
-        for (var i = 0; i < zhiIndices.length; i++) {
-            for (var j = i + 1; j < zhiIndices.length; j++) {
-                var he = Lunar.getDiZhiHe(zhiIndices[i], zhiIndices[j]);
-                if (he) dzRelations.push(pillarNames[i] + pillarNames[j] + '：' + he);
-                var chong = Lunar.getDiZhiChong(zhiIndices[i], zhiIndices[j]);
-                if (chong) dzRelations.push(pillarNames[i] + pillarNames[j] + '：' + chong);
-                var xing = Lunar.getDiZhiXing(zhiIndices[i], zhiIndices[j]);
-                if (xing) dzRelations.push(pillarNames[i] + pillarNames[j] + '：' + xing);
-                var hai = Lunar.getDiZhiHai(zhiIndices[i], zhiIndices[j]);
-                if (hai) dzRelations.push(pillarNames[i] + pillarNames[j] + '：' + hai);
-            }
-        }
+        // 使用统一分析器 getTGDZRelations
+        var analysis = RelationAnalyzer.getTGDZRelations(ganList, zhiList, posLabels, posLabels);
+        var tgRelations = analysis.tianGan;
+        var dzRelations = analysis.diZhi;
 
         var html = '';
         html += '<div style="margin-top:10px;padding:8px;background:var(--bg-secondary);border-radius:6px;">';
         html += '<div class="relation-title">天干留意</div>';
-        html += '<div class="relation-desc">' + (tgRelations.length > 0 ? tgRelations.join('；') : '无天干合化冲克') + '</div>';
+        html += '<div class="relation-desc">' + (tgRelations.length > 0 ? tgRelations.map(function(r) { return r.name; }).join('；') : '无天干合化冲克') + '</div>';
         html += '</div>';
         html += '<div style="margin-top:6px;padding:8px;background:var(--bg-secondary);border-radius:6px;">';
         html += '<div class="relation-title">地支留意</div>';
-        html += '<div class="relation-desc">' + (dzRelations.length > 0 ? dzRelations.join('；') : '无地支刑冲合害') + '</div>';
+        html += '<div class="relation-desc">' + (dzRelations.length > 0 ? dzRelations.map(function(r) { return r.display; }).join('；') : '无地支刑冲合害') + '</div>';
         html += '</div>';
 
         return html;
@@ -1947,37 +1880,24 @@ const App = (function () {
         });
         html += '</div></div>';
 
-        // 天干留意
-        var ganIndices = [p.year.ganIndex, p.month.ganIndex, p.day.ganIndex, p.hour.ganIndex];
-        var zhiIndices = [p.year.zhiIndex, p.month.zhiIndex, p.day.zhiIndex, p.hour.zhiIndex];
-        var pillarNames = ['年柱', '月柱', '日柱', '时柱'];
-        var tgRelations = [];
-        for (var i = 0; i < ganIndices.length; i++) {
-            for (var j = i + 1; j < ganIndices.length; j++) {
-                var he = Lunar.getTianGanHe(ganIndices[i], ganIndices[j]);
-                if (he) tgRelations.push(pillarNames[i] + pillarNames[j] + '：' + he);
-            }
-        }
+        // 天干留意（统一使用 getTGDZRelations）
+        var ganList = [p.year.gan, p.month.gan, p.day.gan, p.hour.gan];
+        var zhiList = [p.year.zhi, p.month.zhi, p.day.zhi, p.hour.zhi];
+        var posLabels = ['年柱', '月柱', '日柱', '时柱'];
+        var analysis = RelationAnalyzer.getTGDZRelations(ganList, zhiList, posLabels, posLabels);
+        var tgRelResult = analysis.tianGan;
         html += '<div class="result-card">';
         html += '<div class="result-title">天干留意</div>';
         html += '<div class="paipan-desc">';
-        html += tgRelations.length > 0 ? tgRelations.join('；') : '无';
+        html += tgRelResult.length > 0 ? tgRelResult.map(function(r) { return r.name; }).join('；') : '无';
         html += '</div></div>';
 
-        // 地支留意
-        var dzRelations = [];
-        for (var i = 0; i < zhiIndices.length; i++) {
-            for (var j = i + 1; j < zhiIndices.length; j++) {
-                var chong = Lunar.getDiZhiChong(zhiIndices[i], zhiIndices[j]);
-                if (chong) dzRelations.push(pillarNames[i] + pillarNames[j] + '：' + chong);
-                var po = Lunar.getDiZhiPo(zhiIndices[i], zhiIndices[j]);
-                if (po) dzRelations.push(pillarNames[i] + pillarNames[j] + '：' + po);
-            }
-        }
+        // 地支留意（统一使用 RelationAnalyzer）
+        var dzRelResult = analysis.diZhi;
         html += '<div class="result-card">';
         html += '<div class="result-title">地支留意</div>';
         html += '<div class="paipan-desc">';
-        html += dzRelations.length > 0 ? dzRelations.join('；') : '无';
+        html += dzRelResult.length > 0 ? dzRelResult.map(function(r) { return r.display; }).join('；') : '无';
         html += '</div></div>';
 
         // 返回顶部按钮
@@ -2371,54 +2291,18 @@ const App = (function () {
         eightGans.push({ idx: dayGZ.ganIndex, label: '流日' + dayGZ.gan });
         eightZhis.push({ idx: dayGZ.zhiIndex, label: '流日' + dayGZ.zhi });
 
-        // 天干留意：8柱天干两两检查合与冲
-        var ganRelations = [];
-        for (var gi = 0; gi < eightGans.length; gi++) {
-            for (var gj = gi + 1; gj < eightGans.length; gj++) {
-                var tgHe = Lunar.getTianGanHe(eightGans[gi].idx, eightGans[gj].idx);
-                if (tgHe) ganRelations.push({ type: '合', desc: tgHe, from: eightGans[gi].label, to: eightGans[gj].label });
-                var tgChong = Lunar.getTianGanChong(eightGans[gi].idx, eightGans[gj].idx);
-                if (tgChong) ganRelations.push({ type: '冲', desc: tgChong, from: eightGans[gi].label, to: eightGans[gj].label });
-            }
-        }
-
-        // 地支留意：8柱地支两两检查合、冲、刑、害、破
-        var zhiRelations = [];
-        for (var zi = 0; zi < eightZhis.length; zi++) {
-            for (var zj = zi + 1; zj < eightZhis.length; zj++) {
-                var dzHe = Lunar.getDiZhiHe(eightZhis[zi].idx, eightZhis[zj].idx);
-                if (dzHe) zhiRelations.push({ type: '合', desc: dzHe, from: eightZhis[zi].label, to: eightZhis[zj].label });
-                var dzChong = Lunar.getDiZhiChong(eightZhis[zi].idx, eightZhis[zj].idx);
-                if (dzChong) zhiRelations.push({ type: '冲', desc: dzChong, from: eightZhis[zi].label, to: eightZhis[zj].label });
-                var dzXing = Lunar.getDiZhiXing(eightZhis[zi].idx, eightZhis[zj].idx);
-                if (dzXing) zhiRelations.push({ type: '刑', desc: dzXing, from: eightZhis[zi].label, to: eightZhis[zj].label });
-                var dzHai = Lunar.getDiZhiHai(eightZhis[zi].idx, eightZhis[zj].idx);
-                if (dzHai) zhiRelations.push({ type: '害', desc: dzHai, from: eightZhis[zi].label, to: eightZhis[zj].label });
-                var dzPo = Lunar.getDiZhiPo(eightZhis[zi].idx, eightZhis[zj].idx);
-                if (dzPo) zhiRelations.push({ type: '破', desc: dzPo, from: eightZhis[zi].label, to: eightZhis[zj].label });
-            }
-        }
-
-        // 三合检测（申子辰、寅午戌、巳酉丑、亥卯未）
-        var sanHeGroups = [[8,0,4],[2,6,10],[5,9,1],[11,3,7]]; // 申子辰、寅午戌、巳酉丑、亥卯未
-        var zhiIdxSet = eightZhis.map(function(z) { return z.idx; });
-        var sanHeNames = ['申子辰合水局','寅午戌合火局','巳酉丑合金局','亥卯未合木局'];
-        for (var sh = 0; sh < sanHeGroups.length; sh++) {
-            var grp = sanHeGroups[sh];
-            if (zhiIdxSet.indexOf(grp[0]) >= 0 && zhiIdxSet.indexOf(grp[1]) >= 0 && zhiIdxSet.indexOf(grp[2]) >= 0) {
-                zhiRelations.push({ type: '三合', desc: sanHeNames[sh] });
-            }
-        }
-
-        // 三会检测（寅卯辰、巳午未、申酉戌、亥子丑）
-        var sanHuiGroups = [[2,3,4],[5,6,7],[8,9,10],[11,0,1]];
-        var sanHuiNames = ['寅卯辰会东方木','巳午未会南方火','申酉戌会西方金','亥子丑会北方水'];
-        for (var shi = 0; shi < sanHuiGroups.length; shi++) {
-            var hgrp = sanHuiGroups[shi];
-            if (zhiIdxSet.indexOf(hgrp[0]) >= 0 && zhiIdxSet.indexOf(hgrp[1]) >= 0 && zhiIdxSet.indexOf(hgrp[2]) >= 0) {
-                zhiRelations.push({ type: '三会', desc: sanHuiNames[shi] });
-            }
-        }
+        // 天干+地支留意：统一使用 getTGDZRelations（与原命局同一个函数）
+        var ganList8 = eightGans.map(function(g) { return Lunar.tianGan[g.idx]; });
+        var ganLabels8 = eightGans.map(function(g) { return g.label; });
+        var zhiList8 = eightZhis.map(function(z) { return Lunar.diZhi[z.idx]; });
+        var zhiLabels8 = eightZhis.map(function(z) { return z.label; });
+        var tgDzResult = RelationAnalyzer.getTGDZRelations(ganList8, zhiList8, ganLabels8, zhiLabels8);
+        var ganRelations = tgDzResult.tianGan.map(function(r) {
+            return { type: r.category, desc: r.name, from: r.pos1 || '', to: r.pos2 || '' };
+        });
+        var zhiRelations = tgDzResult.diZhi.map(function(r) {
+            return { type: r.category === '半合' ? '半合' : (r.category === '合' ? '合' : r.category), desc: r.display };
+        });
 
         // 渲染天干留意
         var elGanRel = document.getElementById('dyt-info-gan');
