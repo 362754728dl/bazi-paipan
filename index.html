@@ -6,6 +6,61 @@
     <meta name="description" content="五行鲤——基于《渊海子平》《三命通会》的专业八字排盘分析平台。五行推命，鲤跃龙门。">
     <title>五行鲤 · 传统命理排盘</title>
     <link rel="stylesheet" href="css/style.css?v=4">
+    <!-- 强制核心函数定义（必须在最前面，确保全局可用） -->
+    <script>
+        // ==================== 强制定义：页面切换函数 ====================
+        function switchPage(pageId) {
+            console.log('[switchPage] 切换到页面:', pageId);
+            // 隐藏所有页面
+            var pages = document.querySelectorAll('.page');
+            for (var i = 0; i < pages.length; i++) {
+                pages[i].classList.remove('active');
+            }
+            // 显示目标页面
+            var target = document.getElementById(pageId);
+            if (target) {
+                target.classList.add('active');
+            }
+            // 更新底部导航高亮
+            var navItems = document.querySelectorAll('#bottomNav .nav-item');
+            for (var j = 0; j < navItems.length; j++) {
+                navItems[j].classList.remove('active');
+                if (navItems[j].getAttribute('data-page') === pageId) {
+                    navItems[j].classList.add('active');
+                }
+            }
+            // 关闭抽屉菜单（如果打开）
+            if (typeof closeDrawer === 'function') {
+                closeDrawer();
+            }
+        }
+        // ==================== 强制定义：关闭抽屉菜单 ====================
+        function closeDrawer() {
+            var overlay = document.getElementById('drawerOverlay');
+            var menu = document.getElementById('drawerMenu');
+            if (overlay) {
+                overlay.classList.remove('show');
+                setTimeout(function() { overlay.style.display = 'none'; }, 300);
+            }
+            if (menu) {
+                menu.classList.remove('show');
+                setTimeout(function() { menu.style.display = 'none'; }, 300);
+            }
+        }
+        // ==================== 强制定义：打开抽屉菜单 ====================
+        function toggleDrawer(e) {
+            if (e) e.stopPropagation();
+            var overlay = document.getElementById('drawerOverlay');
+            var menu = document.getElementById('drawerMenu');
+            if (!overlay || !menu) return;
+            overlay.style.display = 'block';
+            menu.style.display = 'block';
+            setTimeout(function() {
+                overlay.classList.add('show');
+                menu.classList.add('show');
+            }, 10);
+        }
+    </script>
 </head>
 <body>
 

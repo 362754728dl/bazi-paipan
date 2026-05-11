@@ -8,11 +8,22 @@ const { initDb, getDb, saveDb } = require('./db/init');
 
 const app = express();
 
-// CORS 配置：动态origin，解决credentials: true时跨域Cookie失效
-// 注意：credentials: true 时，origin 必须是具体值，不能是 '*'
+// ==================== 强制CORS配置（必须最先加载） ====================
+app.use((req, res, next) => {
+    res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
+    res.header('Access-Control-Allow-Credentials', 'true');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+    if (req.method === 'OPTIONS') {
+        res.sendStatus(200);
+    } else {
+        next();
+    }
+});
+
+// 保留cors中间件作为备用
 app.use(cors({
   origin: function (origin, callback) {
-    // 允许所有origin，但返回具体值（不能是'*'）
     callback(null, origin || 'https://bazi-app-production-dc37.up.railway.app');
   },
   credentials: true

@@ -279,6 +279,9 @@ const Storage = (function () {
    * @returns {Promise<Array>} 排盘记录数组
    */
   async function getRecords(forceRefresh) {
+    // 强制调试日志
+    console.log('[调试] 请求排盘记录，页面URL:', typeof window !== 'undefined' ? window.location.href : 'N/A');
+    
     // 检查缓存
     if (!forceRefresh && _recordsCache && (Date.now() - _recordsCacheTime) < _recordsCacheTTL) {
       return _recordsCache;
@@ -301,11 +304,13 @@ const Storage = (function () {
    * 实际执行获取记录（内部函数）
    */
   async function _doGetRecords(forceRefresh) {
+    console.log('[调试] _doGetRecords 开始执行');
     try {
       const response = await fetch('/api/paipan/records?page=1&pageSize=100', {
         method: 'GET',
         credentials: 'same-origin'
       });
+      console.log('[调试] 排盘记录响应状态:', response.status);
 
       // 401 未登录，回退到本地备份
       if (response.status === 401) {
@@ -408,6 +413,9 @@ const Storage = (function () {
    * @returns {Promise<{list: Array, total: number, page: number, pageSize: number, hasMore: boolean}>}
    */
   async function getRecordsPage(page, pageSize) {
+    // 强制调试日志
+    console.log('[调试] 请求排盘记录(分页)，页面URL:', typeof window !== 'undefined' ? window.location.href : 'N/A', '页码:', page);
+    
     page = Math.max(1, page || 1);
     pageSize = Math.min(50, Math.max(1, pageSize || 10));
 
@@ -416,6 +424,7 @@ const Storage = (function () {
         method: 'GET',
         credentials: 'same-origin'
       });
+      console.log('[调试] 排盘记录(分页)响应状态:', response.status);
 
       // 401 未登录，回退到本地备份（模拟分页）
       if (response.status === 401) {
