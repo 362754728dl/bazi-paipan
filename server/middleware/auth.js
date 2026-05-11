@@ -3,6 +3,7 @@ const config = require('../config');
 
 function authMiddleware(req, res, next) {
   // 只从 HttpOnly Cookie 读取 token
+  console.log('[认证中间件] 收到请求，Cookie存在:', !!req.cookies?.auth_token, 'URL:', req.url);
   console.log('[认证中间件] 路径:', req.path);
   console.log('[认证中间件] cookies:', JSON.stringify(req.cookies));
   console.log('[认证中间件] auth_token:', req.cookies?.auth_token ? '存在(长度:' + req.cookies.auth_token.length + ')' : '不存在');

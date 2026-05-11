@@ -270,6 +270,89 @@
     <a class="drawer-item" href="pages/my.html" onclick="closeDrawer()">👤 我的</a>
 </div>
 
+<!-- 核心函数预定义（确保在app.js加载前可用） -->
+<script>
+// ==================== 页面切换函数（预定义，避免app.js加载前调用报错） ====================
+function switchPage(pageId) {
+    // 如果App已加载，使用App的switchPage
+    if (typeof App !== 'undefined' && typeof App.switchPage === 'function') {
+        App.switchPage(pageId);
+        return;
+    }
+    // 降级方案：直接操作DOM
+    var pages = document.querySelectorAll('.page');
+    pages.forEach(function(p) { p.classList.remove('active'); });
+    var targetPage = document.getElementById(pageId);
+    if (targetPage) targetPage.classList.add('active');
+    
+    // 更新导航高亮
+    var navItems = document.querySelectorAll('#bottomNav .nav-item');
+    navItems.forEach(function(item) {
+        item.classList.remove('active');
+        if (item.getAttribute('data-page') === pageId) {
+            item.classList.add('active');
+        }
+    });
+}
+
+// ==================== 认证就绪管理器（确保认证完成后再执行敏感操作） ====================
+var AuthReadyManager = {
+    _callbacks: [],
+    _isReady: false,
+    _isChecking: false,
+    
+    // 注册认证就绪回调
+    onReady: function(callback) {
+        if (this._isReady) {
+            // 已就绪，立即执行
+            callback();
+        } else {
+            // 未就绪，加入队列
+            this._callbacks.push(callback);
+        }
+    },
+    
+    // 标记认证就绪
+    setReady: function() {
+        this._isReady = true;
+        // 执行所有等待的回调
+        this._callbacks.forEach(function(cb) {
+            try { cb(); } catch(e) { console.error('AuthReady回调执行失败:', e); }
+        });
+        this._callbacks = [];
+    },
+    
+    // 检查登录状态（由app.js调用）
+    checkAuth: function() {
+        if (this._isChecking) return;
+        this._isChecking = true;
+        
+        var self = this;
+        // 尝试从后端验证登录状态
+        fetch('/api/user/info', {
+            method: 'GET',
+            credentials: 'same-origin'
+        }).then(function(res) {
+            if (res.status === 200) {
+                console.log('[AuthReady] 用户已登录');
+            } else {
+                console.log('[AuthReady] 用户未登录');
+            }
+            // 无论登录与否，都标记就绪（未登录时也会回退到本地数据）
+            self.setReady();
+        }).catch(function(err) {
+            console.log('[AuthReady] 认证检查失败:', err);
+            self.setReady(); // 网络错误时也继续
+        });
+    }
+};
+
+// 全局快捷函数
+function afterAuthReady(callback) {
+    AuthReadyManager.onReady(callback);
+}
+</script>
+
 <!-- 抽屉菜单控制脚本（独立，不修改app.js） -->
 <script>
 function toggleDrawer(e) {

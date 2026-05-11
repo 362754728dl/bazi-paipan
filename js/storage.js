@@ -284,6 +284,23 @@ const Storage = (function () {
       return _recordsCache;
     }
 
+    // 使用 afterAuthReady 确保认证就绪后再请求
+    if (typeof afterAuthReady === 'function') {
+      return new Promise(function(resolve) {
+        afterAuthReady(function() {
+          resolve(_doGetRecords(forceRefresh));
+        });
+      });
+    }
+    
+    // 降级：直接请求
+    return _doGetRecords(forceRefresh);
+  }
+  
+  /**
+   * 实际执行获取记录（内部函数）
+   */
+  async function _doGetRecords(forceRefresh) {
     try {
       const response = await fetch('/api/paipan/records?page=1&pageSize=100', {
         method: 'GET',
