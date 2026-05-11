@@ -1226,40 +1226,67 @@ const App = (function () {
         }
         var rule = rules[season] || rules['春'];
 
+        // 当令五行
+        var seasonWangMap = { '春': '木', '夏': '火', '秋': '金', '冬': '水', '四季末': '土' };
+        var wangElement = seasonWangMap[season] || '木';
+
+        // 五行相生相克关系
+        var shengMap = { '木': '火', '火': '土', '土': '金', '金': '水', '水': '木' };
+        var keMap = { '木': '土', '火': '金', '土': '水', '金': '木', '水': '火' };
+
+        // 季节名称
+        var seasonLabelMap = { '春': '春季', '夏': '夏季', '秋': '秋季', '冬': '冬季', '四季末': '四季末（辰戌丑未月）' };
+
+        // 生成说明文案
+        function getStateDesc(wx, state) {
+            var we = wangElement;
+            if (state === '旺') return wx + '当令，处于旺地';
+            if (state === '相') return we + '生' + wx + '，' + wx + '受旺' + we + '生扶，处于相地';
+            if (state === '休') return wx + '生' + we + '，' + we + '旺泄' + wx + '气，处于休地';
+            if (state === '囚') return wx + '被当令之' + we + '所克，处于囚地';
+            if (state === '死') return '当令' + we + '克' + wx + '，' + wx + '处于死地';
+            return '';
+        }
+
         var wsColors = { '旺': '#e53935', '相': '#43a047', '休': '#1e88e5', '囚': '#757575', '死': '#9e9e9e' };
+        var wsBgColors = { '旺': '#ffebee', '相': '#e8f5e9', '休': '#e3f2fd', '囚': '#f5f5f5', '死': '#fafafa' };
         var wxClassMap = { '金': 'wx-jin', '木': 'wx-mu', '水': 'wx-shui', '火': 'wx-huo', '土': 'wx-tu' };
 
         var html = '<div class="result-card" style="margin-top:10px;">';
         html += '<div class="result-title">五行旺衰（旺相休囚死）</div>';
-        html += '<div style="font-size:12px;color:#888;margin-bottom:8px;">月令：' + monthZhiName + '（' + season + '）</div>';
-        html += '<div style="display:flex;justify-content:space-around;flex-wrap:wrap;gap:8px;">';
+        html += '<div style="font-size:13px;color:#666;margin-bottom:10px;">月令：<strong>' + monthZhiName + '</strong>（' + seasonLabelMap[season] + '，' + wangElement + '旺）</div>';
+
+        // 五行旺衰表格
+        html += '<table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:10px;">';
+        html += '<thead><tr style="background:var(--bg-secondary);">';
+        html += '<th style="padding:6px 8px;border:1px solid var(--border-color);text-align:center;">五行</th>';
+        html += '<th style="padding:6px 8px;border:1px solid var(--border-color);text-align:center;">状态</th>';
+        html += '<th style="padding:6px 8px;border:1px solid var(--border-color);text-align:left;">说明</th>';
+        html += '</tr></thead><tbody>';
 
         ['木', '火', '土', '金', '水'].forEach(function (wx) {
             var state = rule[wx] || '—';
             var color = wsColors[state] || 'inherit';
+            var bgColor = wsBgColors[state] || 'transparent';
             var isDayMaster = (wx === dayWuXing);
-            var tag = isDayMaster ? ' <span style="font-size:10px;color:#e53935;">（日主）</span>' : '';
-            html += '<div style="text-align:center;flex:1;min-width:60px;">';
-            html += '<div class="wx-name ' + (wxClassMap[wx] || '') + '" style="margin-bottom:4px;">' + wx + tag + '</div>';
-            html += '<div style="font-size:18px;font-weight:700;color:' + color + ';">' + state + '</div>';
-            html += '</div>';
+            var tag = isDayMaster ? '（日主）' : '';
+            var desc = getStateDesc(wx, state);
+
+            html += '<tr style="background:' + bgColor + ';">';
+            html += '<td style="padding:6px 8px;border:1px solid var(--border-color);text-align:center;font-weight:600;">' + wx + '<span style="font-size:10px;color:#e53935;">' + tag + '</span></td>';
+            html += '<td style="padding:6px 8px;border:1px solid var(--border-color);text-align:center;font-weight:700;color:' + color + ';">' + state + '</td>';
+            html += '<td style="padding:6px 8px;border:1px solid var(--border-color);color:#555;">' + desc + '</td>';
+            html += '</tr>';
         });
 
-        html += '</div>';
+        html += '</tbody></table>';
 
-        // 日主旺衰说明
+        // 日主旺衰总结
         var dayState = rule[dayWuXing] || '—';
         var dayColor = wsColors[dayState] || 'inherit';
-        html += '<div style="margin-top:10px;padding:8px;background:var(--bg-secondary);border-radius:6px;font-size:12px;color:#666;line-height:1.6;">';
-        html += '日主<strong>' + dayGan + '（' + dayWuXing + '）</strong>在' + monthZhiName + '月状态为<strong style="color:' + dayColor + ';">' + dayState + '</strong>';
-        var descMap = {
-            '旺': '，得月令之气，能量最强',
-            '相': '，受月令生扶，次强',
-            '休': '，与月令同类但已退气',
-            '囚': '，被月令克制，力量受困',
-            '死': '，与月令对立，能量最弱'
-        };
-        html += (descMap[dayState] || '') + '。';
+        var dayDesc = getStateDesc(dayWuXing, dayState);
+        html += '<div style="margin-top:10px;padding:10px;background:var(--bg-secondary);border-radius:6px;font-size:13px;color:#555;line-height:1.8;border-left:3px solid ' + dayColor + ';">';
+        html += '日主<strong>' + dayGan + '（' + dayWuXing + '）</strong>在' + monthZhiName + '月为<strong style="color:' + dayColor + ';">' + dayState + '</strong>——' + dayDesc + '。';
         html += '</div>';
         html += '</div>';
 
