@@ -43,7 +43,8 @@ router.post('/login', async (req, res) => {
       httpOnly: true,
       secure: isProduction,
       sameSite: 'lax', // lax 允许同站请求和从外部链接进入时携带 Cookie
-      maxAge: 14 * 24 * 60 * 60 * 1000 // 14天
+      maxAge: 14 * 24 * 60 * 60 * 1000, // 14天
+      path: '/' // 确保 Cookie 在整个网站都有效
     });
 
     res.json({

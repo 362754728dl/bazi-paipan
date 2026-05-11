@@ -8,7 +8,16 @@ const { initDb, getDb, saveDb } = require('./db/init');
 
 const app = express();
 
-// ==================== 强制CORS配置（必须最先加载） ====================
+// ==================== 第1步：cookie-parser 必须最先加载 ====================
+app.use(cookieParser());
+
+// ==================== 第2步：Cookie 检查日志（调试用） ====================
+app.use((req, res, next) => {
+    console.log('[Cookie检查] 收到请求，URL:', req.url, 'Cookies:', JSON.stringify(req.cookies));
+    next();
+});
+
+// ==================== 第3步：强制CORS配置 ====================
 app.use((req, res, next) => {
     res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
     res.header('Access-Control-Allow-Credentials', 'true');
@@ -29,10 +38,10 @@ app.use(cors({
   credentials: true
 }));
 
+// ==================== 第4步：JSON 解析 ====================
 app.use(express.json({ limit: '1mb' }));
-app.use(cookieParser());
 
-// 安全加固：X-Frame-Options + CSP
+// ==================== 第5步：安全加固 ====================
 app.use((req, res, next) => {
     res.setHeader('X-Frame-Options', 'DENY');
     res.setHeader('Content-Security-Policy', 

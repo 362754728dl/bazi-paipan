@@ -248,8 +248,10 @@ router.post('/login', checkLoginRateLimit, async (req, res) => {
       httpOnly: true,
       secure: isProduction, // 生产环境使用 HTTPS
       sameSite: 'lax', // lax 允许同站请求和从外部链接进入时携带 Cookie
-      maxAge: 14 * 24 * 60 * 60 * 1000 // 14天
+      maxAge: 14 * 24 * 60 * 60 * 1000, // 14天
+      path: '/' // 确保 Cookie 在整个网站都有效
     });
+    console.log('[登录返回] Cookie 已设置，secure:', isProduction, 'sameSite: lax, path: /');
 
     res.json({
       code: 200,
