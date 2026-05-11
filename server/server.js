@@ -8,13 +8,10 @@ const { initDb, getDb, saveDb } = require('./db/init');
 
 const app = express();
 
-// CORS 配置：credentials: true 时，origin 必须是具体域名，不能是 * 或 true
+// CORS 配置：动态origin，解决credentials: true时跨域Cookie失效
 app.use(cors({
-  origin: function(origin, callback) {
-    // 允许无 origin 的请求（如同站请求、移动端）
-    if (!origin) return callback(null, true);
-    // 允许所有来源（生产环境可限制为具体域名）
-    return callback(null, true);
+  origin: function (origin, callback) {
+    callback(null, origin || '*');
   },
   credentials: true
 }));
