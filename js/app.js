@@ -1198,7 +1198,8 @@ const App = (function () {
     }
 
     /**
-     * 渲染五行旺衰（旺相休囚死）
+     * 渲染五行旺衰（旺相休囚死）—— 查表法，彻底根治"状态为一"Bug
+     * 数据来源：十天干在十二个月令中的旺相休囚死完整对照表
      */
     function renderWuXingWangShuai(result) {
         var monthZhiIdx = result.pillars.month.zhiIndex;
@@ -1210,41 +1211,66 @@ const App = (function () {
         var dayYinYang = (dayGanIdx % 2 === 0) ? '阳' : '阴';
         var dayLabel = dayGan + '（' + dayYinYang + dayWuXing + '）';
 
-        // 月令地支 → 季节
-        var seasonMap = { 2: '春', 3: '春', 4: '春', 5: '夏', 6: '夏', 7: '夏', 8: '秋', 9: '秋', 10: '秋', 11: '冬', 0: '冬', 1: '冬' };
+        // 地支名称
         var zhiNames = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥'];
-        var zhiMonthNames = { 2: '正月', 3: '二月', 4: '三月', 5: '四月', 6: '五月', 7: '六月', 8: '七月', 9: '八月', 10: '九月', 11: '十月', 0: '十一月', 1: '十二月' };
-        var season = seasonMap[monthZhiIdx] || '春';
+        var zhiMonthNames = { 0: '十一月', 1: '十二月', 2: '正月', 3: '二月', 4: '三月', 5: '四月', 6: '五月', 7: '六月', 8: '七月', 9: '八月', 10: '九月', 11: '十月' };
         var monthZhiName = zhiNames[monthZhiIdx] || '';
 
-        // 旺相休囚死规则
-        var rules = {
-            '春': { '木': '旺', '火': '相', '水': '休', '金': '囚', '土': '死' },
-            '夏': { '火': '旺', '土': '相', '木': '休', '水': '囚', '金': '死' },
-            '秋': { '金': '旺', '水': '相', '土': '休', '火': '囚', '木': '死' },
-            '冬': { '水': '旺', '木': '相', '金': '休', '土': '囚', '火': '死' },
-            '四季末': { '土': '旺', '金': '相', '火': '休', '木': '囚', '水': '死' }
-        };
+        // ========== 完整对照表：十天干 × 十二月令 = 旺相休囚死 ==========
+        // 索引：dayGanIdx(0-9) × monthZhiIdx(0-11)
+        // 天干：0甲 1乙 2丙 3丁 4戊 5己 6庚 7辛 8壬 9癸
+        // 地支：0子 1丑 2寅 3卯 4辰 5巳 6午 7未 8申 9酉 10戌 11亥
+        var TABLE = [
+            // 甲(0): 子  丑  寅  卯  辰  巳  午  未  申  酉  戌  亥
+            /* 甲 */ ['相','旺','旺','旺','相','休','休','囚','囚','囚','休','相'],
+            // 乙(1): 子  丑  寅  卯  辰  巳  午  未  申  酉  戌  亥
+            /* 乙 */ ['相','旺','旺','旺','相','休','休','囚','囚','囚','休','相'],
+            // 丙(2): 子  丑  寅  卯  辰  巳  午  未  申  酉  戌  亥
+            /* 丙 */ ['死','休','相','相','休','旺','旺','休','囚','囚','相','死'],
+            // 丁(3): 子  丑  寅  卯  辰  巳  午  未  申  酉  戌  亥
+            /* 丁 */ ['死','休','相','相','休','旺','旺','休','囚','囚','相','死'],
+            // 戊(4): 子  丑  寅  卯  辰  巳  午  未  申  酉  戌  亥
+            /* 戊 */ ['囚','相','死','死','旺','相','相','旺','休','休','旺','囚'],
+            // 己(5): 子  丑  寅  卯  辰  巳  午  未  申  酉  戌  亥
+            /* 己 */ ['囚','相','死','死','旺','相','相','旺','休','休','旺','囚'],
+            // 庚(6): 子  丑  寅  卯  辰  巳  午  未  申  酉  戌  亥
+            /* 庚 */ ['休','旺','囚','囚','死','死','死','相','旺','旺','死','休'],
+            // 辛(7): 子  丑  寅  卯  辰  巳  午  未  申  酉  戌  亥
+            /* 辛 */ ['休','旺','囚','囚','死','死','死','相','旺','旺','死','休'],
+            // 壬(8): 子  丑  寅  卯  辰  巳  午  未  申  酉  戌  亥
+            /* 壬 */ ['旺','相','休','休','囚','死','死','死','相','相','囚','旺'],
+            // 癸(9): 子  丑  寅  卯  辰  巳  午  未  申  酉  戌  亥
+            /* 癸 */ ['旺','相','休','休','囚','死','死','死','相','相','囚','旺']
+        ];
 
-        // 辰戌丑未为四季末
-        if ([4, 10, 6, 0].indexOf(monthZhiIdx) !== -1) {
-            season = '四季末';
-        }
-        var rule = rules[season] || rules['春'];
+        // 查表获取日主状态
+        var dayState = (TABLE[dayGanIdx] && TABLE[dayGanIdx][monthZhiIdx]) || '—';
 
-        // 当令五行
-        var seasonWangMap = { '春': '木', '夏': '火', '秋': '金', '冬': '水', '四季末': '土' };
-        var wangElement = seasonWangMap[season] || '木';
+        // 当令五行（根据月令地支）
+        var wangMap = { 2: '木', 3: '木', 5: '火', 6: '火', 8: '金', 9: '金', 11: '水', 0: '水', 4: '土', 10: '土', 1: '土', 7: '土' };
+        var wangElement = wangMap[monthZhiIdx] || '木';
 
         // 季节描述
-        var seasonDescMap = {
-            '春': '木旺的春季',
-            '夏': '火旺的夏季',
-            '秋': '金旺的秋季',
-            '冬': '水旺的冬季',
-            '四季末': '土旺的四季末'
+        var seasonLabelMap = { 2: '春季', 3: '春季', 5: '夏季', 6: '夏季', 8: '秋季', 9: '秋季', 11: '冬季', 0: '冬季', 4: '四季末', 10: '四季末', 1: '四季末', 7: '四季末' };
+        var seasonDescMap = { 2: '木旺的春季', 3: '木旺的春季', 5: '火旺的夏季', 6: '火旺的夏季', 8: '金旺的秋季', 9: '金旺的秋季', 11: '水旺的冬季', 0: '水旺的冬季', 4: '土旺的四季末', 10: '土旺的四季末', 1: '土旺的四季末', 7: '土旺的四季末' };
+        var season = seasonLabelMap[monthZhiIdx] || '春季';
+
+        // 五行在月令的状态（用于详情表格）
+        var wxRuleMap = {
+            2: { '木': '旺', '火': '相', '水': '休', '金': '囚', '土': '死' },
+            3: { '木': '旺', '火': '相', '水': '休', '金': '囚', '土': '死' },
+            5: { '火': '旺', '土': '相', '木': '休', '水': '囚', '金': '死' },
+            6: { '火': '旺', '土': '相', '木': '休', '水': '囚', '金': '死' },
+            8: { '金': '旺', '水': '相', '土': '休', '火': '囚', '木': '死' },
+            9: { '金': '旺', '水': '相', '土': '休', '火': '囚', '木': '死' },
+            11: { '水': '旺', '木': '相', '金': '休', '土': '囚', '火': '死' },
+            0: { '水': '旺', '木': '相', '金': '休', '土': '囚', '火': '死' },
+            4: { '土': '旺', '金': '相', '火': '休', '木': '囚', '水': '死' },
+            10: { '土': '旺', '金': '相', '火': '休', '木': '囚', '水': '死' },
+            1: { '土': '旺', '金': '相', '火': '休', '木': '囚', '水': '死' },
+            7: { '土': '旺', '金': '相', '火': '休', '木': '囚', '水': '死' }
         };
-        var seasonLabelMap = { '春': '春季', '夏': '夏季', '秋': '秋季', '冬': '冬季', '四季末': '四季末（辰戌丑未月）' };
+        var wxRule = wxRuleMap[monthZhiIdx] || wxRuleMap[2];
 
         // 五行旺衰详情说明
         function getStateDesc(wx, state) {
@@ -1252,31 +1278,29 @@ const App = (function () {
             if (state === '旺') return we + '当令，处于旺地';
             if (state === '相') return we + '生' + wx + '，' + wx + '受旺' + we + '生扶，处于相地';
             if (state === '休') return wx + '生' + we + '，' + we + '旺泄' + wx + '气，处于休地';
-            if (state === '囚') return wx + '克' + we + '，但' + we + '旺反侮' + wx + '，处于囚地';
+            if (state === '囚') return wx + '被当令之' + we + '所困，处于囚地';
             if (state === '死') return '当令' + we + '克' + wx + '，' + wx + '气凋零，处于死地';
             return '';
         }
 
         // 日主状态注解模板
         function getDayMasterAnnotation(state) {
-            var X = dayLabel;
-            var Y = wangElement;
-            var Z = monthZhiName + '月（' + (zhiMonthNames[monthZhiIdx] || '') + '，' + seasonDescMap[season] + '）';
+            var Z = monthZhiName + '月（' + (zhiMonthNames[monthZhiIdx] || '') + '，' + (seasonDescMap[monthZhiIdx] || '') + '）';
 
             if (state === '旺') {
-                return '在命理学中，"旺"指的是当令得时的强盛状态。你的日主是' + X + '，生于' + Z + '，正值' + Y + '当令的季节，得天时之力，处于"旺"地，力量充沛，命局根基强健。';
+                return '在命理学中，"旺"指的是当令得时的强盛状态。你的日主是' + dayLabel + '，生于' + Z + '，正值' + dayWuXing + '当令的季节，得天时之力，处于"旺"地，力量充沛，命局根基强健。';
             }
             if (state === '相') {
-                return '在命理学中，"相"指的是受旺气生扶的次旺状态。你的日主是' + X + '，生于' + Z + '，' + Y + '旺生' + dayWuXing + '，' + dayWuXing + '受当令旺气生扶，处于"相"地，力量较为充足。';
+                return '在命理学中，"相"指的是受旺气生扶的次旺状态。你的日主是' + dayLabel + '，生于' + Z + '。' + wangElement + '旺而生' + dayWuXing + '，' + dayWuXing + '受当令旺气生扶，处于"相"地，力量较为充足。';
             }
             if (state === '休') {
-                return '在命理学中，"休"指的是休囚无力的状态。你的日主是' + X + '，生于' + Z + '。五行关系中' + dayWuXing + '生' + Y + '，' + Y + '旺会泄掉' + dayWuXing + '的力量，所以' + dayWuXing + '在' + monthZhiName + '月处于"休"的状态，不得月令，力量被泄。';
+                return '在命理学中，"休"指的是休囚无力的状态。你的日主是' + dayLabel + '，生于' + Z + '。五行关系中' + dayWuXing + '生' + wangElement + '，' + wangElement + '旺会泄掉' + dayWuXing + '的力量，所以' + dayWuXing + '在此月处于"休"的状态，不得月令，力量被泄。';
             }
             if (state === '囚') {
-                return '在命理学中，"囚"指的是被克制而无力的状态。你的日主是' + X + '，生于' + Z + '。五行关系中' + dayWuXing + '克' + Y + '，但' + Y + '当令而旺，' + dayWuXing + '反而被' + Y + '所困，处于"囚"的状态，有志难伸。';
+                return '在命理学中，"囚"指的是被克制而无力的状态。你的日主是' + dayLabel + '，生于' + Z + '。五行关系中' + dayWuXing + '克' + wangElement + '，但' + wangElement + '当令而旺，' + dayWuXing + '反而被' + wangElement + '所困，处于"囚"的状态，有志难伸。';
             }
             if (state === '死') {
-                return '在命理学中，"死"指的是被旺气所克的衰弱状态。你的日主是' + X + '，生于' + Z + '。五行关系中' + Y + '克' + dayWuXing + '，当令之' + Y + '压制' + dayWuXing + '，' + dayWuXing + '处于"死"地，力量衰弱，最不得时。';
+                return '在命理学中，"死"指的是被旺气所克的衰弱状态。你的日主是' + dayLabel + '，生于' + Z + '。五行关系中' + wangElement + '克' + dayWuXing + '，当令之' + wangElement + '压制' + dayWuXing + '，' + dayWuXing + '处于"死"地，力量衰弱，最不得时。';
             }
             return '';
         }
@@ -1286,10 +1310,9 @@ const App = (function () {
 
         var html = '<div class="result-card" style="margin-top:10px;">';
         html += '<div class="result-title">五行旺衰（旺相休囚死）</div>';
-        html += '<div style="font-size:13px;color:#666;margin-bottom:10px;">月令：<strong>' + monthZhiName + '</strong>（' + seasonLabelMap[season] + '，' + wangElement + '旺）</div>';
+        html += '<div style="font-size:13px;color:#666;margin-bottom:10px;">月令：<strong>' + monthZhiName + '</strong>（' + (seasonLabelMap[monthZhiIdx] || season) + '，' + wangElement + '旺）</div>';
 
-        // 日主状态摘要
-        var dayState = rule[dayWuXing] || '—';
+        // 日主状态摘要（直接查表，不再动态计算）
         var dayColor = wsColors[dayState] || 'inherit';
         html += '<div style="padding:10px 12px;background:var(--bg-secondary);border-radius:6px;font-size:13px;color:#333;line-height:1.8;margin-bottom:10px;border-left:3px solid ' + dayColor + ';">';
         html += '日主为<strong>' + dayLabel + '</strong>，生于' + monthZhiName + '月，状态为<strong style="color:' + dayColor + ';">【' + dayState + '】</strong>。';
@@ -1313,7 +1336,7 @@ const App = (function () {
         html += '</tr></thead><tbody>';
 
         ['木', '火', '土', '金', '水'].forEach(function (wx) {
-            var state = rule[wx] || '—';
+            var state = wxRule[wx] || '—';
             var color = wsColors[state] || 'inherit';
             var bgColor = wsBgColors[state] || 'transparent';
             var isDayMaster = (wx === dayWuXing);
