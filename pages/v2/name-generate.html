@@ -1308,6 +1308,7 @@
             headers: {
                 'Content-Type': 'application/json'
             },
+            credentials: 'same-origin',
             body: JSON.stringify({
                 provider: AI_CONFIG[AI_CONFIG.default],
                 messages: [
@@ -2056,6 +2057,7 @@ var NameRecordStore = {
                 fetch(apiUrl, {
                     method: 'POST',
                     headers: V2API.getHeaders(),
+                    credentials: 'same-origin',
                     body: JSON.stringify(payload)
                 }).catch(function(err) { console.error('API保存记录失败:', err); });
             }
