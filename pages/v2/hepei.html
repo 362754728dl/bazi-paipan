@@ -490,6 +490,10 @@
                 <label>出生时</label>
                 <select id="hourA"></select>
             </div>
+            <div class="form-group">
+                <label>出生分</label>
+                <select id="minuteA"></select>
+            </div>
         </div>
         <div class="form-row">
             <div class="form-group">
@@ -545,6 +549,10 @@
             <div class="form-group">
                 <label>出生时</label>
                 <select id="hourB"></select>
+            </div>
+            <div class="form-group">
+                <label>出生分</label>
+                <select id="minuteB"></select>
             </div>
         </div>
         <div class="form-row">
@@ -675,6 +683,19 @@
                     opt.textContent = h + '时';
                 }
                 if (h === 8) opt.selected = true;
+                sel.appendChild(opt);
+            }
+        });
+
+        // 分钟 0-59
+        var minutes = ['minuteA', 'minuteB'];
+        minutes.forEach(function(id) {
+            var sel = document.getElementById(id);
+            if (!sel) return;
+            for (var m = 0; m < 60; m++) {
+                var opt = document.createElement('option');
+                opt.value = m;
+                opt.textContent = m < 10 ? '0' + m + '分' : m + '分';
                 sel.appendChild(opt);
             }
         });
@@ -964,11 +985,13 @@
         var monthA = parseInt(document.getElementById('monthA').value);
         var dayA = parseInt(document.getElementById('dayA').value);
         var hourA = parseInt(document.getElementById('hourA').value);
+        var minuteA = parseInt(document.getElementById('minuteA').value);
 
         var yearB = parseInt(document.getElementById('yearB').value);
         var monthB = parseInt(document.getElementById('monthB').value);
         var dayB = parseInt(document.getElementById('dayB').value);
         var hourB = parseInt(document.getElementById('hourB').value);
+        var minuteB = parseInt(document.getElementById('minuteB').value);
 
         if (dayA > getDaysInMonth(yearA, monthA)) {
             alert('甲方出生日期不合法');
@@ -990,8 +1013,8 @@
         var lngB = getCityLongitude('B');
 
         // 生成双方排盘
-        var resultA = Bazi.generate(yearA, monthA, dayA, hourA, 0, genderA, lngA);
-        var resultB = Bazi.generate(yearB, monthB, dayB, hourB, 0, genderB, lngB);
+        var resultA = Bazi.generate(yearA, monthA, dayA, hourA, minuteA, genderA, lngA);
+        var resultB = Bazi.generate(yearB, monthB, dayB, hourB, minuteB, genderB, lngB);
 
         if (!resultA || !resultB) {
             alert('排盘失败，请检查输入的日期是否正确');
@@ -1054,11 +1077,13 @@
         var monthA = parseInt(document.getElementById('monthA').value);
         var dayA = parseInt(document.getElementById('dayA').value);
         var hourA = parseInt(document.getElementById('hourA').value);
+        var minuteA = parseInt(document.getElementById('minuteA').value);
 
         var yearB = parseInt(document.getElementById('yearB').value);
         var monthB = parseInt(document.getElementById('monthB').value);
         var dayB = parseInt(document.getElementById('dayB').value);
         var hourB = parseInt(document.getElementById('hourB').value);
+        var minuteB = parseInt(document.getElementById('minuteB').value);
 
         // 验证日期
         if (dayA > getDaysInMonth(yearA, monthA)) {
@@ -1081,8 +1106,8 @@
         var lngB = getCityLongitude('B');
 
         // 生成双方排盘
-        var resultA = Bazi.generate(yearA, monthA, dayA, hourA, 0, genderA, lngA);
-        var resultB = Bazi.generate(yearB, monthB, dayB, hourB, 0, genderB, lngB);
+        var resultA = Bazi.generate(yearA, monthA, dayA, hourA, minuteA, genderA, lngA);
+        var resultB = Bazi.generate(yearB, monthB, dayB, hourB, minuteB, genderB, lngB);
 
         if (!resultA || !resultB) {
             alert('排盘失败，请检查输入的日期是否正确');
@@ -1318,6 +1343,8 @@
 
             var hourSel = document.getElementById('hour' + party);
             if (hourSel) hourSel.value = birthHour;
+            var minuteSel = document.getElementById('minute' + party);
+            if (minuteSel) minuteSel.value = birthMinute;
             // 填充省市（兼容新旧数据格式）
             var formData = record.formData || record;
             if (formData.province) {
