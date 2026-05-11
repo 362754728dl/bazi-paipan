@@ -183,9 +183,24 @@ const RelationAnalyzer = (function() {
         });
 
         // 1. 检查三刑（力量最大）
+        // 无恩之刑(寅巳申)和恃势之刑(丑戌未)：必须三字全齐
+        // 无礼之刑(子卯)：两字同时存在即可
         for (let xing of diZhiSanXing) {
             const matched = xing.zhi.filter(z => zhiSet.includes(z));
-            if (matched.length >= 2) {
+            const requireAll = xing.zhi.length === 3; // 三字刑需要全齐
+            if (requireAll && matched.length === 3) {
+                const matchedPositions = matched.map(z => positions[zhiList.indexOf(z)]);
+                results.push({
+                    type: 'xing',
+                    name: xing.name,
+                    display: '[刑] ' + xing.name + '（' + xing.type + '）',
+                    zhi: matched,
+                    positions: matchedPositions,
+                    category: '刑',
+                    strength: 7
+                });
+            } else if (!requireAll && matched.length === 2) {
+                // 无礼之刑(子卯)：两字即可
                 const matchedPositions = matched.map(z => positions[zhiList.indexOf(z)]);
                 results.push({
                     type: 'xing',
