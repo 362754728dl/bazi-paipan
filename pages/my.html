@@ -6,22 +6,26 @@
     <title>个人中心</title>
     <style>
     :root {
-        --bg-primary: #F5F0E8;
-        --bg-secondary: #FFF8EE;
-        --bg-card: #FFFCF5;
-        --border-color: #D4C5A0;
-        --border-dark: #B8A472;
-        --text-primary: #3D2B1F;
-        --text-secondary: #6B5B4E;
-        --text-light: #8C7B6B;
-        --red-primary: #A81216;
-        --red-dark: #8B1A1A;
-        --red-light: #E8D0D0;
-        --gold: #C8A84E;
-        --gold-light: #E8D48C;
-        --green: #4A7C59;
-        --shadow: rgba(61, 43, 31, 0.1);
-        --shadow-strong: rgba(61, 43, 31, 0.2);
+        --bg-primary: #0D1117;
+        --bg-secondary: #161B22;
+        --bg-card: rgba(26, 26, 46, 0.75);
+        --border-color: rgba(201, 169, 110, 0.15);
+        --border-gold: rgba(201, 169, 110, 0.3);
+        --border-dark: rgba(201, 169, 110, 0.25);
+        --text-primary: #E8F4F8;
+        --text-secondary: #A0B3C0;
+        --text-light: #6B7B8A;
+        --gold-primary: #C9A96E;
+        --gold-dark: #A68A4D;
+        --gold: #C9A96E;
+        --gold-light: rgba(201, 169, 110, 0.2);
+        --red-primary: #E74C3C;
+        --red-dark: #C0392B;
+        --red-light: rgba(231, 76, 60, 0.15);
+        --green: #2E8B57;
+        --blue: #4A90A4;
+        --shadow: rgba(0, 0, 0, 0.3);
+        --shadow-strong: rgba(0, 0, 0, 0.5);
     }
 
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -38,8 +42,8 @@
 
     /* ==================== 顶部标题栏 ==================== */
     .header {
-        background: linear-gradient(135deg, var(--red-dark), var(--red-primary));
-        color: #FFF;
+        background: linear-gradient(135deg, var(--gold-dark), var(--gold-primary));
+        color: var(--bg-card);
         padding: 15px 20px;
         text-align: center;
         position: sticky;
@@ -57,7 +61,7 @@
         left: 15px;
         top: 50%;
         transform: translateY(-50%);
-        color: #FFF;
+        color: var(--bg-card);
         text-decoration: none;
         font-size: 14px;
         opacity: 0.9;
@@ -73,7 +77,7 @@
 
     /* ==================== 用户信息卡片 ==================== */
     .user-card {
-        background: #FFF;
+        background: rgba(26, 26, 46, 0.75); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(201, 169, 110, 0.15);
         border-radius: 12px;
         padding: 20px 16px;
         margin-bottom: 12px;
@@ -91,9 +95,9 @@
         justify-content: center;
         font-size: 20px;
         font-weight: 700;
-        color: #FFF;
+        color: var(--bg-card);
         flex-shrink: 0;
-        background: linear-gradient(135deg, var(--red-dark), var(--red-primary));
+        background: linear-gradient(135deg, var(--gold-dark), var(--gold-primary));
     }
     .avatar.gray { background: #BFBFBF; }
     .user-info {
@@ -115,19 +119,19 @@
         display: inline-block;
         padding: 5px 14px;
         font-size: 12px;
-        color: var(--red-primary);
+        color: var(--gold-primary);
         background: transparent;
-        border: 1px solid var(--red-primary);
+        border: 1px solid var(--gold-primary);
         border-radius: 6px;
         cursor: pointer;
         transition: all 0.2s;
         letter-spacing: 1px;
     }
-    .btn-change-pwd:active { background: var(--red-light); }
+    .btn-change-pwd:active { background: var(--gold-light); }
 
     /* ==================== 通用卡片 ==================== */
     .section-card {
-        background: #FFF;
+        background: rgba(26, 26, 46, 0.75); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(201, 169, 110, 0.15);
         border-radius: 12px;
         margin-bottom: 12px;
         box-shadow: 0 2px 8px var(--shadow);
@@ -180,7 +184,7 @@
         align-items: center;
         justify-content: space-between;
         padding: 10px 0;
-        border-bottom: 1px solid #F5F0E8;
+        border-bottom: 1px solid var(--bg-primary);
     }
     .footprint-item:last-child { border-bottom: none; }
     .footprint-item .label {
@@ -200,7 +204,7 @@
 
     /* ==================== 暖心文案 ==================== */
     .warm-text-card {
-        background: #FFF;
+        background: rgba(26, 26, 46, 0.75); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(201, 169, 110, 0.15);
         border-radius: 12px;
         margin-bottom: 12px;
         padding: 20px 16px;
@@ -220,7 +224,7 @@
 
     /* ==================== 底部微信入口 ==================== */
     .wechat-card {
-        background: #FFF;
+        background: rgba(26, 26, 46, 0.75); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(201, 169, 110, 0.15);
         border-radius: 12px;
         margin-bottom: 12px;
         padding: 16px;
@@ -235,7 +239,7 @@
     .wechat-card .wechat-id {
         font-size: 16px;
         font-weight: 600;
-        color: var(--red-primary);
+        color: var(--gold-primary);
         letter-spacing: 1px;
     }
 
@@ -252,12 +256,12 @@
         font-size: 14px;
         font-weight: 500;
         cursor: pointer;
-        color: var(--red-primary);
+        color: var(--gold-primary);
         background: transparent;
         letter-spacing: 1px;
         transition: all 0.2s;
     }
-    .btn-logout:active { background: var(--red-light); }
+    .btn-logout:active { background: var(--gold-light); }
 
     /* ==================== 底部合规声明 ==================== */
     .disclaimer {
@@ -288,16 +292,16 @@
     }
     .btn:active { transform: scale(0.98); }
     .btn-primary {
-        background: linear-gradient(135deg, var(--red-dark), var(--red-primary));
-        color: #FFF;
+        background: linear-gradient(135deg, var(--gold-dark), var(--gold-primary));
+        color: var(--bg-card);
         box-shadow: 0 2px 6px rgba(168, 18, 22, 0.3);
     }
     .btn-outline {
         background: transparent;
-        color: var(--red-primary);
-        border: 1px solid var(--red-primary);
+        color: var(--gold-primary);
+        border: 1px solid var(--gold-primary);
     }
-    .btn-outline:active { background: var(--red-light); }
+    .btn-outline:active { background: var(--gold-light); }
     .auth-actions .btn {
         flex: 1;
         padding: 8px 0;
@@ -324,7 +328,7 @@
     }
     .modal-overlay.show { display: flex; }
     .modal-box {
-        background: #FFF;
+        background: rgba(26, 26, 46, 0.75); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(201, 169, 110, 0.15);
         border-radius: 12px;
         padding: 24px 20px 20px;
         width: 320px;
@@ -351,7 +355,7 @@
     .modal-box .form-group input {
         width: 100%;
         padding: 10px 12px;
-        border: 1px solid var(--border-color);
+        border: 1px solid rgba(201, 169, 110, 0.15);
         border-radius: 8px;
         background: var(--bg-secondary);
         color: var(--text-primary);
@@ -359,7 +363,7 @@
     }
     .modal-box .form-group input:focus {
         outline: none;
-        border-color: var(--red-primary);
+        border-color: var(--gold-primary);
         box-shadow: 0 0 0 2px rgba(168, 18, 22, 0.1);
     }
     .modal-actions {
@@ -514,7 +518,7 @@
             <label>验证码</label>
             <div style="display:flex;align-items:center;gap:10px;">
                 <input type="text" id="loginCaptchaInput" placeholder="请输入验证码" maxlength="4" style="flex:1;" autocomplete="off">
-                <img id="loginCaptchaImg" src="/api/captcha?t=1" alt="验证码" title="点击刷新验证码" style="cursor:pointer;height:40px;border-radius:4px;border:1px solid var(--border-color);flex-shrink:0;">
+                <img id="loginCaptchaImg" src="/api/captcha?t=1" alt="验证码" title="点击刷新验证码" style="cursor:pointer;height:40px;border-radius:4px;border: 1px solid rgba(201, 169, 110, 0.15);flex-shrink:0;">
             </div>
         </div>
         <div class="modal-actions">
@@ -522,7 +526,7 @@
             <button class="btn btn-primary" id="loginModalSubmit">登录</button>
         </div>
         <div style="text-align:center;margin-top:12px;font-size:13px;color:var(--text-secondary);">
-            <span id="loginSwitchHint">没有账号？</span><a href="javascript:void(0)" id="loginSwitchLink" style="color:var(--red-primary);text-decoration:none;">去注册</a>
+            <span id="loginSwitchHint">没有账号？</span><a href="javascript:void(0)" id="loginSwitchLink" style="color:var(--gold-primary);text-decoration:none;">去注册</a>
         </div>
     </div>
 </div>
@@ -885,5 +889,8 @@
 })();
 </script>
 
+<footer style="text-align:center;padding:20px 15px;color:var(--text-light);font-size:12px;border-top:1px solid var(--border-color);margin-top:20px;">
+    <p>© 2026 五行鲤 ｜ 传统民俗文化参考，不构成人生决策依据</p>
+</footer>
 </body>
 </html>

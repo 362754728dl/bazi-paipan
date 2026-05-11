@@ -10,22 +10,26 @@
     <style>
     /* ==================== CSS变量 ==================== */
     :root {
-        --bg-primary: #F5F0E8;
-        --bg-secondary: #FFF8EE;
-        --bg-card: #FFFCF5;
-        --border-color: #D4C5A0;
-        --text-primary: #3D2B1F;
-        --text-secondary: #6B5B4E;
-        --text-light: #8C7B6B;
-        --red-primary: #A81216;
-        --gold: #C8A84E;
+        --bg-primary: #0D1117;
+        --bg-secondary: #161B22;
+        --bg-card: rgba(26, 26, 46, 0.75);
+        --border-color: rgba(201, 169, 110, 0.15);
+        --border-gold: rgba(201, 169, 110, 0.3);
+        --border-dark: rgba(201, 169, 110, 0.25);
+        --text-primary: #E8F4F8;
+        --text-secondary: #A0B3C0;
+        --text-light: #6B7B8A;
+        --gold-primary: #C9A96E;
+        --gold-dark: #A68A4D;
+        --gold: #C9A96E;
+        --gold-light: rgba(201, 169, 110, 0.2);
+        --red-primary: #E74C3C;
+        --red-dark: #C0392B;
+        --red-light: rgba(231, 76, 60, 0.15);
         --green: #2E8B57;
-        --blue: #1a73e8;
-        --wx-wood: #2E8B57;
-        --wx-fire: #DC143C;
-        --wx-earth: #8B4513;
-        --wx-metal: #DAA520;
-        --wx-water: #4169E1;
+        --blue: #4A90A4;
+        --shadow: rgba(0, 0, 0, 0.3);
+        --shadow-strong: rgba(0, 0, 0, 0.5);
     }
 
     /* ==================== 全局重置 ==================== */
@@ -42,8 +46,8 @@
 
     /* ==================== 顶部标题栏 ==================== */
     .header {
-        background: linear-gradient(135deg, #8B1A1A, #A81216);
-        color: #FFF;
+        background: linear-gradient(135deg, #8B1A1A, var(--gold-primary));
+        color: var(--bg-card);
         padding: 15px 20px;
         text-align: center;
         position: sticky;
@@ -61,7 +65,7 @@
         left: 15px;
         top: 50%;
         transform: translateY(-50%);
-        color: #FFF;
+        color: var(--bg-card);
         text-decoration: none;
         font-size: 14px;
         opacity: 0.9;
@@ -97,7 +101,7 @@
     .selector-select {
         flex: 1;
         padding: 8px 10px;
-        border: 1px solid var(--border-color);
+        border: 1px solid rgba(201, 169, 110, 0.15);
         border-radius: 6px;
         background: var(--bg-secondary);
         color: var(--text-primary);
@@ -150,12 +154,12 @@
     /* ===== 选中日期样式（深蓝背景+白色文字）===== */
     .calendar-day.selected {
         background: #1a73e8 !important;
-        color: #ffffff !important;
+        color: var(--bg-card) !important;
         border-radius: 8px;
     }
     .calendar-day.selected .day-solar {
-        color: #ffffff !important;
-        -webkit-text-fill-color: #ffffff !important;
+        color: var(--bg-card) !important;
+        -webkit-text-fill-color: var(--bg-card) !important;
     }
     .calendar-day.selected .day-lunar,
     .calendar-day.selected .day-ganzhi {
@@ -166,8 +170,8 @@
         color: #CC0000 !important;
     }
     .calendar-day.selected.weekend .day-solar {
-        color: #ffffff !important;
-        -webkit-text-fill-color: #ffffff !important;
+        color: var(--bg-card) !important;
+        -webkit-text-fill-color: var(--bg-card) !important;
     }
     /* ===== 今天标记 ===== */
     .calendar-day.today:not(.selected) {
@@ -208,7 +212,7 @@
 
     /* ==================== 十二时辰选择栏 ==================== */
     .shichen-bar {
-        background: #fff;
+        background: var(--bg-card);
         border-radius: 8px;
         padding: 12px;
         margin-bottom: 12px;
@@ -218,7 +222,7 @@
     .shichen-bar .shichen-title {
         font-size: 14px;
         font-weight: bold;
-        color: #333;
+        color: var(--text-primary);
         margin-bottom: 8px;
     }
     .shichen-list {
@@ -235,7 +239,7 @@
         align-items: center;
         gap: 1px;
         border: 1px solid #ddd;
-        background: #fff;
+        background: var(--bg-card);
         font-size: 13px;
         color: #555;
         cursor: pointer;
@@ -246,15 +250,15 @@
     .shichen-btn:active { transform: scale(0.95); }
     .shichen-btn.active {
         background: #1a73e8;
-        color: #fff;
+        color: var(--bg-card);
         border-color: #1a73e8;
     }
     .shichen-btn.active .shichen-range { color: rgba(255, 255, 255, 0.75); }
 
     /* ==================== 排盘结果卡片 ==================== */
     .result-card {
-        background: var(--bg-card);
-        border: 1px solid var(--border-color);
+        background: rgba(26, 26, 46, 0.75); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(201, 169, 110, 0.15);
+        border: 1px solid rgba(201, 169, 110, 0.15);
         border-radius: 12px;
         padding: 20px 15px;
         margin-top: 12px;
@@ -264,7 +268,7 @@
         text-align: center;
         font-size: 18px;
         font-weight: 600;
-        color: var(--red-primary);
+        color: var(--gold-primary);
         margin-bottom: 15px;
         letter-spacing: 2px;
         padding-bottom: 10px;
@@ -294,8 +298,8 @@
         text-align: center;
     }
     .bazi-table th {
-        background: var(--red-primary);
-        color: #FFF;
+        background: var(--gold-primary);
+        color: var(--bg-card);
         padding: 8px 4px;
         font-size: 13px;
         font-weight: 500;
@@ -319,7 +323,7 @@
     }
     .bazi-table .shishen-cell {
         font-size: 12px;
-        color: var(--red-primary);
+        color: var(--gold-primary);
         font-weight: 500;
     }
     .bazi-table .canggan-cell {
@@ -342,8 +346,8 @@
         font-weight: 500;
         width: 48px;
     }
-    .bazi-bg-light td { background: #FAF6F0; }
-    .bazi-bg-dark td { background: #EDE8E0; }
+    .bazi-bg-light td { background: rgba(26, 26, 46, 0.5); }
+    .bazi-bg-dark td { background: rgba(26, 26, 46, 0.6); }
     .kongwang-cell {
         font-size: 11px;
         color: var(--text-secondary);
@@ -418,7 +422,7 @@
     }
     .huangli-box {
         background: var(--bg-secondary);
-        border: 1px solid var(--border-color);
+        border: 1px solid rgba(201, 169, 110, 0.15);
         border-radius: 8px;
         padding: 10px 12px;
     }
@@ -464,7 +468,7 @@
         text-align: center;
         padding: 20px;
         margin-top: 20px;
-        background: linear-gradient(135deg, #FFF8EE, #FFFCF5);
+        background: linear-gradient(135deg, var(--bg-secondary), var(--bg-card));
         border: 2px solid var(--gold);
         border-radius: 12px;
     }
@@ -578,13 +582,13 @@
     function getGanColor(ganIdx) {
         var wx = Lunar.wuXingGan[ganIdx];
         var colors = { '金': '#DAA520', '木': '#2E8B57', '水': '#4169E1', '火': '#DC143C', '土': '#8B4513' };
-        return colors[wx] || '#333';
+        return colors[wx] || 'var(--text-primary)';
     }
 
     function getZhiColor(zhiIdx) {
         var wx = Lunar.wuXingZhi[zhiIdx];
         var colors = { '金': '#DAA520', '木': '#2E8B57', '水': '#4169E1', '火': '#DC143C', '土': '#8B4513' };
-        return colors[wx] || '#333';
+        return colors[wx] || 'var(--text-primary)';
     }
 
     // ==================== 初始化 ====================
@@ -891,7 +895,7 @@
             if (analysis.diZhiRelations.length > 0) {
                 analysis.diZhiRelations.forEach(function(r) {
                     var colors = { '刑': '#8B0000', '冲': '#DC143C', '害': '#FF6347', '破': '#FF8C00', '合': '#2E8B57', '会': '#4169E1', '自刑': '#8B0000', '半合': '#2E8B57' };
-                    var color = colors[r.category] || '#333';
+                    var color = colors[r.category] || 'var(--text-primary)';
                     dzHtml += '<div style="padding:6px 0;font-size:13px;"><span style="color:' + color + ';font-weight:bold;">' + r.display + '</span></div>';
                 });
             } else {
@@ -911,7 +915,7 @@
 
         // 返回顶部按钮
         html += '<div style="text-align:center;margin:20px 0 10px;">';
-        html += '<button onclick="window.scrollTo({top:0,behavior:\'smooth\'})" style="padding:8px 24px;background:var(--bg-secondary);color:var(--text-secondary);border:1px solid var(--border-color);border-radius:20px;font-size:13px;cursor:pointer;">返回顶部</button>';
+        html += '<button onclick="window.scrollTo({top:0,behavior:\'smooth\'})" style="padding:8px 24px;background:var(--bg-secondary);color:var(--text-secondary);border: 1px solid rgba(201, 169, 110, 0.15);border-radius:20px;font-size:13px;cursor:pointer;">返回顶部</button>';
         html += '</div>';
 
         document.getElementById('resultArea').innerHTML = html;
@@ -978,5 +982,8 @@
 })();
 </script>
 
+<footer style="text-align:center;padding:20px 15px;color:var(--text-light);font-size:12px;border-top:1px solid var(--border-color);margin-top:20px;">
+    <p>© 2026 五行鲤 ｜ 传统民俗文化参考，不构成人生决策依据</p>
+</footer>
 </body>
 </html>

@@ -7,23 +7,26 @@
     <style>
     /* ==================== CSS 变量与全局样式 ==================== */
     :root {
-        --bg-primary: #F5F0E8;
-        --bg-secondary: #FFF8EE;
-        --bg-card: #FFFCF5;
-        --border-color: #D4C5A0;
-        --border-dark: #B8A472;
-        --text-primary: #3D2B1F;
-        --text-secondary: #6B5B4E;
-        --text-light: #8C7B6B;
-        --red-primary: #A81216;
-        --red-dark: #8B1A1A;
-        --red-light: #E8D0D0;
-        --gold: #C8A84E;
-        --gold-light: #E8D48C;
-        --green: #4A7C59;
-        --blue: #4A6B8A;
-        --shadow: rgba(61, 43, 31, 0.1);
-        --shadow-strong: rgba(61, 43, 31, 0.2);
+        --bg-primary: #0D1117;
+        --bg-secondary: #161B22;
+        --bg-card: rgba(26, 26, 46, 0.75);
+        --border-color: rgba(201, 169, 110, 0.15);
+        --border-gold: rgba(201, 169, 110, 0.3);
+        --border-dark: rgba(201, 169, 110, 0.25);
+        --text-primary: #E8F4F8;
+        --text-secondary: #A0B3C0;
+        --text-light: #6B7B8A;
+        --gold-primary: #C9A96E;
+        --gold-dark: #A68A4D;
+        --gold: #C9A96E;
+        --gold-light: rgba(201, 169, 110, 0.2);
+        --red-primary: #E74C3C;
+        --red-dark: #C0392B;
+        --red-light: rgba(231, 76, 60, 0.15);
+        --green: #2E8B57;
+        --blue: #4A90A4;
+        --shadow: rgba(0, 0, 0, 0.3);
+        --shadow-strong: rgba(0, 0, 0, 0.5);
     }
 
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -40,8 +43,8 @@
 
     /* ==================== 顶部标题栏 ==================== */
     .header {
-        background: linear-gradient(135deg, var(--red-dark), var(--red-primary));
-        color: #FFF;
+        background: linear-gradient(135deg, var(--gold-dark), var(--gold-primary));
+        color: var(--bg-card);
         padding: 15px 20px;
         text-align: center;
         position: sticky;
@@ -59,7 +62,7 @@
         left: 15px;
         top: 50%;
         transform: translateY(-50%);
-        color: #FFF;
+        color: var(--bg-card);
         text-decoration: none;
         font-size: 14px;
         opacity: 0.9;
@@ -76,7 +79,7 @@
     /* ==================== Tab 切换栏 ==================== */
     .tab-bar {
         display: flex;
-        background: #FFF;
+        background: var(--bg-card);
         border-bottom: 1px solid var(--border-color);
         margin-bottom: 12px;
         border-radius: 8px;
@@ -96,15 +99,15 @@
         user-select: none;
     }
     .tab-item.active {
-        color: var(--red-primary);
-        border-bottom-color: var(--red-primary);
+        color: var(--gold-primary);
+        border-bottom-color: var(--gold-primary);
         font-weight: 600;
     }
 
     /* ==================== 表单样式 ==================== */
     .form-section {
-        background: var(--bg-card);
-        border: 1px solid var(--border-color);
+        background: rgba(26, 26, 46, 0.75); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(201, 169, 110, 0.15);
+        border: 1px solid rgba(201, 169, 110, 0.15);
         border-radius: 12px;
         padding: 16px 15px;
         margin-bottom: 12px;
@@ -124,7 +127,7 @@
     .form-group select {
         width: 100%;
         padding: 10px 12px;
-        border: 1px solid var(--border-color);
+        border: 1px solid rgba(201, 169, 110, 0.15);
         border-radius: 8px;
         background: var(--bg-secondary);
         color: var(--text-primary);
@@ -135,7 +138,7 @@
     .form-group input:focus,
     .form-group select:focus {
         outline: none;
-        border-color: var(--red-primary);
+        border-color: var(--gold-primary);
         box-shadow: 0 0 0 2px rgba(168, 18, 22, 0.1);
     }
     .form-group input::placeholder {
@@ -159,7 +162,7 @@
         flex: 1;
         text-align: center;
         padding: 10px 0;
-        border: 1px solid var(--border-color);
+        border: 1px solid rgba(201, 169, 110, 0.15);
         border-radius: 8px;
         cursor: pointer;
         font-size: 14px;
@@ -169,16 +172,16 @@
         user-select: none;
     }
     .gender-item.active {
-        background: var(--red-primary);
-        color: #FFF;
-        border-color: var(--red-primary);
+        background: var(--gold-primary);
+        color: var(--bg-card);
+        border-color: var(--gold-primary);
     }
 
     /* 公历/农历切换（胶囊样式，与主站一致） */
     .calendar-switch {
         display: flex;
         background: var(--bg-card);
-        border: 1px solid var(--border-color);
+        border: 1px solid rgba(201, 169, 110, 0.15);
         border-radius: 8px;
         overflow: hidden;
         margin-bottom: 15px;
@@ -195,8 +198,8 @@
         color: var(--text-secondary);
     }
     .calendar-switch .switch-item.active {
-        background: var(--red-primary);
-        color: #FFF;
+        background: var(--gold-primary);
+        color: var(--bg-card);
         font-weight: 600;
     }
 
@@ -217,8 +220,8 @@
         transform: scale(0.98);
     }
     .btn-primary {
-        background: linear-gradient(135deg, var(--red-dark), var(--red-primary));
-        color: #FFF;
+        background: linear-gradient(135deg, var(--gold-dark), var(--gold-primary));
+        color: var(--bg-card);
         box-shadow: 0 2px 6px rgba(168, 18, 22, 0.3);
         height: 44px;
         line-height: 20px;
@@ -233,8 +236,8 @@
 
     /* ==================== 结果卡片 ==================== */
     .result-card {
-        background: var(--bg-card);
-        border: 1px solid var(--border-color);
+        background: rgba(26, 26, 46, 0.75); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(201, 169, 110, 0.15);
+        border: 1px solid rgba(201, 169, 110, 0.15);
         border-radius: 12px;
         padding: 16px 15px;
         margin-top: 12px;
@@ -245,7 +248,7 @@
         text-align: center;
         font-size: 16px;
         font-weight: 600;
-        color: var(--red-primary);
+        color: var(--gold-primary);
         margin-bottom: 14px;
         padding-bottom: 10px;
         border-bottom: 1px solid var(--border-color);
@@ -257,7 +260,7 @@
         color: var(--text-primary);
         margin: 12px 0 8px;
         padding-left: 8px;
-        border-left: 3px solid var(--red-primary);
+        border-left: 3px solid var(--gold-primary);
     }
     .result-desc {
         font-size: 13px;
@@ -274,8 +277,8 @@
         text-align: center;
     }
     .bazi-table th {
-        background: var(--red-primary);
-        color: #FFF;
+        background: var(--gold-primary);
+        color: var(--bg-card);
         padding: 8px 4px;
         font-size: 12px;
         font-weight: 500;
@@ -302,7 +305,7 @@
     }
     .bazi-table .shishen-cell {
         font-size: 11px;
-        color: var(--red-primary);
+        color: var(--gold-primary);
         font-weight: 500;
     }
     .label-cell {
@@ -314,8 +317,8 @@
         font-weight: 500;
         width: 48px;
     }
-    .bazi-bg-light td { background: #FAF6F0; }
-    .bazi-bg-dark td { background: #EDE8E0; }
+    .bazi-bg-light td { background: rgba(26, 26, 46, 0.5); }
+    .bazi-bg-dark td { background: rgba(26, 26, 46, 0.6); }
 
     /* 五行统计 */
     .wuxing-bar {
@@ -353,8 +356,8 @@
 
     /* ==================== 大模型结果区域 ==================== */
     .ai-result-card {
-        background: var(--bg-card);
-        border: 1px solid var(--border-color);
+        background: rgba(26, 26, 46, 0.75); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(201, 169, 110, 0.15);
+        border: 1px solid rgba(201, 169, 110, 0.15);
         border-radius: 12px;
         padding: 16px 15px;
         margin-top: 12px;
@@ -383,19 +386,19 @@
     }
     .ai-content .name-scheme {
         background: var(--bg-secondary);
-        border: 1px solid var(--border-color);
+        border: 1px solid rgba(201, 169, 110, 0.15);
         border-radius: 8px;
         padding: 10px 12px;
         margin: 8px 0;
         transition: background 0.2s;
     }
     .ai-content .name-scheme:hover {
-        background: #FFF5E6;
+        background: var(--bg-card)5E6;
     }
     .ai-content .name-scheme-name {
         font-size: 18px;
         font-weight: 700;
-        color: var(--red-primary);
+        color: var(--gold-primary);
         margin-bottom: 4px;
     }
     .ai-content .name-scheme-wx {
@@ -411,7 +414,7 @@
     .ai-content .section-header {
         font-size: 15px;
         font-weight: 700;
-        color: var(--red-primary);
+        color: var(--gold-primary);
         margin: 14px 0 8px;
         padding-bottom: 4px;
         border-bottom: 1px dashed var(--border-color);
@@ -421,7 +424,7 @@
     }
     .ai-content .score-line {
         font-size: 14px;
-        color: var(--red-primary);
+        color: var(--gold-primary);
         font-weight: 600;
         margin: 4px 0;
     }
@@ -436,7 +439,7 @@
         width: 36px;
         height: 36px;
         border: 3px solid var(--border-color);
-        border-top-color: var(--red-primary);
+        border-top-color: var(--gold-primary);
         border-radius: 50%;
         animation: spin 0.8s linear infinite;
         margin-bottom: 12px;
@@ -475,7 +478,7 @@
         left: 50%;
         transform: translateX(-50%) translateY(-20px);
         background: rgba(61, 43, 31, 0.9);
-        color: #FFF;
+        color: var(--bg-card);
         padding: 10px 24px;
         border-radius: 20px;
         font-size: 14px;
@@ -541,7 +544,7 @@
             <!-- 排盘记录下拉 -->
             <div class="form-group">
                 <label>选择我的排盘记录</label>
-                <select id="evalRecordSelect" style="width:100%;padding:9px 10px;border:1px solid var(--border-color);border-radius:6px;font-size:14px;background:var(--bg-secondary);color:var(--text-primary);outline:none;">
+                <select id="evalRecordSelect" style="width:100%;padding:9px 10px;border: 1px solid rgba(201, 169, 110, 0.15);border-radius:6px;font-size:14px;background:var(--bg-secondary);color:var(--text-primary);outline:none;">
                     <option value="">-- 手动输入或选择记录 --</option>
                 </select>
             </div>
@@ -757,13 +760,13 @@
     function getGanColor(ganIdx) {
         var wx = Lunar.wuXingGan[ganIdx];
         var colors = { '金': '#DAA520', '木': '#2E8B57', '水': '#4169E1', '火': '#DC143C', '土': '#8B4513' };
-        return colors[wx] || '#333';
+        return colors[wx] || 'var(--text-primary)';
     }
 
     function getZhiColor(zhiIdx) {
         var wx = Lunar.wuXingZhi[zhiIdx];
         var colors = { '金': '#DAA520', '木': '#2E8B57', '水': '#4169E1', '火': '#DC143C', '土': '#8B4513' };
-        return colors[wx] || '#333';
+        return colors[wx] || 'var(--text-primary)';
     }
 
     // ==================== Tab 切换 ====================
@@ -1258,7 +1261,7 @@
         if (analysis.diZhiRelations.length > 0) {
             analysis.diZhiRelations.forEach(function(r) {
                 var colors = { '刑': '#8B0000', '冲': '#DC143C', '害': '#FF6347', '破': '#FF8C00', '合': '#2E8B57', '会': '#4169E1' };
-                var color = colors[r.category] || '#333';
+                var color = colors[r.category] || 'var(--text-primary)';
                 html += '<div style="padding:6px 0;font-size:13px;"><span style="color:' + color + ';font-weight:bold;">[' + r.category + '] ' + r.display + '</span></div>';
             });
         } else {
@@ -1409,7 +1412,7 @@
         html += '<div class="result-subtitle">姓名五行属性</div>';
         html += '<div class="result-desc">';
         name.split('').forEach(function(ch, i) {
-            html += '<span style="display:inline-block;padding:4px 10px;margin:4px;border-radius:6px;background:var(--bg-secondary);border:1px solid var(--border-color);">';
+            html += '<span style="display:inline-block;padding:4px 10px;margin:4px;border-radius:6px;background:var(--bg-secondary);border: 1px solid rgba(201, 169, 110, 0.15);">';
             html += '<strong>' + escapeHtml(ch) + '</strong> → ' + nameWx[i];
             html += '</span>';
         });
@@ -1419,7 +1422,7 @@
         html += '<div class="result-subtitle">四柱十神分布</div>';
         html += '<div class="result-desc">';
         shiShenList.forEach(function(item) {
-            html += '<span style="display:inline-block;padding:4px 10px;margin:4px;border-radius:6px;background:var(--bg-secondary);border:1px solid var(--border-color);">';
+            html += '<span style="display:inline-block;padding:4px 10px;margin:4px;border-radius:6px;background:var(--bg-secondary);border: 1px solid rgba(201, 169, 110, 0.15);">';
             html += item.pillar + '柱 ' + item.gan + '（' + item.ss + '）';
             html += '</span>';
         });
@@ -1613,7 +1616,7 @@
         html += '<div class="result-subtitle">姓名五行属性</div>';
         html += '<div class="result-desc">';
         var wxDisplay = nameWuxing.map(function(item) {
-            return '<span style="display:inline-block;padding:4px 10px;margin:4px;border-radius:6px;background:var(--bg-secondary);border:1px solid var(--border-color);"><strong>' + escapeHtml(item.char) + '</strong>（' + item.wx + '）</span>';
+            return '<span style="display:inline-block;padding:4px 10px;margin:4px;border-radius:6px;background:var(--bg-secondary);border: 1px solid rgba(201, 169, 110, 0.15);"><strong>' + escapeHtml(item.char) + '</strong>（' + item.wx + '）</span>';
         }).join('');
         html += wxDisplay;
         html += '<br>名字五行组合：' + nameWuxing.map(function(item) { return item.wx; }).join(' ');
@@ -1644,9 +1647,9 @@
         html += '<span style="flex:1;min-width:120px;padding:8px 12px;background:var(--bg-secondary);border-radius:6px;text-align:center;">字义寓意<br><strong>' + meaningScore + '</strong>/15</span>';
         html += '<span style="flex:1;min-width:120px;padding:8px 12px;background:var(--bg-secondary);border-radius:6px;text-align:center;">音律字形<br><strong>' + yinluScore + '</strong>/5</span>';
         html += '</div>';
-        html += '<div style="text-align:center;padding:12px;background:linear-gradient(135deg,var(--red-light),#fff);border-radius:8px;border:1px solid var(--red-primary);">';
+        html += '<div style="text-align:center;padding:12px;background:linear-gradient(135deg,var(--gold-light),var(--bg-card));border-radius:8px;border:1px solid var(--gold-primary);">';
         html += '<span style="font-size:14px;color:var(--text-secondary);">总分</span><br>';
-        html += '<span style="font-size:28px;font-weight:700;color:var(--red-primary);">' + totalScore + '</span><span style="font-size:16px;color:var(--text-light);">/100</span>';
+        html += '<span style="font-size:28px;font-weight:700;color:var(--gold-primary);">' + totalScore + '</span><span style="font-size:16px;color:var(--text-light);">/100</span>';
         html += '</div>';
         html += '</div>';
 
@@ -1701,7 +1704,7 @@
 
         // 专业评测引导按钮
         var proHtml = '<div style="text-align:center;margin-top:16px;">' +
-            '<button onclick="showProEvalModal()" style="padding:12px 32px;background:linear-gradient(135deg,#07C160,#06AD56);color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;letter-spacing:1px;">专业姓名评测</button>' +
+            '<button onclick="showProEvalModal()" style="padding:12px 32px;background:linear-gradient(135deg,#07C160,#06AD56);color:var(--bg-card);border:none;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;letter-spacing:1px;">专业姓名评测</button>' +
             '<div style="font-size:12px;color:var(--text-light);margin-top:8px;">由专业命理师一对一深度分析</div>' +
             '</div>';
 
@@ -1892,7 +1895,7 @@
 
         // 分隔线
         html += '<div style="text-align:center;margin:20px 0 16px;position:relative;">';
-        html += '<div style="display:inline-block;padding:0 16px;background:var(--bg-primary);color:var(--red-primary);font-size:14px;font-weight:600;letter-spacing:2px;position:relative;z-index:1;">五行取名推荐</div>';
+        html += '<div style="display:inline-block;padding:0 16px;background:var(--bg-primary);color:var(--gold-primary);font-size:14px;font-weight:600;letter-spacing:2px;position:relative;z-index:1;">五行取名推荐</div>';
         html += '<div style="position:absolute;top:50%;left:10%;right:10%;height:1px;background:var(--border-color);"></div>';
         html += '</div>';
 
@@ -1919,7 +1922,7 @@
 
         // 五行偏枯提示
         if (nameResult.weakestWx) {
-            html += '<div style="padding:8px 12px;background:var(--bg-secondary);border-radius:8px;border-left:3px solid var(--red-primary);">';
+            html += '<div style="padding:8px 12px;background:var(--bg-secondary);border-radius:8px;border-left:3px solid var(--gold-primary);">';
             html += '<strong>五行缺' + nameResult.weakestWx + '</strong>：命局中' + nameResult.weakestWx + '行偏弱，取名时宜适当补益。';
             html += '</div>';
         }
@@ -1934,19 +1937,19 @@
             html += '<div class="ai-result-card">';
             html += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">';
             html += '<div class="result-title" style="margin-bottom:0;padding-bottom:0;border-bottom:none;">推荐名字 ' + (idx + 1) + '</div>';
-            html += '<span style="display:inline-block;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:500;background:var(--bg-secondary);color:var(--red-primary);border:1px solid var(--border-color);">' + s.strategy + '</span>';
+            html += '<span style="display:inline-block;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:500;background:var(--bg-secondary);color:var(--gold-primary);border: 1px solid rgba(201, 169, 110, 0.15);">' + s.strategy + '</span>';
             html += '</div>';
 
             // 姓名全称
             html += '<div style="text-align:center;margin:12px 0;">';
-            html += '<div style="font-size:28px;font-weight:700;color:var(--red-primary);letter-spacing:6px;">' + escapeHtml(s.name) + '</div>';
+            html += '<div style="font-size:28px;font-weight:700;color:var(--gold-primary);letter-spacing:6px;">' + escapeHtml(s.name) + '</div>';
             html += '</div>';
 
             // 五行属性标签
             html += '<div style="display:flex;justify-content:center;gap:8px;margin-bottom:12px;">';
             var wxChars = s.wxLabel.split('');
             wxChars.forEach(function(wc) {
-                var color = wxColorMap[wc] || '#333';
+                var color = wxColorMap[wc] || 'var(--text-primary)';
                 html += '<span style="display:inline-block;padding:4px 12px;border-radius:6px;font-size:13px;font-weight:600;color:' + color + ';background:' + color + '15;border:1px solid ' + color + '40;">' + wc + '</span>';
             });
             html += '</div>';
@@ -1974,7 +1977,7 @@
         // 底部提示
         html += '<div style="text-align:center;padding:16px 0;font-size:12px;color:var(--text-light);line-height:1.8;">';
         html += '以上名字基于《渊海子平》《三命通会》《穷通宝鉴》等典籍五行理论生成<br>';
-        html += '仅供参考，如需更精准的取名方案，欢迎添加站长微信 <strong style="color:var(--red-primary);">DLing3313</strong>';
+        html += '仅供参考，如需更精准的取名方案，欢迎添加站长微信 <strong style="color:var(--gold-primary);">DLing3313</strong>';
         html += '</div>';
 
         return html;
@@ -2270,18 +2273,18 @@ var NameRecordStore = {
     // 专业评测弹窗
     window.showProEvalModal = function() {
         var modalHtml = '<div id="proEvalModal" style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.6);z-index:9999;display:flex;align-items:center;justify-content:center;" onclick="if(event.target===this)this.remove()">' +
-            '<div style="background:#fff;border-radius:16px;padding:32px 24px 24px;width:300px;max-width:90vw;text-align:center;box-shadow:0 8px 30px rgba(0,0,0,0.3);">' +
+            '<div style="background:var(--bg-card);border-radius:16px;padding:32px 24px 24px;width:300px;max-width:90vw;text-align:center;box-shadow:0 8px 30px rgba(0,0,0,0.3);">' +
             '<div style="width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,#07C160,#06AD56);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">' +
             '<svg width="36" height="36" viewBox="0 0 24 24" fill="white"><path d="M8.5 11a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3zm5-1.5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0zM20 12c0 2.2-1.8 4-4 4h-.5l-2.5 2 .5-2H16c2.2 0 4-1.8 4-4s-1.8-4-4-4H8c-2.2 0-4 1.8-4 4s1.8 4 4 4h1.5l.5 2-2.5-2H8C5.8 16 4 14.2 4 12s1.8-4 4-4h8c2.2 0 4 1.8 4 4z"/></svg>' +
             '</div>' +
-            '<div style="font-size:18px;font-weight:bold;color:#333;margin-bottom:8px;">专业姓名评测</div>' +
-            '<div style="font-size:14px;color:#666;line-height:1.6;margin-bottom:16px;">由专业命理师一对一深度分析<br>添加站长微信获取服务</div>' +
-            '<div style="background:#f5f5f5;border-radius:8px;padding:12px;margin-bottom:16px;">' +
+            '<div style="font-size:18px;font-weight:bold;color:var(--text-primary);margin-bottom:8px;">专业姓名评测</div>' +
+            '<div style="font-size:14px;color:var(--text-secondary);line-height:1.6;margin-bottom:16px;">由专业命理师一对一深度分析<br>添加站长微信获取服务</div>' +
+            '<div style="background:var(--bg-secondary);border-radius:8px;padding:12px;margin-bottom:16px;">' +
             '<div style="font-size:12px;color:#999;margin-bottom:6px;">微信号</div>' +
-            '<div style="font-size:18px;font-weight:bold;color:#333;letter-spacing:1px;">DLing3313</div>' +
+            '<div style="font-size:18px;font-weight:bold;color:var(--text-primary);letter-spacing:1px;">DLing3313</div>' +
             '</div>' +
             '<img src="../images/wechat-qr.png" alt="站长微信二维码" style="width:200px;height:200px;margin:10px auto;display:block;border-radius:8px;">' +
-            '<button onclick="this.closest(\'div[id]\').remove()" style="width:100%;padding:12px;background:linear-gradient(135deg,#07C160,#06AD56);color:#fff;border:none;border-radius:8px;font-size:16px;font-weight:bold;cursor:pointer;">我知道了</button>' +
+            '<button onclick="this.closest(\'div[id]\').remove()" style="width:100%;padding:12px;background:linear-gradient(135deg,#07C160,#06AD56);color:var(--bg-card);border:none;border-radius:8px;font-size:16px;font-weight:bold;cursor:pointer;">我知道了</button>' +
             '</div></div>';
         document.body.insertAdjacentHTML('beforeend', modalHtml);
     };
@@ -2309,18 +2312,18 @@ var NameRecordStore = {
 
 <!-- 微信引导弹窗 -->
 <div id="wechatGuideModal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.6);z-index:9999;align-items:center;justify-content:center;">
-  <div style="background:#fff;border-radius:16px;padding:32px 24px 24px;width:300px;max-width:90vw;text-align:center;box-shadow:0 8px 30px rgba(0,0,0,0.3);">
+  <div style="background:var(--bg-card);border-radius:16px;padding:32px 24px 24px;width:300px;max-width:90vw;text-align:center;box-shadow:0 8px 30px rgba(0,0,0,0.3);">
     <div style="width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,#07C160,#06AD56);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
       <svg width="36" height="36" viewBox="0 0 24 24" fill="white"><path d="M8.5 11a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3zm5-1.5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0zM20 12c0 2.2-1.8 4-4 4h-.5l-2.5 2 .5-2H16c2.2 0 4-1.8 4-4s-1.8-4-4-4H8c-2.2 0-4 1.8-4 4s1.8 4 4 4h1.5l.5 2-2.5-2H8C5.8 16 4 14.2 4 12s1.8-4 4-4h8c2.2 0 4 1.8 4 4z"/></svg>
     </div>
-    <div style="font-size:18px;font-weight:bold;color:#333;margin-bottom:8px;">添加站长微信</div>
-    <div style="font-size:14px;color:#666;line-height:1.6;margin-bottom:16px;">微信号：DLing3313<br>了解更多，请添加微信</div>
-    <div style="background:#f5f5f5;border-radius:8px;padding:12px;margin-bottom:16px;">
+    <div style="font-size:18px;font-weight:bold;color:var(--text-primary);margin-bottom:8px;">添加站长微信</div>
+    <div style="font-size:14px;color:var(--text-secondary);line-height:1.6;margin-bottom:16px;">微信号：DLing3313<br>了解更多，请添加微信</div>
+    <div style="background:var(--bg-secondary);border-radius:8px;padding:12px;margin-bottom:16px;">
       <div style="font-size:12px;color:#999;margin-bottom:6px;">微信号</div>
-      <div style="font-size:18px;font-weight:bold;color:#333;letter-spacing:1px;" id="wechatIdDisplay">DLing3313</div>
+      <div style="font-size:18px;font-weight:bold;color:var(--text-primary);letter-spacing:1px;" id="wechatIdDisplay">DLing3313</div>
       </div>
       <img src="../images/wechat-qr.png" alt="站长微信二维码" style="width:200px;height:200px;margin:10px auto;display:block;border-radius:8px;">
-      <button onclick="document.getElementById('wechatGuideModal').style.display='none'" style="width:100%;padding:12px;background:linear-gradient(135deg,#07C160,#06AD56);color:#fff;border:none;border-radius:8px;font-size:16px;font-weight:bold;cursor:pointer;">我知道了</button>
+      <button onclick="document.getElementById('wechatGuideModal').style.display='none'" style="width:100%;padding:12px;background:linear-gradient(135deg,#07C160,#06AD56);color:var(--bg-card);border:none;border-radius:8px;font-size:16px;font-weight:bold;cursor:pointer;">我知道了</button>
   </div>
 </div>
 <script>
@@ -2329,5 +2332,8 @@ function showWechatGuide() {
 }
 </script>
 
+<footer style="text-align:center;padding:20px 15px;color:var(--text-light);font-size:12px;border-top:1px solid var(--border-color);margin-top:20px;">
+    <p>© 2026 五行鲤 ｜ 传统民俗文化参考，不构成人生决策依据</p>
+</footer>
 </body>
 </html>
