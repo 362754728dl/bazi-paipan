@@ -2514,3 +2514,12 @@ html, body {
     color: var(--green-primary);
     font-weight: 600;
 }
+
+/* ==================== 移动端菜单文字重叠修复 ==================== */
+.drawer-item {
+    line-height: 1.5;
+    white-space: nowrap;
+}
+html, body {
+    -webkit-text-size-adjust: 100%;
+}
