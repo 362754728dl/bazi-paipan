@@ -1105,6 +1105,10 @@
         html += '</div>';
         html += '<div class="ai-result-content" id="aiResult" style="display:none;"></div>';
         html += '</div>';
+        // 分享按钮
+        html += '<div id="shareBtnArea" style="text-align:center;margin:16px 0;display:none;">';
+        html += '<button onclick="shareHepeiResult()" style="padding:10px 28px;background:var(--red-primary);color:#fff;border:none;border-radius:8px;font-size:14px;cursor:pointer;">📤 分享合配结果</button>';
+        html += '</div>';
 
         resultArea.innerHTML = html;
 
@@ -1120,6 +1124,9 @@
             var aiResultEl = document.getElementById('aiResult');
             aiResultEl.innerHTML = formatAIContent(aiContent);
             aiResultEl.style.display = 'block';
+            // 显示分享按钮
+            var shareArea = document.getElementById('shareBtnArea');
+            if (shareArea) shareArea.style.display = 'block';
         } catch (err) {
             document.getElementById('aiLoading').style.display = 'none';
             var aiResultEl = document.getElementById('aiResult');
@@ -1345,6 +1352,19 @@ function checkMemberAndAnalyze() {
         startAnalysis();
     } else {
         showWechatGuide();
+    }
+}
+</script>
+<script>
+// 分享合配结果
+async function shareHepeiResult() {
+    if (navigator.share) {
+        try {
+            await navigator.share({ title: '五行鲤 · 八字合配', url: window.location.href });
+        } catch (e) {}
+    } else if (navigator.clipboard) {
+        await navigator.clipboard.writeText(window.location.href);
+        alert('链接已复制到剪贴板');
     }
 }
 </script>
