@@ -1203,11 +1203,17 @@ const App = (function () {
     function renderWuXingWangShuai(result) {
         var monthZhiIdx = result.pillars.month.zhiIndex;
         var dayGan = result.pillars.day.gan;
+        var dayGanIdx = result.pillars.day.ganIndex;
         var dayWuXing = result.pillars.day.wuXing;
+
+        // 日主阴阳（偶数索引为阳干，奇数为阴干）
+        var dayYinYang = (dayGanIdx % 2 === 0) ? '阳' : '阴';
+        var dayLabel = dayGan + '（' + dayYinYang + dayWuXing + '）';
 
         // 月令地支 → 季节
         var seasonMap = { 2: '春', 3: '春', 4: '春', 5: '夏', 6: '夏', 7: '夏', 8: '秋', 9: '秋', 10: '秋', 11: '冬', 0: '冬', 1: '冬' };
         var zhiNames = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥'];
+        var zhiMonthNames = { 2: '正月', 3: '二月', 4: '三月', 5: '四月', 6: '五月', 7: '六月', 8: '七月', 9: '八月', 10: '九月', 11: '十月', 0: '十一月', 1: '十二月' };
         var season = seasonMap[monthZhiIdx] || '春';
         var monthZhiName = zhiNames[monthZhiIdx] || '';
 
@@ -1230,33 +1236,75 @@ const App = (function () {
         var seasonWangMap = { '春': '木', '夏': '火', '秋': '金', '冬': '水', '四季末': '土' };
         var wangElement = seasonWangMap[season] || '木';
 
-        // 五行相生相克关系
-        var shengMap = { '木': '火', '火': '土', '土': '金', '金': '水', '水': '木' };
-        var keMap = { '木': '土', '火': '金', '土': '水', '金': '木', '水': '火' };
-
-        // 季节名称
+        // 季节描述
+        var seasonDescMap = {
+            '春': '木旺的春季',
+            '夏': '火旺的夏季',
+            '秋': '金旺的秋季',
+            '冬': '水旺的冬季',
+            '四季末': '土旺的四季末'
+        };
         var seasonLabelMap = { '春': '春季', '夏': '夏季', '秋': '秋季', '冬': '冬季', '四季末': '四季末（辰戌丑未月）' };
 
-        // 生成说明文案
+        // 五行旺衰详情说明
         function getStateDesc(wx, state) {
             var we = wangElement;
-            if (state === '旺') return wx + '当令，处于旺地';
+            if (state === '旺') return we + '当令，处于旺地';
             if (state === '相') return we + '生' + wx + '，' + wx + '受旺' + we + '生扶，处于相地';
             if (state === '休') return wx + '生' + we + '，' + we + '旺泄' + wx + '气，处于休地';
-            if (state === '囚') return wx + '被当令之' + we + '所克，处于囚地';
-            if (state === '死') return '当令' + we + '克' + wx + '，' + wx + '处于死地';
+            if (state === '囚') return wx + '克' + we + '，但' + we + '旺反侮' + wx + '，处于囚地';
+            if (state === '死') return '当令' + we + '克' + wx + '，' + wx + '气凋零，处于死地';
+            return '';
+        }
+
+        // 日主状态注解模板
+        function getDayMasterAnnotation(state) {
+            var X = dayLabel;
+            var Y = wangElement;
+            var Z = monthZhiName + '月（' + (zhiMonthNames[monthZhiIdx] || '') + '，' + seasonDescMap[season] + '）';
+
+            if (state === '旺') {
+                return '在命理学中，"旺"指的是当令得时的强盛状态。你的日主是' + X + '，生于' + Z + '，正值' + Y + '当令的季节，得天时之力，处于"旺"地，力量充沛，命局根基强健。';
+            }
+            if (state === '相') {
+                return '在命理学中，"相"指的是受旺气生扶的次旺状态。你的日主是' + X + '，生于' + Z + '，' + Y + '旺生' + dayWuXing + '，' + dayWuXing + '受当令旺气生扶，处于"相"地，力量较为充足。';
+            }
+            if (state === '休') {
+                return '在命理学中，"休"指的是休囚无力的状态。你的日主是' + X + '，生于' + Z + '。五行关系中' + dayWuXing + '生' + Y + '，' + Y + '旺会泄掉' + dayWuXing + '的力量，所以' + dayWuXing + '在' + monthZhiName + '月处于"休"的状态，不得月令，力量被泄。';
+            }
+            if (state === '囚') {
+                return '在命理学中，"囚"指的是被克制而无力的状态。你的日主是' + X + '，生于' + Z + '。五行关系中' + dayWuXing + '克' + Y + '，但' + Y + '当令而旺，' + dayWuXing + '反而被' + Y + '所困，处于"囚"的状态，有志难伸。';
+            }
+            if (state === '死') {
+                return '在命理学中，"死"指的是被旺气所克的衰弱状态。你的日主是' + X + '，生于' + Z + '。五行关系中' + Y + '克' + dayWuXing + '，当令之' + Y + '压制' + dayWuXing + '，' + dayWuXing + '处于"死"地，力量衰弱，最不得时。';
+            }
             return '';
         }
 
         var wsColors = { '旺': '#e53935', '相': '#43a047', '休': '#1e88e5', '囚': '#757575', '死': '#9e9e9e' };
         var wsBgColors = { '旺': '#ffebee', '相': '#e8f5e9', '休': '#e3f2fd', '囚': '#f5f5f5', '死': '#fafafa' };
-        var wxClassMap = { '金': 'wx-jin', '木': 'wx-mu', '水': 'wx-shui', '火': 'wx-huo', '土': 'wx-tu' };
 
         var html = '<div class="result-card" style="margin-top:10px;">';
         html += '<div class="result-title">五行旺衰（旺相休囚死）</div>';
         html += '<div style="font-size:13px;color:#666;margin-bottom:10px;">月令：<strong>' + monthZhiName + '</strong>（' + seasonLabelMap[season] + '，' + wangElement + '旺）</div>';
 
-        // 五行旺衰表格
+        // 日主状态摘要
+        var dayState = rule[dayWuXing] || '—';
+        var dayColor = wsColors[dayState] || 'inherit';
+        html += '<div style="padding:10px 12px;background:var(--bg-secondary);border-radius:6px;font-size:13px;color:#333;line-height:1.8;margin-bottom:10px;border-left:3px solid ' + dayColor + ';">';
+        html += '日主为<strong>' + dayLabel + '</strong>，生于' + monthZhiName + '月，状态为<strong style="color:' + dayColor + ';">【' + dayState + '】</strong>。';
+        html += '</div>';
+
+        // 日主注解
+        var annotation = getDayMasterAnnotation(dayState);
+        if (annotation) {
+            html += '<div style="padding:10px 12px;background:#FFF8E1;border-radius:6px;font-size:12px;color:#5D4037;line-height:1.8;margin-bottom:10px;">';
+            html += '<strong style="color:#E65100;">注解：</strong>' + annotation;
+            html += '</div>';
+        }
+
+        // 五行旺衰详情表格
+        html += '<div style="font-size:13px;font-weight:600;color:var(--text-primary);margin-bottom:6px;">五行旺衰详情：</div>';
         html += '<table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:10px;">';
         html += '<thead><tr style="background:var(--bg-secondary);">';
         html += '<th style="padding:6px 8px;border:1px solid var(--border-color);text-align:center;">五行</th>';
@@ -1280,14 +1328,6 @@ const App = (function () {
         });
 
         html += '</tbody></table>';
-
-        // 日主旺衰总结
-        var dayState = rule[dayWuXing] || '—';
-        var dayColor = wsColors[dayState] || 'inherit';
-        var dayDesc = getStateDesc(dayWuXing, dayState);
-        html += '<div style="margin-top:10px;padding:10px;background:var(--bg-secondary);border-radius:6px;font-size:13px;color:#555;line-height:1.8;border-left:3px solid ' + dayColor + ';">';
-        html += '日主<strong>' + dayGan + '（' + dayWuXing + '）</strong>在' + monthZhiName + '月为<strong style="color:' + dayColor + ';">' + dayState + '</strong>——' + dayDesc + '。';
-        html += '</div>';
         html += '</div>';
 
         var ra = $('resultArea');
