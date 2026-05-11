@@ -1282,11 +1282,42 @@
                     if (daySel) daySel.value = parseInt(parts[2]);
                 }
             }
-            // 填充出生时间
-            if (record.birthHour !== undefined && record.birthHour !== null) {
-                var hourSel = document.getElementById('hour' + party);
-                if (hourSel) hourSel.value = record.birthHour;
+            // ===== 时辰回填（稳健版） =====
+            var birthHour = 0;
+            var birthMinute = 0;
+
+            // 按优先级依次尝试所有可能的字段名
+            if (record.formData) {
+                if (record.formData.hour !== undefined && record.formData.hour !== null) {
+                    birthHour = parseInt(record.formData.hour);
+                }
+                if (record.formData.minute !== undefined && record.formData.minute !== null) {
+                    birthMinute = parseInt(record.formData.minute);
+                }
+                if (birthHour === 0 && record.formData.birthHour !== undefined) {
+                    birthHour = parseInt(record.formData.birthHour);
+                }
+                if (birthMinute === 0 && record.formData.birthMinute !== undefined) {
+                    birthMinute = parseInt(record.formData.birthMinute);
+                }
+                if (birthHour === 0 && record.formData.birth_hour !== undefined) {
+                    birthHour = parseInt(record.formData.birth_hour);
+                }
             }
+            if (birthHour === 0 && record.birthHour !== undefined) {
+                birthHour = parseInt(record.birthHour);
+            }
+            if (birthMinute === 0 && record.birthMinute !== undefined) {
+                birthMinute = parseInt(record.birthMinute);
+            }
+
+            if (isNaN(birthHour) || birthHour < 0 || birthHour > 23) birthHour = 0;
+            if (isNaN(birthMinute) || birthMinute < 0 || birthMinute > 59) birthMinute = 0;
+
+            console.log('[合配回填] 提取到的时辰：', birthHour + ':' + birthMinute);
+
+            var hourSel = document.getElementById('hour' + party);
+            if (hourSel) hourSel.value = birthHour;
             // 填充省市（兼容新旧数据格式）
             var formData = record.formData || record;
             if (formData.province) {
