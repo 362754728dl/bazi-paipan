@@ -7,27 +7,22 @@
     <style>
         /* ==================== CSS 变量与全局样式 ==================== */
         :root {
-        --bg-primary: #0D1117;
-        --bg-secondary: #161B22;
-        --bg-card: rgba(26, 26, 46, 0.75);
-        --border-color: rgba(201, 169, 110, 0.15);
-        --border-gold: rgba(201, 169, 110, 0.3);
-        --border-dark: rgba(201, 169, 110, 0.25);
-        --text-primary: #E8F4F8;
-        --text-secondary: #A0B3C0;
-        --text-light: #6B7B8A;
-        --gold-primary: #C9A96E;
-        --gold-dark: #A68A4D;
-        --gold: #C9A96E;
-        --gold-light: rgba(201, 169, 110, 0.2);
-        --red-primary: #E74C3C;
-        --red-dark: #C0392B;
-        --red-light: rgba(231, 76, 60, 0.15);
-        --green: #2E8B57;
-        --blue: #4A90A4;
-        --shadow: rgba(0, 0, 0, 0.3);
-        --shadow-strong: rgba(0, 0, 0, 0.5);
-    }
+            --bg-primary: #F5F0E8;
+            --bg-secondary: #FFF8EE;
+            --bg-card: #FFFCF5;
+            --border-color: #D4C5A0;
+            --border-dark: #B8A472;
+            --text-primary: #3D2B1F;
+            --text-secondary: #6B5B4E;
+            --text-light: #8C7B6B;
+            --red-primary: #C41A1A;
+            --red-dark: #A01515;
+            --red-light: #E8D0D0;
+            --gold: #C8A84E;
+            --gold-light: #E8D48C;
+            --green: #4A7C59;
+            --blue: #4A6B8A;
+        }
 
         * {
             margin: 0;
@@ -46,8 +41,8 @@
 
         /* ==================== 顶部标题栏 ==================== */
         .header {
-            background: linear-gradient(135deg, var(--gold-primary), var(--gold-dark));
-            color: var(--bg-card);
+            background: linear-gradient(135deg, var(--red-primary), var(--red-dark));
+            color: #fff;
             padding: 14px 16px;
             display: flex;
             align-items: center;
@@ -63,7 +58,7 @@
             letter-spacing: 2px;
         }
         .header-back {
-            color: var(--bg-card);
+            color: #fff;
             text-decoration: none;
             font-size: 14px;
             opacity: 0.9;
@@ -95,7 +90,7 @@
         .form-group input {
             width: 100%;
             padding: 10px 14px;
-            border: 1px solid rgba(201, 169, 110, 0.15);
+            border: 1px solid var(--border-color);
             border-radius: 8px;
             font-size: 14px;
             color: var(--text-primary);
@@ -104,7 +99,7 @@
             transition: border-color 0.2s;
         }
         .form-group input:focus {
-            border-color: var(--gold-primary);
+            border-color: var(--red-primary);
         }
 
         /* ==================== 信息栏 ==================== */
@@ -161,7 +156,7 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            background: var(--bg-card, var(--bg-card));
+            background: var(--bg-card, #fff);
             z-index: 2;
         }
         .ly-coin-spin {
@@ -198,7 +193,7 @@
         .ly-yao-name { width: 36px; color: var(--text-light); font-size: 12px; }
         .ly-yao-type { width: 36px; color: var(--text-primary); font-size: 12px; }
         .ly-yao-symbol { flex: 1; font-family: monospace; font-size: 14px; letter-spacing: 2px; color: var(--text-primary); }
-        .ly-yao-dong { width: 20px; text-align: center; color: var(--gold-primary); font-weight: 700; font-size: 16px; }
+        .ly-yao-dong { width: 20px; text-align: center; color: var(--red-primary); font-weight: 700; font-size: 16px; }
         .ly-yao-empty { opacity: 0.4; }
         .ly-yao-progress { text-align: center; color: var(--text-light); font-size: 12px; margin-top: 8px; }
 
@@ -216,8 +211,8 @@
             -webkit-tap-highlight-color: transparent;
         }
         .btn-primary {
-            background: linear-gradient(135deg, var(--gold-primary), var(--gold-dark));
-            color: var(--bg-card);
+            background: linear-gradient(135deg, var(--red-primary), var(--red-dark));
+            color: #fff;
             box-shadow: 0 3px 10px rgba(196, 26, 26, 0.3);
         }
         .btn-primary:hover { box-shadow: 0 4px 14px rgba(196, 26, 26, 0.4); }
@@ -225,7 +220,7 @@
         .btn-secondary {
             background: var(--bg-card);
             color: var(--text-secondary);
-            border: 1px solid rgba(201, 169, 110, 0.15);
+            border: 1px solid var(--border-color);
         }
         .btn-secondary:hover { background: var(--bg-secondary); }
         .btn-secondary:active { transform: scale(0.97); }
@@ -259,24 +254,24 @@
             -webkit-tap-highlight-color: transparent;
         }
         .ly-result-tab.active {
-            color: var(--gold-primary);
-            border-bottom-color: var(--gold-primary);
+            color: var(--red-primary);
+            border-bottom-color: var(--red-primary);
             font-weight: 600;
         }
 
         /* AI分析区域样式 */
         .ly-ai-section { padding: 15px 0; }
         .ly-ai-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
-        .ly-ai-title { font-size: 16px; font-weight: 600; color: var(--text-primary); }
+        .ly-ai-title { font-size: 16px; font-weight: 600; color: #333; }
         .ly-ai-count { font-size: 12px; color: #999; background: #f0ebe3; padding: 4px 10px; border-radius: 12px; }
         .ly-ai-tip { font-size: 12px; color: #999; text-align: center; margin-bottom: 16px; }
-        .ly-ai-btn { display: block; width: 100%; padding: 14px; background: var(--gold-primary); color: var(--bg-card); border: none; border-radius: 10px; font-size: 16px; font-weight: 600; cursor: pointer; transition: opacity 0.2s; box-shadow: 0 2px 8px rgba(196,26,26,0.3); }
+        .ly-ai-btn { display: block; width: 100%; padding: 14px; background: var(--red-primary); color: #fff; border: none; border-radius: 10px; font-size: 16px; font-weight: 600; cursor: pointer; transition: opacity 0.2s; box-shadow: 0 2px 8px rgba(196,26,26,0.3); }
         .ly-ai-btn:disabled { cursor: not-allowed; }
-        .ly-ai-result { margin-top: 16px; padding: 16px; background: var(--bg-card); border-radius: 10px; border: 1px solid rgba(201, 169, 110, 0.15); }
+        .ly-ai-result { margin-top: 16px; padding: 16px; background: #fff; border-radius: 10px; border: 1px solid var(--border-color); }
         .ly-ai-loading { text-align: center; color: #999; font-size: 14px; padding: 20px 0; }
-        .ly-ai-content { font-size: 14px; line-height: 1.8; color: var(--text-primary); }
+        .ly-ai-content { font-size: 14px; line-height: 1.8; color: #333; }
         .ly-ai-content h4 { font-size: 15px; }
-        .ly-ai-content strong { color: var(--gold-primary); }
+        .ly-ai-content strong { color: var(--red-primary); }
         .ly-ai-error { text-align: center; color: #e74c3c; font-size: 14px; padding: 20px 0; }
         .ly-ai-disclaimer { font-size: 11px; color: #bbb; text-align: center; margin-top: 16px; padding: 10px; background: #faf8f5; border-radius: 8px; }
 
@@ -299,7 +294,7 @@
         .ly-info-row:last-child { border-bottom: none; }
         .ly-info-label { color: var(--text-light); white-space: nowrap; }
         .ly-info-value { color: var(--text-primary); text-align: right; margin-left: 10px; word-break: break-all; }
-        .ly-info-value b { color: var(--gold-primary); }
+        .ly-info-value b { color: var(--red-primary); }
 
         /* ==================== 卦象并排 ==================== */
         .ly-hexagram-pair {
@@ -315,8 +310,8 @@
             box-shadow: 0 1px 4px rgba(0,0,0,0.06);
         }
         .ly-hex-title {
-            background: var(--gold-primary);
-            color: var(--bg-card);
+            background: var(--red-primary);
+            color: #fff;
             padding: 8px 10px;
             font-size: 13px;
             font-weight: 600;
@@ -334,14 +329,14 @@
         }
         .ly-hex-line:last-child { border-bottom: none; }
         .ly-hex-shen { width: 18px; color: var(--text-light); font-size: 10px; }
-        .ly-hex-qin { width: 22px; color: var(--gold-primary); font-size: 10px; font-weight: 600; }
+        .ly-hex-qin { width: 22px; color: var(--red-primary); font-size: 10px; font-weight: 600; }
         .ly-hex-zhi { width: 32px; font-size: 11px; }
         .ly-hex-gan { width: 16px; font-size: 11px; color: var(--text-light); }
         .ly-hex-yao { flex: 1; font-family: monospace; font-size: 13px; letter-spacing: 1px; }
         .ly-hex-tag { width: 24px; font-size: 10px; text-align: center; }
-        .ly-hex-tag.shi { color: var(--gold-primary); font-weight: 700; }
+        .ly-hex-tag.shi { color: var(--red-primary); font-weight: 700; }
         .ly-hex-tag.ying { color: #228B22; font-weight: 700; }
-        .ly-hex-tag.dong { color: var(--gold-primary); font-weight: 700; }
+        .ly-hex-tag.dong { color: var(--red-primary); font-weight: 700; }
         .ly-fushen-line { font-size: 10px; color: #999; padding: 2px 0; border-bottom: 1px solid var(--border-color); }
 
         /* ==================== 卦象总断 ==================== */
@@ -393,8 +388,8 @@
         .ly-trad-header {
             text-align: center;
             padding: 15px;
-            background: linear-gradient(135deg, var(--gold-primary), #e74c3c);
-            color: var(--bg-card);
+            background: linear-gradient(135deg, var(--red-primary), #e74c3c);
+            color: #fff;
             border-radius: 8px 8px 0 0;
         }
         .ly-trad-name { font-size: 18px; font-weight: 700; }
@@ -404,7 +399,7 @@
             padding: 12px 14px;
             border-bottom: 1px solid var(--border-color);
         }
-        .ly-trad-label { font-size: 14px; font-weight: 600; color: var(--gold-primary); margin-bottom: 6px; }
+        .ly-trad-label { font-size: 14px; font-weight: 600; color: var(--red-primary); margin-bottom: 6px; }
         .ly-trad-text { font-size: 13px; color: var(--text-secondary); line-height: 1.8; }
 
         /* ==================== 分类占断 ==================== */
@@ -417,7 +412,7 @@
         .ly-cat-title { font-size: 15px; font-weight: 600; padding: 12px 14px; border-bottom: 1px solid var(--border-color); }
         .ly-cat-item { display: flex; padding: 10px 14px; border-bottom: 1px solid var(--border-color); font-size: 13px; }
         .ly-cat-item:last-child { border-bottom: none; }
-        .ly-cat-label { width: 60px; color: var(--gold-primary); font-weight: 600; flex-shrink: 0; }
+        .ly-cat-label { width: 60px; color: var(--red-primary); font-weight: 600; flex-shrink: 0; }
         .ly-cat-text { color: var(--text-secondary); line-height: 1.6; }
 
         /* ==================== 卦辞爻辞页 ==================== */
@@ -439,8 +434,8 @@
             -webkit-tap-highlight-color: transparent;
         }
         .ly-classic-tab.active {
-            background: var(--gold-primary);
-            color: var(--bg-card);
+            background: var(--red-primary);
+            color: #fff;
             font-weight: 600;
         }
         .ly-guaci {
@@ -450,7 +445,7 @@
             margin-bottom: 12px;
             box-shadow: 0 1px 4px rgba(0,0,0,0.06);
         }
-        .ly-guaci-title { font-size: 15px; font-weight: 600; color: var(--gold-primary); margin-bottom: 8px; }
+        .ly-guaci-title { font-size: 15px; font-weight: 600; color: var(--red-primary); margin-bottom: 8px; }
         .ly-guaci-text { font-size: 13px; color: var(--text-secondary); line-height: 2; }
         .ly-yaoci-item {
             background: var(--bg-card);
@@ -486,7 +481,7 @@
         .ly-dj-item:last-child { border-bottom: none; }
         .ly-dj-item span:first-child {
             width: 50px;
-            color: var(--gold-primary);
+            color: var(--red-primary);
             font-weight: 600;
             flex-shrink: 0;
         }
@@ -506,7 +501,7 @@
         .ly-xiangzhuan-title, .ly-tuanzhuan-title {
             font-size: 15px;
             font-weight: 600;
-            color: var(--gold-primary);
+            color: var(--red-primary);
             margin-bottom: 8px;
         }
         .ly-xiangzhuan-text, .ly-tuanzhuan-text {
@@ -522,11 +517,11 @@
             padding-bottom: 6px;
             border-bottom: 1px solid var(--border-color);
         }
-        .ly-yaoci-label { font-size: 14px; font-weight: 600; color: var(--gold-primary); margin-bottom: 4px; }
+        .ly-yaoci-label { font-size: 14px; font-weight: 600; color: var(--red-primary); margin-bottom: 4px; }
 
         /* ==================== 底部合规声明 ==================== */
         .disclaimer {
-            background: var(--bg-card)8E1;
+            background: #FFF8E1;
             color: #E65100;
             padding: 12px 16px;
             border-radius: 8px;
@@ -543,7 +538,7 @@
             left: 50%;
             transform: translateX(-50%) translateY(-20px);
             background: rgba(0,0,0,0.75);
-            color: var(--bg-card);
+            color: #fff;
             padding: 10px 20px;
             border-radius: 20px;
             font-size: 14px;
@@ -1675,7 +1670,7 @@
                     // 将Markdown格式转为HTML展示
                     resultText = resultText
                         .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-                        .replace(/#{1,6}\s*(.+)/g, '<h4 style="color:var(--gold-primary);margin:12px 0 6px;">$1</h4>')
+                        .replace(/#{1,6}\s*(.+)/g, '<h4 style="color:var(--red-primary);margin:12px 0 6px;">$1</h4>')
                         .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
                         .replace(/---/g, '<hr style="border:none;border-top:1px solid var(--border-color);margin:12px 0;">')
                         .replace(/\n/g, '<br>');
@@ -1711,13 +1706,13 @@
         // 复用现有的toast或创建弹窗
         var overlay = document.createElement('div');
         overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:1000;display:flex;align-items:center;justify-content:center;';
-        overlay.innerHTML = '<div style="background:var(--bg-card);border-radius:12px;padding:24px;max-width:320px;width:85%;text-align:center;">' +
+        overlay.innerHTML = '<div style="background:#fff;border-radius:12px;padding:24px;max-width:320px;width:85%;text-align:center;">' +
             '<div style="font-size:40px;margin-bottom:12px;">👑</div>' +
-            '<div style="font-size:16px;font-weight:bold;margin-bottom:8px;color:var(--text-primary);">VIP会员</div>' +
-            '<div style="font-size:14px;color:var(--text-secondary);margin-bottom:20px;line-height:1.6;">' + message + '</div>' +
+            '<div style="font-size:16px;font-weight:bold;margin-bottom:8px;color:#333;">VIP会员</div>' +
+            '<div style="font-size:14px;color:#666;margin-bottom:20px;line-height:1.6;">' + message + '</div>' +
             '<div style="display:flex;gap:12px;">' +
-            '<button onclick="this.closest(\'div[style]\').remove()" style="flex:1;padding:10px;border:1px solid #ddd;border-radius:8px;background:var(--bg-card);font-size:14px;cursor:pointer;">取消</button>' +
-            '<a href="pay.html" onclick="this.closest(\'div[style]\').remove()" style="flex:1;padding:10px;border:none;border-radius:8px;background:var(--gold-primary);color:var(--bg-card);font-size:14px;cursor:pointer;text-decoration:none;display:block;">开通VIP</a>' +
+            '<button onclick="this.closest(\'div[style]\').remove()" style="flex:1;padding:10px;border:1px solid #ddd;border-radius:8px;background:#fff;font-size:14px;cursor:pointer;">取消</button>' +
+            '<a href="pay.html" onclick="this.closest(\'div[style]\').remove()" style="flex:1;padding:10px;border:none;border-radius:8px;background:var(--red-primary);color:#fff;font-size:14px;cursor:pointer;text-decoration:none;display:block;">开通VIP</a>' +
             '</div></div>';
         overlay.addEventListener('click', function(e) { if (e.target === overlay) overlay.remove(); });
         document.body.appendChild(overlay);
@@ -1754,18 +1749,18 @@
 
 <!-- 微信引导弹窗 -->
 <div id="wechatGuideModal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.6);z-index:9999;align-items:center;justify-content:center;">
-  <div style="background:var(--bg-card);border-radius:16px;padding:32px 24px 24px;width:300px;max-width:90vw;text-align:center;box-shadow:0 8px 30px rgba(0,0,0,0.3);">
+  <div style="background:#fff;border-radius:16px;padding:32px 24px 24px;width:300px;max-width:90vw;text-align:center;box-shadow:0 8px 30px rgba(0,0,0,0.3);">
     <div style="width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,#07C160,#06AD56);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
       <svg width="36" height="36" viewBox="0 0 24 24" fill="white"><path d="M8.5 11a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3zm5-1.5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0zM20 12c0 2.2-1.8 4-4 4h-.5l-2.5 2 .5-2H16c2.2 0 4-1.8 4-4s-1.8-4-4-4H8c-2.2 0-4 1.8-4 4s1.8 4 4 4h1.5l.5 2-2.5-2H8C5.8 16 4 14.2 4 12s1.8-4 4-4h8c2.2 0 4 1.8 4 4z"/></svg>
     </div>
-    <div style="font-size:18px;font-weight:bold;color:var(--text-primary);margin-bottom:8px;">添加站长微信</div>
-    <div style="font-size:14px;color:var(--text-secondary);line-height:1.6;margin-bottom:16px;">微信号：DLing3313<br>了解更多，请添加微信</div>
-    <div style="background:var(--bg-secondary);border-radius:8px;padding:12px;margin-bottom:16px;">
+    <div style="font-size:18px;font-weight:bold;color:#333;margin-bottom:8px;">添加站长微信</div>
+    <div style="font-size:14px;color:#666;line-height:1.6;margin-bottom:16px;">微信号：DLing3313<br>了解更多，请添加微信</div>
+    <div style="background:#f5f5f5;border-radius:8px;padding:12px;margin-bottom:16px;">
       <div style="font-size:12px;color:#999;margin-bottom:6px;">微信号</div>
-      <div style="font-size:18px;font-weight:bold;color:var(--text-primary);letter-spacing:1px;" id="wechatIdDisplay">DLing3313</div>
+      <div style="font-size:18px;font-weight:bold;color:#333;letter-spacing:1px;" id="wechatIdDisplay">DLing3313</div>
       </div>
       <img src="../images/wechat-qr.png" alt="站长微信二维码" style="width:200px;height:200px;margin:10px auto;display:block;border-radius:8px;">
-      <button onclick="document.getElementById('wechatGuideModal').style.display='none'" style="width:100%;padding:12px;background:linear-gradient(135deg,#07C160,#06AD56);color:var(--bg-card);border:none;border-radius:8px;font-size:16px;font-weight:bold;cursor:pointer;">我知道了</button>
+      <button onclick="document.getElementById('wechatGuideModal').style.display='none'" style="width:100%;padding:12px;background:linear-gradient(135deg,#07C160,#06AD56);color:#fff;border:none;border-radius:8px;font-size:16px;font-weight:bold;cursor:pointer;">我知道了</button>
   </div>
 </div>
 <script>
@@ -1774,8 +1769,5 @@ function showWechatGuide() {
 }
 </script>
 
-<footer style="text-align:center;padding:20px 15px;color:var(--text-light);font-size:12px;border-top:1px solid var(--border-color);margin-top:20px;">
-    <p>© 2026 五行鲤 ｜ 传统民俗文化参考，不构成人生决策依据</p>
-</footer>
 </body>
 </html>

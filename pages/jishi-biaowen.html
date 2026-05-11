@@ -7,26 +7,22 @@
     <style>
     /* ==================== CSS变量 ==================== */
     :root {
-        --bg-primary: #0D1117;
-        --bg-secondary: #161B22;
-        --bg-card: rgba(26, 26, 46, 0.75);
-        --border-color: rgba(201, 169, 110, 0.15);
-        --border-gold: rgba(201, 169, 110, 0.3);
-        --border-dark: rgba(201, 169, 110, 0.25);
-        --text-primary: #E8F4F8;
-        --text-secondary: #A0B3C0;
-        --text-light: #6B7B8A;
-        --gold-primary: #C9A96E;
-        --gold-dark: #A68A4D;
-        --gold: #C9A96E;
-        --gold-light: rgba(201, 169, 110, 0.2);
-        --red-primary: #E74C3C;
-        --red-dark: #C0392B;
-        --red-light: rgba(231, 76, 60, 0.15);
-        --green: #2E8B57;
-        --blue: #4A90A4;
-        --shadow: rgba(0, 0, 0, 0.3);
-        --shadow-strong: rgba(0, 0, 0, 0.5);
+        --bg-primary: #F5F0E8;
+        --bg-secondary: #FFF8EE;
+        --bg-card: #FFFCF5;
+        --border-color: #D4C5A0;
+        --border-dark: #B8A472;
+        --text-primary: #3D2B1F;
+        --text-secondary: #6B5B4E;
+        --text-light: #8C7B6B;
+        --red-primary: #A81216;
+        --red-dark: #8A0E12;
+        --red-light: #E8D0D0;
+        --gold: #C8A84E;
+        --gold-light: #E8D48C;
+        --green: #4A7C59;
+        --shadow: rgba(61, 43, 31, 0.1);
+        --shadow-strong: rgba(61, 43, 31, 0.2);
     }
 
     /* ==================== 全局重置 ==================== */
@@ -43,8 +39,8 @@
 
     /* ==================== 顶部标题栏 ==================== */
     .header {
-        background: linear-gradient(135deg, #8B1A1A, var(--gold-primary));
-        color: var(--bg-card);
+        background: linear-gradient(135deg, #8B1A1A, #A81216);
+        color: #FFF;
         padding: 15px 20px;
         text-align: center;
         position: sticky;
@@ -62,7 +58,7 @@
         left: 15px;
         top: 50%;
         transform: translateY(-50%);
-        color: var(--bg-card);
+        color: #FFF;
         text-decoration: none;
         font-size: 14px;
         opacity: 0.9;
@@ -78,8 +74,8 @@
 
     /* ==================== 服务说明卡片 ==================== */
     .service-card {
-        background: rgba(26, 26, 46, 0.75); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(201, 169, 110, 0.15);
-        border: 1px solid rgba(201, 169, 110, 0.15);
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
         border-radius: 12px;
         padding: 20px 16px;
         margin-bottom: 16px;
@@ -89,7 +85,7 @@
     .service-card-title {
         font-size: 18px;
         font-weight: 600;
-        color: var(--gold-primary);
+        color: var(--red-primary);
         text-align: center;
         margin-bottom: 12px;
         letter-spacing: 2px;
@@ -110,7 +106,7 @@
     .service-card-price .price-amount {
         font-size: 28px;
         font-weight: 700;
-        color: var(--gold-primary);
+        color: var(--red-primary);
     }
     .service-card-price .price-unit {
         font-size: 14px;
@@ -140,15 +136,15 @@
         display: inline-block;
         width: 6px;
         height: 6px;
-        background: var(--gold-primary);
+        background: var(--red-primary);
         border-radius: 50%;
         flex-shrink: 0;
     }
 
     /* ==================== 表单样式 ==================== */
     .form-section {
-        background: rgba(26, 26, 46, 0.75); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(201, 169, 110, 0.15);
-        border: 1px solid rgba(201, 169, 110, 0.15);
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
         border-radius: 12px;
         padding: 20px 16px;
         margin-bottom: 16px;
@@ -158,10 +154,10 @@
     .form-section-title {
         font-size: 16px;
         font-weight: 600;
-        color: var(--gold-primary);
+        color: var(--red-primary);
         margin-bottom: 16px;
         padding-left: 10px;
-        border-left: 3px solid var(--gold-primary);
+        border-left: 3px solid var(--red-primary);
         letter-spacing: 1px;
     }
     .form-group {
@@ -178,7 +174,7 @@
         font-weight: 500;
     }
     .form-group label .required {
-        color: var(--gold-primary);
+        color: var(--red-primary);
         margin-left: 2px;
     }
     .form-group input[type="text"],
@@ -186,7 +182,7 @@
     .form-group textarea {
         width: 100%;
         padding: 10px 12px;
-        border: 1px solid rgba(201, 169, 110, 0.15);
+        border: 1px solid var(--border-color);
         border-radius: 8px;
         font-size: 15px;
         background: var(--bg-card);
@@ -199,7 +195,7 @@
     .form-group input[type="text"]:focus,
     .form-group select:focus,
     .form-group textarea:focus {
-        border-color: var(--gold-primary);
+        border-color: var(--red-primary);
         box-shadow: 0 0 0 2px rgba(168, 18, 22, 0.1);
     }
     .form-group input::placeholder,
@@ -235,16 +231,16 @@
         user-select: none;
     }
     .gender-switch .gender-item.active {
-        border-color: var(--gold-primary);
-        background: var(--gold-light);
-        color: var(--gold-primary);
+        border-color: var(--red-primary);
+        background: var(--red-light);
+        color: var(--red-primary);
         font-weight: 600;
     }
 
     /* ==================== 收款区域 ==================== */
     .payment-section {
-        background: rgba(26, 26, 46, 0.75); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(201, 169, 110, 0.15);
-        border: 1px solid rgba(201, 169, 110, 0.15);
+        background: var(--bg-card);
+        border: 1px solid var(--border-color);
         border-radius: 12px;
         padding: 20px 16px;
         margin-bottom: 16px;
@@ -254,7 +250,7 @@
     .payment-title {
         font-size: 16px;
         font-weight: 600;
-        color: var(--gold-primary);
+        color: var(--red-primary);
         text-align: center;
         margin-bottom: 16px;
         letter-spacing: 2px;
@@ -272,7 +268,7 @@
         width: 140px;
         height: 140px;
         border-radius: 8px;
-        border: 1px solid rgba(201, 169, 110, 0.15);
+        border: 1px solid var(--border-color);
         object-fit: cover;
     }
     .qr-item span {
@@ -301,8 +297,8 @@
         cursor: pointer;
         letter-spacing: 2px;
         transition: transform 0.2s, box-shadow 0.2s;
-        background: linear-gradient(135deg, var(--gold-primary), var(--gold-primary));
-        color: var(--bg-card);
+        background: linear-gradient(135deg, #A81216, #C41A1A);
+        color: #FFF;
         box-shadow: 0 4px 15px rgba(168, 18, 22, 0.4);
         margin-bottom: 16px;
     }
@@ -328,7 +324,7 @@
         display: flex;
     }
     .success-modal {
-        background: rgba(26, 26, 46, 0.75); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(201, 169, 110, 0.15);
+        background: var(--bg-card);
         border-radius: 12px;
         padding: 30px 24px;
         width: 85%;
@@ -364,8 +360,8 @@
     .success-modal .btn-confirm {
         display: inline-block;
         padding: 10px 32px;
-        background: var(--gold-primary);
-        color: var(--bg-card);
+        background: var(--red-primary);
+        color: #FFF;
         border: none;
         border-radius: 20px;
         font-size: 14px;
@@ -374,7 +370,7 @@
         transition: background 0.2s;
     }
     .success-modal .btn-confirm:active {
-        background: var(--gold-dark);
+        background: var(--red-dark);
     }
 
     /* ==================== 底部合规声明 ==================== */
@@ -559,7 +555,7 @@
         var modal = overlay.querySelector('.success-modal');
         modal.innerHTML = '<div class="success-icon">&#10003;</div>' +
             '<h3>订单已提交</h3>' +
-            '<textarea id="biaowenSummary" style="width:100%;min-height:150px;padding:10px;border: 1px solid rgba(201, 169, 110, 0.15);border-radius:8px;font-size:13px;line-height:1.6;background:var(--bg-secondary);color:var(--text-primary);resize:vertical;font-family:inherit;margin-bottom:12px;">' + summaryText.replace(/</g,'&lt;') + '</textarea>' +
+            '<textarea id="biaowenSummary" style="width:100%;min-height:150px;padding:10px;border:1px solid var(--border-color);border-radius:8px;font-size:13px;line-height:1.6;background:var(--bg-secondary);color:var(--text-primary);resize:vertical;font-family:inherit;margin-bottom:12px;">' + summaryText.replace(/</g,'&lt;') + '</textarea>' +
             '<button class="btn-confirm" onclick="copyBiaowenText()" style="margin-bottom:8px;background:linear-gradient(135deg,#07C160,#06AD56);">一键复制</button>' +
             '<button class="btn-confirm" onclick="closeSuccess()" style="background:var(--text-light);">关闭</button>';
         overlay.classList.add('show');
@@ -600,8 +596,5 @@
 })();
 </script>
 
-<footer style="text-align:center;padding:20px 15px;color:var(--text-light);font-size:12px;border-top:1px solid var(--border-color);margin-top:20px;">
-    <p>© 2026 五行鲤 ｜ 传统民俗文化参考，不构成人生决策依据</p>
-</footer>
 </body>
 </html>
