@@ -291,8 +291,9 @@ async function initDb() {
 
   // 【关键修复】兼容旧数据库：如果 users 表使用 password 字段而非 password_hash，则迁移
   try {
-    const hasPasswordHash = compatDb.prepare("PRAGMA table_info(users)").all().some(col => col.name === 'password_hash');
-    const hasPassword = compatDb.prepare("PRAGMA table_info(users)").all().some(col => col.name === 'password');
+    const tableInfo = compatDb.prepare("PRAGMA table_info(users)").all();
+    const hasPasswordHash = tableInfo.some(function(col) { return col.name === 'password_hash'; });
+    const hasPassword = tableInfo.some(function(col) { return col.name === 'password'; });
     if (!hasPasswordHash && hasPassword) {
       console.log('[数据库迁移] 检测到旧版 password 字段，正在迁移到 password_hash...');
       compatDb.exec(`ALTER TABLE users ADD COLUMN password_hash TEXT`);
