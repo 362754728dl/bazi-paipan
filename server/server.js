@@ -74,7 +74,13 @@ app.get('*', (req, res) => {
 const config = require('./config');
 
 async function startServer() {
-  await initDb();
+  try {
+    await initDb();
+    console.log('[启动] 数据库初始化成功');
+  } catch (err) {
+    console.error('[启动] 数据库初始化失败:', err);
+    throw err;
+  }
 
   // 定期保存数据库到文件（每30秒）
   setInterval(function() {
