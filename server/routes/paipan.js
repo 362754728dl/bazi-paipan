@@ -100,4 +100,24 @@ router.delete('/record/:id', authMiddleware, async (req, res) => {
   }
 });
 
+// POST /api/paipan/records - 保存排盘记录
+router.post('/records', authMiddleware, async (req, res) => {
+  try {
+    const db = getDb();
+    const userId = req.user.user_id;
+    const { name, gender, solar_date, lunar_date, bazi_str, sheng_xiao, form_data, birth_hour, birth_minute } = req.body;
+
+    const result = await db.run(
+      `INSERT INTO paipan_records (user_id, name, gender, solar_date, lunar_date, bazi_str, sheng_xiao, form_data, birth_hour, birth_minute)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [userId, name, gender, solar_date, lunar_date, bazi_str, JSON.stringify(form_data || {}), birth_hour, birth_minute]
+    );
+
+    res.json({ code: 200, message: '保存成功', data: { id: result.lastID } });
+  } catch (error) {
+    console.error('[保存排盘记录] 失败:', error);
+    res.json({ code: 500, message: '保存失败' });
+  }
+});
+
 module.exports = router;
