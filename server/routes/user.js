@@ -8,23 +8,109 @@ const config = require('../config');
 
 const router = express.Router();
 
+// ==================== 登录频率限制（内存级） ====================
+const loginAttempts = new Map(); // IP -> { count, firstAttempt }
+const LOGIN_LIMIT = 5; // 1分钟内最多5次尝试
+const LOGIN_WINDOW = 60000; // 1分钟窗口
+
+function checkLoginRateLimit(req, res, next) {
+  const ip = req.ip || req.connection.remoteAddress || 'unknown';
+  const now = Date.now();
+  const attempt = loginAttempts.get(ip);
+  
+  if (attempt) {
+    // 清理过期记录
+    if (now - attempt.firstAttempt > LOGIN_WINDOW) {
+      loginAttempts.set(ip, { count: 1, firstAttempt: now });
+      return next();
+    }
+    // 检查是否超限
+    if (attempt.count >= LOGIN_LIMIT) {
+      return res.json({ code: 429, message: '登录尝试过于频繁，请1分钟后再试' });
+    }
+    // 增加计数
+    attempt.count++;
+  } else {
+    loginAttempts.set(ip, { count: 1, firstAttempt: now });
+  }
+  next();
+}
+
+// 每5分钟清理过期登录记录
+setInterval(function() {
+  const now = Date.now();
+  for (const [ip, attempt] of loginAttempts.entries()) {
+    if (now - attempt.firstAttempt > LOGIN_WINDOW) {
+      loginAttempts.delete(ip);
+    }
+  }
+}, 300000);
+
+// ==================== 数学验证码（内存存储） ====================
+const mathCaptchaStore = new Map();
+
+// 每10分钟清理过期验证码
+setInterval(function() {
+  var now = Date.now();
+  for (var key in mathCaptchaStore) {
+    if (now - mathCaptchaStore[key].createdAt >= 600000) {
+      delete mathCaptchaStore[key];
+    }
+  }
+}, 600000);
+
+// GET /api/user/captcha - 获取数学验证码
+router.get('/captcha', async (req, res) => {
+  var ip = req.ip || req.connection.remoteAddress || req.headers['x-forwarded-for'] || 'unknown';
+  var a = Math.floor(Math.random() * 9) + 1;
+  var b = Math.floor(Math.random() * 9) + 1;
+  var ops = ['+', '-'];
+  var op = ops[Math.floor(Math.random() * ops.length)];
+  var answer;
+  var question;
+  if (op === '+') {
+    answer = a + b;
+    question = a + '+' + b + '=?';
+  } else {
+    // 确保结果非负
+    if (a < b) { var tmp = a; a = b; b = tmp; }
+    answer = a - b;
+    question = a + '-' + b + '=?';
+  }
+  mathCaptchaStore[ip] = { answer: answer, createdAt: Date.now() };
+  res.json({ code: 200, data: { question: question }, message: 'success' });
+});
+
 // 生成JWT token
-function generateToken(user) {
+async function generateToken(user) {
   return jwt.sign(
-    { user_id: user.id, username: user.username, level: user.level },
+    { user_id: user.id, username: user.username, level: user.level, role: user.role || 'normal' },
     config.jwtSecret,
     { expiresIn: config.jwtExpiresIn }
   );
 }
 
 // POST /api/user/register
-router.post('/register', (req, res) => {
+router.post('/register', async (req, res) => {
   try {
     const { username, password, captcha } = req.body;
     const ip = req.ip || req.connection.remoteAddress || req.headers['x-forwarded-for'] || 'unknown';
 
-    // 【防护层1】验证码校验
-    if (!verifyCaptcha(ip, captcha)) {
+    // 【防护层1】验证码校验（支持SVG验证码和数学验证码两种方式）
+    let captchaValid = verifyCaptcha(ip, captcha);
+    
+    // 如果SVG验证码校验失败，尝试数学验证码
+    if (!captchaValid && mathCaptchaStore[ip]) {
+      const mathRecord = mathCaptchaStore[ip];
+      if (Date.now() - mathRecord.createdAt < 600000) {
+        captchaValid = String(mathRecord.answer) === String(captcha);
+        if (captchaValid) {
+          delete mathCaptchaStore[ip]; // 一次一失效
+        }
+      }
+    }
+    
+    if (!captchaValid) {
       return res.json({ code: 400, message: '验证码错误，请重新输入' });
     }
 
@@ -34,7 +120,15 @@ router.post('/register', (req, res) => {
       return res.json({ code: 429, message: rateCheck.message });
     }
 
+    // 【防护层3】数据库级IP注册限制（最近24小时该IP注册>=3次则拒绝）
     const db = getDb();
+    const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().slice(0, 19).replace('T', ' ');
+    const ipRegCount = await db.prepare(
+      "SELECT COUNT(*) as count FROM registration_logs WHERE ip = ? AND created_at >= ?"
+    ).get(ip, twentyFourHoursAgo).count;
+    if (ipRegCount >= 3) {
+      return res.json({ code: 429, message: '该IP注册次数过多，请24小时后再试' });
+    }
 
     // 参数验证
     if (!username || !password) {
@@ -48,7 +142,7 @@ router.post('/register', (req, res) => {
     }
 
     // 检查用户名是否已存在
-    const existing = db.prepare('SELECT id FROM users WHERE username = ?').get(username);
+    const existing = await db.prepare('SELECT id FROM users WHERE username = ?').get(username);
     if (existing) {
       return res.json({ code: 400, message: '用户名已存在' });
     }
@@ -57,7 +151,7 @@ router.post('/register', (req, res) => {
     const passwordHash = bcrypt.hashSync(password, 10);
 
     // 插入用户
-    const result = db.prepare(
+    const result = await db.prepare(
       'INSERT INTO users (username, password_hash) VALUES (?, ?)'
     ).run(username, passwordHash);
 
@@ -70,21 +164,19 @@ router.post('/register', (req, res) => {
     // 注册成功：记录IP限流
     recordRegisterSuccess(ip);
 
-    const token = generateToken(user);
-
-    // 设置 HttpOnly Cookie（Express内置res.cookie，无需cookie-parser）
+    // 注册成功：写入注册日志
     try {
-      var isProduction = process.env.NODE_ENV === 'production';
-      res.cookie('auth_token', token, {
-        httpOnly: true,
-        secure: isProduction,
-        sameSite: 'lax',
-        path: '/',
-        maxAge: 7 * 24 * 60 * 60 * 1000
-      });
-    } catch (e) {
-      console.error('设置Cookie失败:', e.message);
+      await db.prepare(
+        'INSERT INTO registration_logs (username, ip) VALUES (?, ?)'
+      ).run(username, ip);
+    } catch(e) {
+      console.error('写入注册日志失败:', e);
     }
+
+    console.log('[认证] 用户 ' + username + ' 注册成功');
+    const token = await generateToken(user);
+
+    console.log('[用户信息返回] 用户名: ' + user.username + ', level: ' + user.level + ', member_level: ' + (user.member_level || 0) + ', member_expire_time: ' + (user.member_expire_time || 0));
 
     res.json({
       code: 200,
@@ -98,7 +190,7 @@ router.post('/register', (req, res) => {
 });
 
 // POST /api/user/login
-router.post('/login', (req, res) => {
+router.post('/login', checkLoginRateLimit, async (req, res) => {
   try {
     const { username, password } = req.body;
     const db = getDb();
@@ -107,8 +199,10 @@ router.post('/login', (req, res) => {
       return res.json({ code: 400, message: '用户名和密码不能为空' });
     }
 
-    const user = db.prepare('SELECT * FROM users WHERE username = ?').get(username);
+    console.log('[认证] 用户 ' + username + ' 尝试登录');
+    const user = await db.prepare('SELECT * FROM users WHERE username = ?').get(username);
     if (!user) {
+      console.log('[认证] 用户 ' + username + ' 登录失败：用户不存在');
       return res.json({ code: 400, message: '用户名或密码错误' });
     }
 
@@ -117,14 +211,9 @@ router.post('/login', (req, res) => {
       return res.json({ code: 403, message: '账号已被禁用' });
     }
 
-    // 兼容旧数据库：可能使用 password 或 password_hash 字段
-    var passwordHash = user.password_hash || user.password;
-    if (!passwordHash) {
-      console.log('[登录] 用户', username, '没有密码字段');
-      return res.json({ code: 400, message: '用户名或密码错误' });
-    }
-    const valid = bcrypt.compareSync(password, passwordHash);
+    const valid = bcrypt.compareSync(password, user.password_hash);
     if (!valid) {
+      console.log('[认证] 用户 ' + username + ' 登录失败：密码错误');
       return res.json({ code: 400, message: '用户名或密码错误' });
     }
 
@@ -133,7 +222,7 @@ router.post('/login', (req, res) => {
     if (user.member_level === 1 && user.member_expire_time > 0) {
       const now = Math.floor(Date.now() / 1000);
       if (now > user.member_expire_time) {
-        db2.prepare(
+        await db2.prepare(
           "UPDATE users SET member_level = 0, member_expire_time = 0, ai_used_today = 0, ai_last_use_date = '', updated_at = datetime('now','localtime') WHERE id = ?"
         ).run(user.id);
         user.member_level = 0;
@@ -144,36 +233,34 @@ router.post('/login', (req, res) => {
     // 重置每日AI次数（如果不是今天）
     const today = new Date().toISOString().slice(0, 10);
     if (user.ai_last_use_date !== today) {
-      db2.prepare("UPDATE users SET ai_used_today = 0, ai_last_use_date = ? WHERE id = ?").run(today, user.id);
+      await db2.prepare("UPDATE users SET ai_used_today = 0, ai_last_use_date = ? WHERE id = ?").run(today, user.id);
       user.ai_used_today = 0;
     }
 
-    const token = generateToken(user);
-    console.log('[登录] 用户', user.username, '密码验证通过，生成token');
+    console.log('[认证] 用户 ' + username + ' 登录成功');
+    const token = await generateToken(user);
 
-    // 设置 HttpOnly Cookie
-    try {
-      var isProduction = process.env.NODE_ENV === 'production';
-      res.cookie('auth_token', token, {
-        httpOnly: true,
-        secure: isProduction,
-        sameSite: 'lax',
-        path: '/',
-        maxAge: 7 * 24 * 60 * 60 * 1000
-      });
-      console.log('[登录] Cookie设置成功');
-    } catch (e) {
-      console.error('[登录] 设置Cookie失败:', e.message);
-    }
+    console.log('[登录返回] 用户名: ' + user.username + ', level: ' + user.level + ', member_level: ' + (user.member_level || 0) + ', member_expire_time: ' + (user.member_expire_time || 0));
 
-    console.log('[登录] 用户', user.username, '登录成功，返回200');
+    // 设置 HttpOnly Cookie（安全：XSS无法窃取，浏览器自动携带）
+    const isProduction = process.env.NODE_ENV === 'production';
+    res.cookie('auth_token', token, {
+      httpOnly: true,
+      secure: isProduction, // 生产环境使用 HTTPS
+      sameSite: 'lax', // lax 允许同站请求和从外部链接进入时携带 Cookie
+      maxAge: 14 * 24 * 60 * 60 * 1000, // 14天
+      path: '/' // 确保 Cookie 在整个网站都有效
+    });
+    console.log('[登录返回] Cookie 已设置，secure:', isProduction, 'sameSite: lax, path: /');
+
     res.json({
       code: 200,
       data: {
-        token,
+        // token 不再返回给前端，通过 HttpOnly Cookie 传递
         user_id: user.id,
         username: user.username,
         level: user.level,
+        role: user.role || 'normal',
         email: user.email,
         phone: user.phone,
         vip_expire_time: user.vip_expire_time,
@@ -185,16 +272,22 @@ router.post('/login', (req, res) => {
       message: '登录成功'
     });
   } catch (err) {
-    console.error('[登录] 异常:', err);
-    res.json({ code: 500, message: '登录失败: ' + err.message });
+    console.error('登录失败:', err);
+    res.json({ code: 500, message: '登录失败' });
   }
 });
 
-// POST /api/user/register
-router.get('/info', authMiddleware, (req, res) => {
+// POST /api/user/logout（退出登录，清除Cookie）
+router.post('/logout', (req, res) => {
+  res.clearCookie('auth_token');
+  res.json({ code: 200, message: '退出成功' });
+});
+
+// GET /api/user/info（需登录）
+router.get('/info', authMiddleware, async (req, res) => {
   try {
     const db = getDb();
-    const user = db.prepare(
+    const user = await db.prepare(
       'SELECT id, username, email, phone, level, vip_expire_time, created_at FROM users WHERE id = ?'
     ).get(req.user_id);
 
@@ -214,7 +307,7 @@ router.get('/info', authMiddleware, (req, res) => {
 });
 
 // POST /api/user/change-password（需登录）
-router.post('/change-password', authMiddleware, (req, res) => {
+router.post('/change-password', authMiddleware, async (req, res) => {
   try {
     const { oldPassword, newPassword } = req.body;
     const db = getDb();
@@ -226,7 +319,7 @@ router.post('/change-password', authMiddleware, (req, res) => {
       return res.json({ code: 400, message: '新密码至少6位' });
     }
 
-    const user = db.prepare('SELECT * FROM users WHERE id = ?').get(req.user_id);
+    const user = await db.prepare('SELECT * FROM users WHERE id = ?').get(req.user_id);
     if (!user) {
       return res.json({ code: 404, message: '用户不存在' });
     }
@@ -237,7 +330,7 @@ router.post('/change-password', authMiddleware, (req, res) => {
     }
 
     const newHash = bcrypt.hashSync(newPassword, 10);
-    db.prepare('UPDATE users SET password_hash = ?, updated_at = datetime(\'now\',\'localtime\') WHERE id = ?')
+    await db.prepare('UPDATE users SET password_hash = ?, updated_at = datetime(\'now\',\'localtime\') WHERE id = ?')
       .run(newHash, req.user_id);
 
     res.json({ code: 200, data: null, message: '密码修改成功' });
@@ -248,20 +341,20 @@ router.post('/change-password', authMiddleware, (req, res) => {
 });
 
 // GET /api/user/daily-count（需登录）
-router.get('/daily-count', authMiddleware, (req, res) => {
+router.get('/daily-count', authMiddleware, async (req, res) => {
   try {
     const db = getDb();
     const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
 
     // 检查VIP是否过期
-    const user = db.prepare('SELECT level, vip_expire_time FROM users WHERE id = ?').get(req.user_id);
+    const user = await db.prepare('SELECT level, vip_expire_time FROM users WHERE id = ?').get(req.user_id);
     let isVip = user.level === 'vip';
     if (isVip && user.vip_expire_time) {
       const now = new Date();
       const expire = new Date(user.vip_expire_time);
       if (now > expire) {
         // VIP已过期，降级
-        db.prepare('UPDATE users SET level = \'normal\', vip_expire_time = \'\', updated_at = datetime(\'now\',\'localtime\') WHERE id = ?')
+        await db.prepare('UPDATE users SET level = \'normal\', vip_expire_time = \'\', updated_at = datetime(\'now\',\'localtime\') WHERE id = ?')
           .run(req.user_id);
         isVip = false;
       }
@@ -270,7 +363,7 @@ router.get('/daily-count', authMiddleware, (req, res) => {
     const limits = isVip ? config.vipLimits : config.freeLimits;
 
     // 获取今日使用次数
-    const record = db.prepare(
+    const record = await db.prepare(
       'SELECT name_count, eval_count, liuyao_count FROM daily_counts WHERE user_id = ? AND date = ?'
     ).get(req.user_id, today);
 
@@ -303,9 +396,9 @@ router.get('/daily-count', authMiddleware, (req, res) => {
 // ==================== 会员系统：AI次数检查与扣减 ====================
 
 // 辅助函数：检查并刷新会员状态（到期自动降级）
-function refreshMemberStatus(userId) {
+async function refreshMemberStatus(userId) {
   const db = getDb();
-  const user = db.prepare(
+  const user = await db.prepare(
     'SELECT member_level, member_expire_time FROM users WHERE id = ?'
   ).get(userId);
 
@@ -316,7 +409,7 @@ function refreshMemberStatus(userId) {
     const now = Math.floor(Date.now() / 1000);
     if (now > user.member_expire_time) {
       // 已到期，自动降级为普通会员
-      db.prepare(
+      await db.prepare(
         "UPDATE users SET member_level = 0, member_expire_time = 0, ai_used_today = 0, ai_last_use_date = '', updated_at = datetime('now','localtime') WHERE id = ?"
       ).run(userId);
       return { member_level: 0, member_expire_time: 0, ai_used_today: 0, ai_last_use_date: '', ai_experience_used: user.ai_experience_used || 0 };
@@ -327,38 +420,39 @@ function refreshMemberStatus(userId) {
 }
 
 // 辅助函数：重置每日AI次数（如果不是今天，自动归零）
-function resetDailyAiCountIfNeeded(userId) {
+async function resetDailyAiCountIfNeeded(userId) {
   const db = getDb();
   const today = new Date().toISOString().slice(0, 10);
-  const user = db.prepare('SELECT ai_last_use_date FROM users WHERE id = ?').get(userId);
+  const user = await db.prepare('SELECT ai_last_use_date FROM users WHERE id = ?').get(userId);
 
   if (!user || user.ai_last_use_date !== today) {
-    db.prepare(
+    await db.prepare(
       "UPDATE users SET ai_used_today = 0, ai_last_use_date = ? WHERE id = ?"
     ).run(today, userId);
   }
 }
 
 // GET /api/user/ai-quota（需登录）- 查询AI使用配额
-router.get('/ai-quota', authMiddleware, (req, res) => {
+router.get('/ai-quota', authMiddleware, async (req, res) => {
   try {
     const db = getDb();
 
     // 先刷新会员状态
-    const memberUser = refreshMemberStatus(req.user_id);
+    const memberUser = await refreshMemberStatus(req.user_id);
     if (!memberUser) {
       return res.json({ code: 404, message: '用户不存在' });
     }
 
     // 重置每日次数
-    resetDailyAiCountIfNeeded(req.user_id);
+    await resetDailyAiCountIfNeeded(req.user_id);
 
     // 重新查询最新数据
-    const user = db.prepare(
+    const user = await db.prepare(
       'SELECT member_level, member_expire_time, ai_used_today, ai_last_use_date, ai_experience_used FROM users WHERE id = ?'
     ).get(req.user_id);
 
     const isMember = user.member_level === 1;
+    console.log('[AI配额探测] 用户: ' + user.username + ', 判定is_member依据的member_level: ' + user.member_level);
     const todayLimit = isMember ? 5 : 0; // 月度会员每天5次，普通会员无每日额度
     const usedToday = user.ai_used_today || 0;
     const remaining = isMember ? Math.max(0, todayLimit - usedToday) : 0;
@@ -386,21 +480,21 @@ router.get('/ai-quota', authMiddleware, (req, res) => {
 });
 
 // POST /api/user/ai-use（需登录）- 使用AI前检查并扣减次数
-router.post('/ai-use', authMiddleware, (req, res) => {
+router.post('/ai-use', authMiddleware, async (req, res) => {
   try {
     const db = getDb();
 
     // 先刷新会员状态
-    const memberUser = refreshMemberStatus(req.user_id);
+    const memberUser = await refreshMemberStatus(req.user_id);
     if (!memberUser) {
       return res.json({ code: 404, message: '用户不存在' });
     }
 
     // 重置每日次数
-    resetDailyAiCountIfNeeded(req.user_id);
+    await resetDailyAiCountIfNeeded(req.user_id);
 
     // 重新查询最新数据
-    const user = db.prepare(
+    const user = await db.prepare(
       'SELECT member_level, ai_used_today, ai_experience_used FROM users WHERE id = ?'
     ).get(req.user_id);
 
@@ -417,7 +511,7 @@ router.post('/ai-use', authMiddleware, (req, res) => {
         });
       }
       // 扣减次数
-      db.prepare('UPDATE users SET ai_used_today = ai_used_today + 1 WHERE id = ?').run(req.user_id);
+      await db.prepare('UPDATE users SET ai_used_today = ai_used_today + 1 WHERE id = ?').run(req.user_id);
       return res.json({
         code: 200,
         data: { allowed: true, is_member: true, used: user.ai_used_today + 1, limit: todayLimit, remaining: todayLimit - user.ai_used_today - 1 },
@@ -433,7 +527,7 @@ router.post('/ai-use', authMiddleware, (req, res) => {
         });
       }
       // 使用体验资格
-      db.prepare('UPDATE users SET ai_experience_used = 1, ai_used_today = ai_used_today + 1 WHERE id = ?').run(req.user_id);
+      await db.prepare('UPDATE users SET ai_experience_used = 1, ai_used_today = ai_used_today + 1 WHERE id = ?').run(req.user_id);
       return res.json({
         code: 200,
         data: { allowed: true, is_member: false, experience_used: true },
@@ -444,64 +538,6 @@ router.post('/ai-use', authMiddleware, (req, res) => {
     console.error('AI次数扣减失败:', err);
     res.json({ code: 500, message: 'AI次数扣减失败' });
   }
-});
-
-// AI分析记录列表
-router.get('/ai-logs', authMiddleware, function(req, res) {
-    try {
-        var db = getDb();
-        var userId = req.user_id;
-        var type = req.query.type || '';
-        var page = parseInt(req.query.page) || 1;
-        var pageSize = parseInt(req.query.pageSize) || 10;
-        var offset = (page - 1) * pageSize;
-
-        var whereClause = 'WHERE user_id = ?';
-        var params = [userId];
-        if (type) {
-            whereClause += ' AND analysis_type = ?';
-            params.push(type);
-        }
-
-        var total, list;
-        if (type) {
-            total = db.prepare('SELECT COUNT(*) as cnt FROM ai_analysis_logs WHERE user_id = ? AND analysis_type = ?').get(userId, type).cnt;
-            list = db.prepare('SELECT id, analysis_type, input_summary, model_name, tokens_used, created_at FROM ai_analysis_logs WHERE user_id = ? AND analysis_type = ? ORDER BY created_at DESC LIMIT ? OFFSET ?')
-                .all(userId, type, pageSize, offset);
-        } else {
-            total = db.prepare('SELECT COUNT(*) as cnt FROM ai_analysis_logs WHERE user_id = ?').get(userId).cnt;
-            list = db.prepare('SELECT id, analysis_type, input_summary, model_name, tokens_used, created_at FROM ai_analysis_logs WHERE user_id = ? ORDER BY created_at DESC LIMIT ? OFFSET ?')
-                .all(userId, pageSize, offset);
-        }
-
-        res.json({
-            code: 200,
-            data: { list: list, total: total, page: page, pageSize: pageSize, hasMore: offset + list.length < total },
-            message: 'success'
-        });
-    } catch (err) {
-        console.error('获取AI记录失败:', err.message, err.stack);
-        res.json({ code: 500, message: '获取记录失败' });
-    }
-});
-
-// AI分析记录详情
-router.get('/ai-log/:id', authMiddleware, function(req, res) {
-    try {
-        var db = getDb();
-        var userId = req.user_id;
-        var logId = parseInt(req.params.id);
-
-        var log = db.prepare('SELECT * FROM ai_analysis_logs WHERE id = ? AND user_id = ?').get(logId, userId);
-        if (!log) {
-            return res.json({ code: 404, message: '记录不存在' });
-        }
-
-        res.json({ code: 200, data: log, message: 'success' });
-    } catch (err) {
-        console.error('获取AI记录详情失败:', err);
-        res.json({ code: 500, message: '获取记录详情失败' });
-    }
 });
 
 module.exports = router;

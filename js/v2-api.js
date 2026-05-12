@@ -1,258 +1,134 @@
 /**
- * v2-api.js - v2版本核心API模块
- * 替代storage.js中的localStorage操作，改用后端API
- * 仅在v2页面中使用，不影响v1.5.0
+ * V2API 兼容层（精简版）
+ * 
+ * 说明：主站认证已改为 HttpOnly Cookie，此文件仅提供兼容性函数外壳，
+ * 避免 v2 页面报 ReferenceError。实际认证由浏览器自动携带 Cookie 完成。
  */
-var V2API = (function () {
-    'use strict';
+var V2API = {
+    /**
+     * 判断是否已登录（已废弃，返回 false 让后端验证）
+     * @returns {boolean}
+     */
+    isLoggedIn: function() {
+        // HttpOnly Cookie 无法在前端读取，返回 false 让后端验证
+        return false;
+    },
 
-    var TOKEN_KEY = 'v2_token';
-    var USER_CACHE_KEY = 'v2_user';
-    var V1_USER_KEY = 'bazi_current_user';
+    /**
+     * 获取请求头（不再需要 Authorization）
+     * @returns {Object}
+     */
+    getHeaders: function() {
+        return { 'Content-Type': 'application/json' };
+    },
 
-    // ==================== Token管理 ====================
+    /**
+     * 获取每日使用次数（已废弃）
+     * @returns {number} -1 表示已废弃
+     */
+    getDailyCount: function() {
+        return -1;
+    },
 
-    function getToken() {
-        return localStorage.getItem(TOKEN_KEY) || '';
-    }
+    /**
+     * 判断是否为 VIP 用户（会员系统已移除）
+     * @returns {boolean}
+     */
+    isVipUser: function() {
+        return false;
+    },
 
-    function setToken(token) {
-        localStorage.setItem(TOKEN_KEY, token);
-    }
-
-    function removeToken() {
-        localStorage.removeItem(TOKEN_KEY);
-    }
-
-    function getHeaders() {
-        var headers = { 'Content-Type': 'application/json' };
-        var token = getToken();
-        if (token) headers['Authorization'] = 'Bearer ' + token;
-        return headers;
-    }
-
-    // ==================== 用户缓存 ====================
-
-    function getUserCache() {
-        try {
-            return JSON.parse(localStorage.getItem(USER_CACHE_KEY) || 'null');
-        } catch (e) { return null; }
-    }
-
-    function setUserCache(user) {
-        localStorage.setItem(USER_CACHE_KEY, JSON.stringify(user));
-    }
-
-    function clearUserCache() {
-        localStorage.removeItem(USER_CACHE_KEY);
-    }
-
-    // ==================== 登录状态判断（兼容V1+V2） ====================
-
-    function isLoggedIn() {
-        return !!localStorage.getItem(TOKEN_KEY) || !!localStorage.getItem(V1_USER_KEY);
-    }
-
-    function getCurrentUser() {
-        // 优先从V2缓存读取
-        var user = getUserCache();
-        if (user) return user;
-        // 兼容V1：从bazi_current_user读取
-        try {
-            var v1User = JSON.parse(localStorage.getItem(V1_USER_KEY) || 'null');
-            if (v1User) {
-                return { username: v1User.username, level: 'normal' };
-            }
-        } catch (e) {}
+    /**
+     * 获取当前用户信息（由各页面自行从后端获取）
+     * @returns {null}
+     */
+    getCurrentUser: function() {
         return null;
-    }
+    },
 
-    function logout() {
-        // 清除V2
-        removeToken();
-        clearUserCache();
-        // 清除V1
-        localStorage.removeItem(V1_USER_KEY);
-    }
+    /**
+     * 登录（已废弃，使用主站登录）
+     * @returns {Promise}
+     */
+    login: function() {
+        return Promise.reject(new Error('请使用主站登录功能'));
+    },
 
-    // ==================== 登录/注册 ====================
+    /**
+     * 注册（已废弃，使用主站注册）
+     * @returns {Promise}
+     */
+    register: function() {
+        return Promise.reject(new Error('请使用主站注册功能'));
+    },
 
-    async function login(username, password) {
-        var resp = await fetch('/api/user/login', {
+    /**
+     * 退出登录（已废弃，使用主站退出）
+     */
+    logout: function() {
+        // 调用主站退出接口
+        fetch('/api/user/logout', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include',
-            body: JSON.stringify({ username: username, password: password })
-        });
-        var json = await resp.json();
-        if (json.code === 200) {
-            setToken(json.data.token);
-            setUserCache({ username: json.data.username || username, level: json.data.level });
-            // 同步写入V1的bazi_current_user，让V1页面也能识别登录状态
-            localStorage.setItem(V1_USER_KEY, JSON.stringify({
-                username: json.data.username || username,
-                createTime: Date.now()
-            }));
-            return { success: true, user: json.data };
-        }
-        return { success: false, message: json.message || '登录失败' };
-    }
+            credentials: 'same-origin'
+        }).catch(function() {});
+    },
 
-    async function register(username, password, captcha) {
-        var resp = await fetch('/api/user/register', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include',
-            body: JSON.stringify({ username: username, password: password, captcha: captcha || '' })
-        });
-        var json = await resp.json();
-        if (json.code === 200) {
-            // 注册成功后自动登录：保存token和用户信息
-            if (json.data && json.data.token) {
-                setToken(json.data.token);
-                setUserCache({ username: json.data.username || username, level: json.data.level || 'normal' });
-                // 同步写入V1的bazi_current_user
-                localStorage.setItem(V1_USER_KEY, JSON.stringify({
-                    username: json.data.username || username,
-                    createTime: Date.now()
-                }));
-            }
-            return { success: true, message: '注册成功' };
-        }
-        return { success: false, message: json.message || '注册失败' };
-    }
-
-    // ==================== 修改密码 ====================
-
-    async function changePassword(oldPwd, newPwd) {
-        var resp = await fetch('/api/user/change-password', {
-            method: 'POST',
-            headers: getHeaders(),
-            credentials: 'include',
-            body: JSON.stringify({ oldPassword: oldPwd, newPassword: newPwd })
-        });
-        var json = await resp.json();
-        if (json.code === 200) {
-            return { success: true, message: '密码修改成功' };
-        }
-        return { success: false, message: json.message || '修改失败' };
-    }
-
-    // ==================== 用户信息 ====================
-
-    async function getUserInfo() {
-        var resp = await fetch('/api/user/info', { headers: getHeaders(), credentials: 'include' });
-        var json = await resp.json();
-        if (json.code === 200) {
-            setUserCache({ username: json.data.username, level: json.data.level });
-            return json.data;
-        }
+    /**
+     * 获取用户会员信息（会员系统已移除）
+     * @returns {null}
+     */
+    getUserMembership: function() {
         return null;
+    },
+
+    /**
+     * 获取排盘记录（已废弃，使用 Storage 模块）
+     * @returns {Promise}
+     */
+    getPaipanRecords: function() {
+        return Promise.resolve({ list: [], total: 0 });
+    },
+
+    /**
+     * 修改密码（已废弃，使用主站功能）
+     * @returns {Promise}
+     */
+    changePassword: function() {
+        return Promise.reject(new Error('请使用主站修改密码功能'));
     }
+};
 
-    // ==================== 排盘记录 ====================
+/**
+ * V2Member 兼容层（精简版）
+ * 
+ * 说明：会员系统已完全移除，此对象仅提供兼容性函数外壳。
+ */
+var V2Member = {
+    /**
+     * 检查并使用次数（已废弃）
+     * @returns {Promise}
+     */
+    checkAndUse: function() {
+        return Promise.resolve({ allowed: true, data: { reason: 'deprecated' } });
+    },
 
-    async function savePaipanRecord(record) {
-        var resp = await fetch('/api/paipan/save', {
-            method: 'POST',
-            headers: getHeaders(),
-            credentials: 'include',
-            body: JSON.stringify(record)
-        });
-        var json = await resp.json();
-        return json;
+    /**
+     * 显示会员弹窗（已废弃）
+     */
+    showMemberModal: function(message) {
+        alert(message || '会员功能已下线');
+    },
+
+    /**
+     * 显示每日限制弹窗（已废弃）
+     */
+    showDailyLimitModal: function() {
+        alert('每日使用次数已用完');
     }
+};
 
-    async function getPaipanRecords(page, pageSize) {
-        var url = '/api/paipan/records?page=' + (page || 1) + '&pageSize=' + (pageSize || 50);
-        var resp = await fetch(url, { headers: getHeaders(), credentials: 'include' });
-        var json = await resp.json();
-        if (json.code === 200) {
-            return json.data; // { list, total, page, pageSize }
-        }
-        return { list: [], total: 0, page: 1, pageSize: 50 };
-    }
-
-    async function deletePaipanRecord(id) {
-        var resp = await fetch('/api/paipan/record/' + id, {
-            method: 'DELETE',
-            headers: getHeaders(),
-            credentials: 'include'
-        });
-        var json = await resp.json();
-        return json;
-    }
-
-    // ==================== 姓名记录 ====================
-
-    async function getNameRecords(type, page, pageSize) {
-        var url = type === 'evaluate'
-            ? '/api/name/eval-records?page=' + (page || 1) + '&pageSize=' + (pageSize || 50)
-            : '/api/name/records?page=' + (page || 1) + '&pageSize=' + (pageSize || 50);
-        var resp = await fetch(url, { headers: getHeaders(), credentials: 'include' });
-        var json = await resp.json();
-        if (json.code === 200) {
-            return json.data;
-        }
-        return { list: [], total: 0, page: 1, pageSize: 50 };
-    }
-
-    // ==================== 会员信息 ====================
-
-    function getUserMembership() {
-        // 从用户缓存中获取会员信息
-        var user = getUserCache();
-        if (!user) return null;
-        // 通过 /api/user/info 获取最新信息
-        // 这里简化处理：从缓存读取level
-        var isVip = user.level === 'vip';
-        return {
-            isActive: isVip,
-            plan: isVip ? 'monthly' : 'normal',
-            expireDate: isVip ? '2099-12-31' : ''
-        };
-    }
-
-    function isVipUser() {
-        var user = getUserCache();
-        return user && user.level === 'vip';
-    }
-
-    // ==================== 每日次数 ====================
-
-    async function getDailyCount() {
-        var resp = await fetch('/api/user/daily-count', { headers: getHeaders(), credentials: 'include' });
-        var json = await resp.json();
-        if (json.code === 200) {
-            return json.data;
-        }
-        return { name_count: 0, eval_count: 0, liuyao_count: 0 };
-    }
-
-    // ==================== 导出 ====================
-
-    return {
-        TOKEN_KEY: TOKEN_KEY,
-        getToken: getToken,
-        setToken: setToken,
-        removeToken: removeToken,
-        getHeaders: getHeaders,
-        getUserCache: getUserCache,
-        setUserCache: setUserCache,
-        clearUserCache: clearUserCache,
-        isLoggedIn: isLoggedIn,
-        getCurrentUser: getCurrentUser,
-        logout: logout,
-        login: login,
-        register: register,
-        changePassword: changePassword,
-        getUserInfo: getUserInfo,
-        savePaipanRecord: savePaipanRecord,
-        getPaipanRecords: getPaipanRecords,
-        deletePaipanRecord: deletePaipanRecord,
-        getNameRecords: getNameRecords,
-        getUserMembership: getUserMembership,
-        isVipUser: isVipUser,
-        getDailyCount: getDailyCount
-    };
-})();
+// 暴露到全局
+if (typeof window !== 'undefined') {
+    window.V2API = V2API;
+    window.V2Member = V2Member;
+}
