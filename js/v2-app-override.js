@@ -52,6 +52,7 @@
         fetch('/api/paipan/save', {
             method: 'POST',
             headers: getHeaders(),
+            credentials: 'include',
             body: JSON.stringify({
                 name: record.name,
                 solarDate: record.solarDate,
@@ -83,7 +84,8 @@
     Storage.deleteRecord = function (id) {
         fetch('/api/paipan/record/' + id, {
             method: 'DELETE',
-            headers: getHeaders()
+            headers: getHeaders(),
+            credentials: 'include'
         }).then(function (r) { return r.json(); }).catch(function (err) {
             console.error('删除排盘记录失败:', err);
         });
@@ -666,7 +668,7 @@
      */
     window.V2Member = {
         getQuota: function() {
-            return fetch('/api/user/ai-quota', { headers: getHeaders() })
+            return fetch('/api/user/ai-quota', { headers: getHeaders(), credentials: 'include' })
                 .then(function(r) { return r.json(); })
                 .then(function(json) {
                     if (json.code === 200) return json.data;
@@ -682,7 +684,8 @@
         checkAndUse: function() {
             return fetch('/api/user/ai-use', {
                 method: 'POST',
-                headers: getHeaders()
+                headers: getHeaders(),
+                credentials: 'include'
             })
             .then(function(r) { return r.json(); })
             .then(function(json) {

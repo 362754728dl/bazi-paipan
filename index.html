@@ -3,71 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="description" content="五行鲤——基于《渊海子平》《三命通会》的专业八字排盘分析平台。五行推命，鲤跃龙门。">
-    <title>五行鲤 · 传统命理排盘</title>
+    <title>四柱八字排盘</title>
     <link rel="stylesheet" href="css/style.css?v=4">
-    <!-- 强制核心函数定义（必须在最前面，确保全局可用） -->
-    <script>
-        // ==================== 强制定义：页面切换函数 ====================
-        function switchPage(pageId) {
-            console.log('[switchPage] 切换到页面:', pageId);
-            // 隐藏所有页面
-            var pages = document.querySelectorAll('.page');
-            for (var i = 0; i < pages.length; i++) {
-                pages[i].classList.remove('active');
-            }
-            // 显示目标页面
-            var target = document.getElementById(pageId);
-            if (target) {
-                target.classList.add('active');
-            }
-            // 更新底部导航高亮
-            var navItems = document.querySelectorAll('#bottomNav .nav-item');
-            for (var j = 0; j < navItems.length; j++) {
-                navItems[j].classList.remove('active');
-                if (navItems[j].getAttribute('data-page') === pageId) {
-                    navItems[j].classList.add('active');
-                }
-            }
-            // 关闭抽屉菜单（如果打开）
-            if (typeof closeDrawer === 'function') {
-                closeDrawer();
-            }
-        }
-        // ==================== 强制定义：关闭抽屉菜单 ====================
-        function closeDrawer() {
-            var overlay = document.getElementById('drawerOverlay');
-            var menu = document.getElementById('drawerMenu');
-            if (overlay) {
-                overlay.classList.remove('show');
-                setTimeout(function() { overlay.style.display = 'none'; }, 300);
-            }
-            if (menu) {
-                menu.classList.remove('show');
-                setTimeout(function() { menu.style.display = 'none'; }, 300);
-            }
-        }
-        // ==================== 强制定义：打开抽屉菜单 ====================
-        function toggleDrawer(e) {
-            if (e) e.stopPropagation();
-            var overlay = document.getElementById('drawerOverlay');
-            var menu = document.getElementById('drawerMenu');
-            if (!overlay || !menu) return;
-            overlay.style.display = 'block';
-            menu.style.display = 'block';
-            setTimeout(function() {
-                overlay.classList.add('show');
-                menu.classList.add('show');
-            }, 10);
-        }
-    </script>
 </head>
 <body>
 
 <!-- 顶部标题栏 -->
 <header class="header">
-    <img src="/images/logo.png" alt="五行鲤" style="height:50px;display:block;margin:0 auto 8px;">
-    <h1>五行鲤 · 四柱八字排盘</h1>
+    <h1>四柱八字排盘</h1>
     <div class="subtitle">传统命理 · 精准排盘</div>
 </header>
 
@@ -184,10 +127,6 @@
 <div class="page" id="pageRecords">
     <div class="service-title">我的排盘记录</div>
     <div class="record-list" id="recordList"></div>
-    <div id="loadMoreWrap" style="display:none;text-align:center;padding:12px 0 20px;">
-        <button class="btn-load-more" id="btnLoadMore">加载更多</button>
-    </div>
-    <div id="recordsCount" style="display:none;text-align:center;padding:4px 0 8px;font-size:12px;color:#999;"></div>
     <div class="empty-state" id="emptyState" style="display:none">
         <div class="empty-icon">🔒</div>
         <div>请先登录查看记录</div>
@@ -225,9 +164,6 @@
         <button class="admin-tab" data-tab="tabRecords">排盘记录</button>
         <button class="admin-tab" data-tab="tabSettings">系统设置</button>
         <button class="admin-tab" data-tab="tabMembership">会员管理</button>
-    </div>
-    <div style="padding:0 12px 8px;">
-        <a href="pages/admin/members.html" id="adminMembersLink" style="display:none;font-size:12px;color:var(--red-primary);text-decoration:none;">进入会员管理页面 &gt;&gt;</a>
     </div>
 
     <!-- 用户管理 -->
@@ -267,14 +203,14 @@
             <select id="vipPlan" style="padding:8px 12px;border:1px solid var(--border-color);border-radius:8px;font-size:14px;">
                 <option value="trial">体验会员(1个月)</option>
                 <option value="yearly">年度会员(1年)</option>
-                <option value="lifetime">永久</option>
+                <option value="lifetime">终身会员</option>
             </select>
-            <button onclick="showToast('会员管理功能已移除')" style="padding:8px 16px;background:var(--red-primary);color:#fff;border:none;border-radius:8px;font-size:14px;cursor:pointer;">管理功能</button>
+            <button onclick="adminActivateVip()" style="padding:8px 16px;background:var(--red-primary);color:#fff;border:none;border-radius:8px;font-size:14px;cursor:pointer;">开通会员</button>
         </div>
         <div style="margin-bottom:16px;display:flex;gap:10px;flex-wrap:wrap;">
             <input type="text" id="quotaUsername" placeholder="用户名" style="flex:1;padding:8px 12px;border:1px solid var(--border-color);border-radius:8px;font-size:14px;">
             <input type="number" id="quotaNumber" placeholder="次数(-1为无限)" style="width:140px;padding:8px 12px;border:1px solid var(--border-color);border-radius:8px;font-size:14px;">
-            <button onclick="showToast('次数调整功能已整合至用户管理')" style="padding:8px 16px;background:var(--gold);color:#fff;border:none;border-radius:8px;font-size:14px;cursor:pointer;">调整次数</button>
+            <button onclick="adminAdjustQuota()" style="padding:8px 16px;background:var(--gold);color:#fff;border:none;border-radius:8px;font-size:14px;cursor:pointer;">调整次数</button>
         </div>
         <div id="membershipList"></div>
     </div>
@@ -287,7 +223,10 @@
     </div>
 </div>
 
-
+<!-- 会员充值套餐页面 -->
+<div id="pageVip" class="page">
+    <div id="vipContent"></div>
+</div>
 
 <!-- 六爻页面 -->
 <div id="pageLiuyao" class="page">
@@ -299,15 +238,15 @@
     </div>
 </div>
 
-<!-- 管理员入口（仅admin可见） -->
+<!-- 隐藏的管理员入口 -->
 <div style="text-align:center;padding:5px 0 2px;">
-    <a href="javascript:void(0)" id="adminEntry" style="display:none;font-size:10px;color:#ccc;text-decoration:none;">管理</a>
+    <a href="javascript:void(0)" id="adminEntry" style="font-size:10px;color:#ccc;text-decoration:none;">管理</a>
 </div>
 
 <!-- 底部三栏导航 -->
 <nav class="bottom-nav" id="bottomNav">
-    <button class="nav-item active" data-page="pagePaipan" onclick="switchPage('pagePaipan')">☰ 排盘</button>
-    <button class="nav-item" data-page="pageRecords" onclick="switchPage('pageRecords')">📋 排盘记录</button>
+    <button class="nav-item active" data-page="pagePaipan">☰ 排盘</button>
+    <button class="nav-item" data-page="pageRecords">📋 排盘记录</button>
     <button class="nav-item" id="btnMore" onclick="toggleDrawer(event)">⋯ 更多</button>
 </nav>
 
@@ -316,156 +255,14 @@
 <div class="drawer-menu" id="drawerMenu">
     <div class="drawer-handle"></div>
     <div class="drawer-title">更多功能</div>
-    <a class="drawer-item" href="pages/fortune-v2.html" onclick="closeDrawer()">📅 今日运势</a>
+    <a class="drawer-item" href="javascript:void(0)" onclick="closeDrawer();switchPage('pageToday')">📅 今日运势</a>
     <a class="drawer-item" href="javascript:void(0)" onclick="closeDrawer();switchPage('pageLiuyao')">🔮 六爻排盘</a>
     <a class="drawer-item" href="pages/jishi-biaowen.html" onclick="closeDrawer()">📜 民俗表文</a>
     <a class="drawer-item" href="pages/name-generate.html" onclick="closeDrawer()">✍️ 姓名拟定</a>
     <a class="drawer-item" href="pages/hepei.html" onclick="closeDrawer()">☯️ 八字合配</a>
-    <a class="drawer-item" href="pages/yangsheng.html" onclick="closeDrawer()">🥗 身心调养</a>
     <div class="drawer-divider"></div>
     <a class="drawer-item" href="pages/my.html" onclick="closeDrawer()">👤 我的</a>
-    <div class="drawer-divider"></div>
-    <a class="drawer-item" href="pages/admin/members.html" id="adminDrawerItem" style="display:none;" onclick="closeDrawer()">⚙️ 管理后台</a>
 </div>
-
-<!-- 核心函数预定义（确保在app.js加载前可用） -->
-<script>
-// ==================== 页面切换函数（预定义，避免app.js加载前调用报错） ====================
-function switchPage(pageId) {
-    // 如果App已加载，使用App的switchPage
-    if (typeof App !== 'undefined' && typeof App.switchPage === 'function') {
-        App.switchPage(pageId);
-        return;
-    }
-    // 降级方案：直接操作DOM
-    var pages = document.querySelectorAll('.page');
-    pages.forEach(function(p) { p.classList.remove('active'); });
-    var targetPage = document.getElementById(pageId);
-    if (targetPage) targetPage.classList.add('active');
-    
-    // 更新导航高亮
-    var navItems = document.querySelectorAll('#bottomNav .nav-item');
-    navItems.forEach(function(item) {
-        item.classList.remove('active');
-        if (item.getAttribute('data-page') === pageId) {
-            item.classList.add('active');
-        }
-    });
-}
-
-// ==================== 认证就绪管理器（确保认证完成后再执行敏感操作） ====================
-var AuthReadyManager = {
-    _callbacks: [],
-    _isReady: false,
-    _isChecking: false,
-    
-    // 注册认证就绪回调
-    onReady: function(callback) {
-        if (this._isReady) {
-            // 已就绪，立即执行
-            callback();
-        } else {
-            // 未就绪，加入队列
-            this._callbacks.push(callback);
-        }
-    },
-    
-    // 标记认证就绪
-    setReady: function() {
-        this._isReady = true;
-        // 执行所有等待的回调
-        this._callbacks.forEach(function(cb) {
-            try { cb(); } catch(e) { console.error('AuthReady回调执行失败:', e); }
-        });
-        this._callbacks = [];
-    },
-    
-    // 检查登录状态（由app.js调用）
-    checkAuth: function() {
-        if (this._isChecking) return;
-        this._isChecking = true;
-        
-        var self = this;
-        // 尝试从后端验证登录状态
-        fetch('/api/user/info', {
-            method: 'GET',
-            credentials: 'same-origin'
-        }).then(function(res) {
-            if (res.status === 200) {
-                console.log('[AuthReady] 用户已登录');
-            } else {
-                console.log('[AuthReady] 用户未登录');
-            }
-            // 无论登录与否，都标记就绪（未登录时也会回退到本地数据）
-            self.setReady();
-        }).catch(function(err) {
-            console.log('[AuthReady] 认证检查失败:', err);
-            self.setReady(); // 网络错误时也继续
-        });
-    }
-};
-
-// 全局快捷函数
-function afterAuthReady(callback) {
-    AuthReadyManager.onReady(callback);
-}
-
-// ==================== 分享功能 ====================
-async function sharePaipanResult() {
-    if (navigator.share) {
-        try {
-            await navigator.share({
-                title: '五行鲤 · 传统命理排盘',
-                text: '来看看这个八字排盘结果',
-                url: window.location.href
-            });
-        } catch (err) {
-            console.log('分享取消:', err);
-        }
-    } else if (navigator.clipboard) {
-        try {
-            await navigator.clipboard.writeText(window.location.href);
-            if (typeof showToast === 'function') {
-                showToast('链接已复制到剪贴板');
-            } else {
-                alert('链接已复制到剪贴板');
-            }
-        } catch (err) {
-            console.error('复制失败:', err);
-        }
-    } else {
-        // 降级方案
-        var textArea = document.createElement('textarea');
-        textArea.value = window.location.href;
-        document.body.appendChild(textArea);
-        textArea.select();
-        document.execCommand('copy');
-        document.body.removeChild(textArea);
-        if (typeof showToast === 'function') {
-            showToast('链接已复制到剪贴板');
-        } else {
-            alert('链接已复制到剪贴板');
-        }
-    }
-}
-
-// ==================== 管理员入口控制 ====================
-function checkAdminAccess() {
-    // 从本地存储或Cookie检查是否是admin
-    var username = localStorage.getItem('username') || '';
-    if (username === 'admin') {
-        var adminItem = document.getElementById('adminDrawerItem');
-        if (adminItem) {
-            adminItem.style.display = 'block';
-        }
-    }
-}
-
-// 页面加载后检查管理员权限
-document.addEventListener('DOMContentLoaded', function() {
-    checkAdminAccess();
-});
-</script>
 
 <!-- 抽屉菜单控制脚本（独立，不修改app.js） -->
 <script>
@@ -490,27 +287,6 @@ function closeDrawer() {
         menu.style.display = 'none';
     }, 300);
 }
-// 底部导航快速绑定（确保DOM加载后立即生效）
-(function() {
-    function bindNavItems() {
-        var navItems = document.querySelectorAll('.nav-item[data-page]');
-        navItems.forEach(function(item) {
-            var pageId = item.getAttribute('data-page');
-            if (pageId && !item.onclick) {
-                item.onclick = function() {
-                    if (typeof switchPage === 'function') {
-                        switchPage(pageId);
-                    }
-                };
-            }
-        });
-    }
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', bindNavItems);
-    } else {
-        bindNavItems();
-    }
-})();
 </script>
 
 <!-- ==================== 登录弹窗 ==================== -->
@@ -594,10 +370,11 @@ function closeDrawer() {
 <script src="js/utils/bazi_strength_stable.js"></script>
 <script src="js/bazi-analyzer.js"></script>
 <script src="js/storage.js"></script>
+<script src="js/v2-api.js"></script>
 <script src="js/app.js?v=20"></script>
+<script src="js/v2-app-override.js"></script>
 <script src="js/liuyao.js"></script>
 <script src="js/liuyao-ui.js"></script>
-<!-- relation-analyzer.js 和 mingli-analyzer.js 改为懒加载，见底部脚本 -->
 <script>
 // switchTab 桥接函数：将 tab 名称映射到 pageId 并调用 switchPage
 function switchTab(tabName) {
@@ -614,79 +391,6 @@ function switchTab(tabName) {
     }
 }
 </script>
-
-<!-- 微信引导弹窗 -->
-<div id="wechatGuideModal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.6);z-index:9999;align-items:center;justify-content:center;">
-  <div style="background:#fff;border-radius:16px;padding:32px 24px 24px;width:300px;max-width:90vw;text-align:center;box-shadow:0 8px 30px rgba(0,0,0,0.3);">
-    <div style="width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,#07C160,#06AD56);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
-      <svg width="36" height="36" viewBox="0 0 24 24" fill="white"><path d="M8.5 11a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3zm5-1.5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0zM20 12c0 2.2-1.8 4-4 4h-.5l-2.5 2 .5-2H16c2.2 0 4-1.8 4-4s-1.8-4-4-4H8c-2.2 0-4 1.8-4 4s1.8 4 4 4h1.5l.5 2-2.5-2H8C5.8 16 4 14.2 4 12s1.8-4 4-4h8c2.2 0 4 1.8 4 4z"/></svg>
-    </div>
-    <div style="font-size:18px;font-weight:bold;color:#333;margin-bottom:8px;">添加站长微信</div>
-    <div style="font-size:14px;color:#666;line-height:1.6;margin-bottom:16px;">微信号：DLing3313<br>了解更多，请添加微信</div>
-    <div style="background:#f5f5f5;border-radius:8px;padding:12px;margin-bottom:16px;">
-      <div style="font-size:12px;color:#999;margin-bottom:6px;">微信号</div>
-      <div style="font-size:18px;font-weight:bold;color:#333;letter-spacing:1px;" id="wechatIdDisplay">DLing3313</div>
-    </div>
-    <img src="images/wechat-qr.png" alt="站长微信二维码" style="width:200px;height:200px;margin:10px auto;display:block;border-radius:8px;">
-    <button onclick="document.getElementById('wechatGuideModal').style.display='none'" style="width:100%;padding:12px;background:linear-gradient(135deg,#07C160,#06AD56);color:#fff;border:none;border-radius:8px;font-size:16px;font-weight:bold;cursor:pointer;margin-top:12px;">我知道了</button>
-  </div>
-</div>
-<script>
-function showWechatGuide() {
-    document.getElementById('wechatGuideModal').style.display = 'flex';
-}
-
-// ==================== 重型分析器懒加载 ====================
-// 这些分析器只在需要时加载，避免阻塞首页交互
-var LazyLoader = {
-    loaded: {},
-    load: function(src) {
-        if (this.loaded[src]) return Promise.resolve();
-        return new Promise(function(resolve, reject) {
-            var script = document.createElement('script');
-            script.src = src;
-            script.onload = function() {
-                LazyLoader.loaded[src] = true;
-                resolve();
-            };
-            script.onerror = reject;
-            document.head.appendChild(script);
-        });
-    },
-    // 预加载关键资源（在页面空闲时）
-    preload: function(src) {
-        if (this.loaded[src]) return;
-        if ('requestIdleCallback' in window) {
-            requestIdleCallback(function() {
-                LazyLoader.load(src);
-            }, { timeout: 5000 });
-        } else {
-            setTimeout(function() {
-                LazyLoader.load(src);
-            }, 2000);
-        }
-    }
-};
-
-// 页面加载完成后，空闲时预加载重型分析器
-window.addEventListener('load', function() {
-    // 预加载所有分析器（用于姓名拟定、合配、运势等功能）
-    LazyLoader.preload('js/relation-analyzer.js');
-    LazyLoader.preload('js/mingli-analyzer.js');
-    LazyLoader.preload('js/hepei-analyzer.js');
-    LazyLoader.preload('js/huangli.js');
-});
-</script>
-
-<!-- 底部版权信息 -->
-<div style="text-align:center;padding:16px 12px 24px;font-size:12px;color:#999;background:var(--bg-primary);">
-    © 2026 五行鲤 ｜ 传统民俗文化参考，不构成人生决策依据
-    <p style="font-size:12px;color:#999;margin-top:4px;">
-        <a href="https://beian.miit.gov.cn/" target="_blank" rel="noopener" style="color:#999;text-decoration:none;">
-            京ICP备XXXXXXXX号-1
-        </a>
-    </p>
-</div>
 
 </body>
 </html>
