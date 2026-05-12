@@ -1,6 +1,5 @@
 const express = require('express');
 const cors = require('cors');
-const cookieParser = require('cookie-parser');
 const path = require('path');
 const svgCaptcha = require('svg-captcha');
 
@@ -8,7 +7,24 @@ const { initDb, getDb, saveDb } = require('./db/init');
 
 const app = express();
 app.use(cors({ origin: true, credentials: true }));
-app.use(cookieParser());
+
+// 手动解析 cookie（无需 cookie-parser 依赖）
+app.use(function(req, res, next) {
+  var cookieHeader = req.headers.cookie || '';
+  req.cookies = {};
+  if (cookieHeader) {
+    cookieHeader.split(';').forEach(function(pair) {
+      var parts = pair.trim().split('=');
+      if (parts.length >= 2) {
+        var key = parts[0].trim();
+        var val = parts.slice(1).join('=').trim();
+        req.cookies[key] = val;
+      }
+    });
+  }
+  next();
+});
+
 app.use(express.json({ limit: '1mb' }));
 
 // 频率限制
