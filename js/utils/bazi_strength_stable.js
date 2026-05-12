@@ -1,384 +1,310 @@
 /**
  * 日元强弱分析工具 - bazi_strength_stable.js
- * 基于用户提供的七级判定标准（严格规则，无动态计算）
+ * 基于子平派标准（独立封装，不影响现有排盘核心逻辑）
  * 依赖：lunar.js（万年历核心引擎）
  *
- * 七级判定：从强、强、偏强、均衡、偏弱、弱、从弱
+ * 算法核心：通过得令、得地、得势三个维度评估日主强弱
+ * - 得令：月令地支五行是否为日主印星或比劫（权重2分）
+ * - 得地：四柱地支藏干中是否含日主同类天干（权重2分）
+ * - 得势：天干（年干、月干、时干）中是否有同类五行（权重2分）
  *
- * 判定规则：
- * 1. 从强：七字全生助日元
- * 2. 强：得令+得地+得势
- * 3. 偏强：得令+得地+不得势 或 得令+不得地+得势
- * 4. 均衡：不得令+得地+得势 或 得令+不得地+不得势
- * 5. 偏弱：不得令+不得地+得势 或 不得令+得地+不得势
- * 6. 弱：不得令+不得地+不得势
- * 7. 从弱：七字全克泄耗日元
+ * 强弱等级划分：
+ * - 6分：从强（日主五行全局占比>=40%）或 强
+ * - 5分：强
+ * - 4分：偏强
+ * - 3分：均衡
+ * - 2分：偏弱
+ * - 1分：弱
+ * - 0分：从弱
  */
 
 const BaziStrengthStable = (function() {
     'use strict';
 
-    // ==================== 得令对照表 ====================
-    // 日主 → 得令月支列表
-    var DE_LING_MAP = {
-        '甲': ['寅', '卯', '亥', '子'],
-        '乙': ['寅', '卯', '亥', '子'],
-        '丙': ['巳', '午', '寅', '卯'],
-        '丁': ['巳', '午', '寅', '卯'],
-        '戊': ['辰', '戌', '丑', '未', '巳', '午'],
-        '己': ['辰', '戌', '丑', '未', '巳', '午'],
-        '庚': ['辰', '戌', '丑', '未', '申', '酉'],
-        '辛': ['辰', '戌', '丑', '未', '申', '酉'],
-        '壬': ['申', '酉', '亥', '子'],
-        '癸': ['申', '酉', '亥', '子']
+    // ==================== 五行生克关系 ====================
+    // 木生火、火生土、土生金、金生水、水生木
+    var BEI_SHENG_MAP = {
+        '木': '水',
+        '火': '木',
+        '土': '火',
+        '金': '土',
+        '水': '金'
     };
 
-    // ==================== 得地对照表 ====================
-    // 日主五行 → 含同类五行的地支列表
-    var DE_DI_MAP = {
-        '木': ['寅', '卯', '辰', '亥', '未'],  // 藏干中有木的地支
-        '火': ['巳', '午', '未', '寅', '戌'],  // 藏干中有火的地支
-        '土': ['辰', '戌', '丑', '未', '巳', '午', '寅'],  // 藏干中有土的地支
-        '金': ['申', '酉', '戌', '巳', '丑'],  // 藏干中有金的地支
-        '水': ['亥', '子', '丑', '申', '辰']   // 藏干中有水的地支
-    };
+    // 柱位名称映射
+    var PILLAR_NAMES = ['年', '月', '日', '时'];
 
-    // ==================== 天干五行映射 ====================
-    var GAN_WU_XING = {
-        '甲': '木', '乙': '木',
-        '丙': '火', '丁': '火',
-        '戊': '土', '己': '土',
-        '庚': '金', '辛': '金',
-        '壬': '水', '癸': '水'
-    };
-
-    // ==================== 五行生我关系（印星） ====================
-    var SHENG_WO = {
-        '木': '水',  // 水生木
-        '火': '木',  // 木生火
-        '土': '火',  // 火生土
-        '金': '土',  // 土生金
-        '水': '金'   // 金生水
-    };
-
-    // ==================== 五行我生关系（食伤） ====================
-    var WO_SHENG = {
-        '木': '火',
-        '火': '土',
-        '土': '金',
-        '金': '水',
-        '水': '木'
-    };
-
-    // ==================== 五行克我关系（官杀） ====================
-    var KE_WO = {
-        '木': '金',
-        '火': '水',
-        '土': '木',
-        '金': '火',
-        '水': '土'
-    };
-
-    // ==================== 五行我克关系（财星） ====================
-    var WO_KE = {
-        '木': '土',
-        '火': '金',
-        '土': '水',
-        '金': '木',
-        '水': '火'
-    };
+    // 藏干层级名称
+    var CANG_GAN_LEVEL = ['本气', '中气', '余气'];
 
     // ==================== 辅助函数 ====================
 
     /**
-     * 获取天干五行
+     * 获取某天干的五行属性
      */
     function getGanWuXing(gan) {
-        return GAN_WU_XING[gan] || '';
+        var idx = Lunar.tianGan.indexOf(gan);
+        if (idx === -1) return '';
+        return Lunar.wuXingGan[idx];
     }
 
     /**
-     * 判断两个字是否同类五行
+     * 获取某地支的五行属性（地支本气五行）
+     */
+    function getZhiWuXing(zhiIndex) {
+        return Lunar.wuXingZhi[zhiIndex];
+    }
+
+    /**
+     * 获取生我者的五行（印星五行）
+     */
+    function getYinXing(wuXing) {
+        return BEI_SHENG_MAP[wuXing] || '';
+    }
+
+    /**
+     * 判断两个天干是否为同类五行
      */
     function isSameWuXing(gan1, gan2) {
         return getGanWuXing(gan1) === getGanWuXing(gan2);
     }
 
     /**
-     * 判断五行是否生助日主（印星或比劫）
+     * 获取十神名称
      */
-    function isShengZhu(wx, riZhuWX) {
-        // 比劫：同类五行
-        if (wx === riZhuWX) return true;
-        // 印星：生我者
-        if (SHENG_WO[riZhuWX] === wx) return true;
-        return false;
-    }
-
-    /**
-     * 判断五行是否克泄耗日主
-     */
-    function isKeXieHao(wx, riZhuWX) {
-        return !isShengZhu(wx, riZhuWX);
+    function getShiShenName(dayGan, otherGan) {
+        var dayIdx = Lunar.tianGan.indexOf(dayGan);
+        var otherIdx = Lunar.tianGan.indexOf(otherGan);
+        return Lunar.getShiShen(dayIdx, otherIdx);
     }
 
     // ==================== 得令判断 ====================
 
     /**
      * 判断日主是否得令
-     * 规则：月支在对应的得令列表中 → 得令
+     * 月令地支的五行属性，看是否为日主的印星或比劫
      */
-    function analyzeDeLing(dayGan, monthZhi) {
-        var deLingList = DE_LING_MAP[dayGan];
-        if (!deLingList) {
-            return { deLing: false, detail: '无法识别日主' };
-        }
-
-        var deLing = deLingList.indexOf(monthZhi) !== -1;
+    function analyzeDeLing(dayPillar, monthPillar) {
+        var dayGan = dayPillar.gan;
         var dayWX = getGanWuXing(dayGan);
+        var monthZhiWX = getZhiWuXing(monthPillar.zhiIndex);
+        var monthZhi = monthPillar.zhi;
+        var yinXingWX = getYinXing(dayWX);
 
-        if (deLing) {
+        // 月令本气为日主同类（比劫）→ 得令
+        if (monthZhiWX === dayWX) {
             return {
                 deLing: true,
-                detail: '月支' + monthZhi + '在' + dayGan + '日主的得令列表中，得令'
-            };
-        } else {
-            return {
-                deLing: false,
-                detail: '月支' + monthZhi + '不在' + dayGan + '日主的得令列表中，不得令'
+                score: 2,
+                detail: '月令' + monthZhi + '(' + monthZhiWX + ')为日主' + dayGan + dayWX + '之比劫，得令'
             };
         }
+
+        // 月令本气为日主印星（生我者）→ 得令
+        if (monthZhiWX === yinXingWX) {
+            return {
+                deLing: true,
+                score: 2,
+                detail: '月令' + monthZhi + '(' + monthZhiWX + ')为日主' + dayGan + dayWX + '之印星，得令'
+            };
+        }
+
+        // 月令藏干中有日主本气根 → 半得令
+        var cangGan = Lunar.zhiCangGan[monthPillar.zhiIndex];
+        if (cangGan && cangGan.length > 0) {
+            var benQiGan = cangGan[0];
+            if (isSameWuXing(benQiGan, dayGan)) {
+                var benQiShiShen = getShiShenName(dayGan, benQiGan);
+                return {
+                    deLing: true,
+                    score: 1,
+                    detail: '月令' + monthZhi + '藏干本气' + benQiGan + '(' + benQiShiShen + ')与日主' + dayGan + dayWX + '同类，半得令'
+                };
+            }
+        }
+
+        // 否则 → 不得令
+        return {
+            deLing: false,
+            score: 0,
+            detail: '月令' + monthZhi + '(' + monthZhiWX + ')非日主' + dayGan + dayWX + '之印星或比劫，不得令'
+        };
     }
 
     // ==================== 得地判断 ====================
 
     /**
      * 判断日主是否得地
-     * 规则：四柱地支藏干中有同类五行 → 得地
+     * 检查四个地支的藏干中是否有日主天干（同类五行）
      */
     function analyzeDeDi(pillars) {
         var dayGan = pillars.day.gan;
         var dayWX = getGanWuXing(dayGan);
-        var deDiList = DE_DI_MAP[dayWX];
-        var pillarNames = ['年', '月', '日', '时'];
         var pillarKeys = ['year', 'month', 'day', 'hour'];
-        var foundZhi = [];
+        var rootCount = 0;
+        var rootDetails = [];
 
         for (var i = 0; i < pillarKeys.length; i++) {
-            var zhi = pillars[pillarKeys[i]].zhi;
-            if (deDiList.indexOf(zhi) !== -1) {
-                foundZhi.push(pillarNames[i] + '支' + zhi);
+            var key = pillarKeys[i];
+            var pillar = pillars[key];
+            var cangGan = Lunar.zhiCangGan[pillar.zhiIndex];
+            var zhiName = pillar.zhi;
+
+            if (!cangGan || cangGan.length === 0) continue;
+
+            for (var j = 0; j < cangGan.length; j++) {
+                var cg = cangGan[j];
+                if (isSameWuXing(cg, dayGan)) {
+                    rootCount++;
+                    var level = CANG_GAN_LEVEL[j] || '';
+                    var ss = getShiShenName(dayGan, cg);
+                    rootDetails.push(PILLAR_NAMES[i] + '支' + zhiName + '藏' + cg + '(' + ss + ')');
+                    break;
+                }
             }
         }
 
-        if (foundZhi.length > 0) {
+        if (rootCount >= 2) {
             return {
                 deDi: true,
-                detail: foundZhi.join('、') + '藏干中有' + dayWX + '，得地'
-            };
-        } else {
-            return {
-                deDi: false,
-                detail: '四柱地支藏干中无' + dayWX + '同类，不得地'
+                score: 2,
+                detail: rootDetails.join('，') + '，通根有力'
             };
         }
+
+        if (rootCount === 1) {
+            return {
+                deDi: true,
+                score: 1,
+                detail: rootDetails[0] + '，根气不足'
+            };
+        }
+
+        return {
+            deDi: false,
+            score: 0,
+            detail: '四柱地支藏干中无日主' + dayGan + dayWX + '同类，不得地'
+        };
     }
 
     // ==================== 得势判断 ====================
 
     /**
      * 判断日主是否得势
-     * 规则：年、月、时三天干中出现≥1个同五行字 → 得势
+     * 检查天干（年干、月干、时干，不含日干自身）中是否有同类五行
      */
     function analyzeDeShi(pillars) {
         var dayGan = pillars.day.gan;
         var dayWX = getGanWuXing(dayGan);
         var otherGanKeys = ['year', 'month', 'hour'];
-        var foundGan = [];
+        var sameCount = 0;
+        var sameDetails = [];
 
         for (var i = 0; i < otherGanKeys.length; i++) {
-            var gan = pillars[otherGanKeys[i]].gan;
+            var key = otherGanKeys[i];
+            var gan = pillars[key].gan;
             if (isSameWuXing(gan, dayGan)) {
-                foundGan.push(gan);
+                sameCount++;
+                var ss = getShiShenName(dayGan, gan);
+                sameDetails.push(gan + '(' + ss + ')');
             }
         }
 
-        if (foundGan.length >= 1) {
+        if (sameCount >= 1) {
             return {
                 deShi: true,
-                detail: '天干出现' + foundGan.join('、') + '，与日主同属' + dayWX + '，得势'
+                score: 2,
+                detail: '天干出现' + sameDetails.join('、') + '，得势'
             };
-        } else {
+        }
+
+        return {
+            deShi: false,
+            score: 0,
+            detail: '天干无日主' + dayGan + dayWX + '同类，不得势'
+        };
+    }
+
+    // ==================== 强弱等级划分 ====================
+
+    /**
+     * 根据得分和五行占比确定强弱等级
+     */
+    function getLevel(score, wuXing, riZhuWuXing) {
+        var totalCount = 0;
+        var keys = ['金', '木', '水', '火', '土'];
+        for (var i = 0; i < keys.length; i++) {
+            totalCount += (wuXing[keys[i]] || 0);
+        }
+        var riZhuCount = wuXing[riZhuWuXing] || 0;
+        var ratio = totalCount > 0 ? riZhuCount / totalCount : 0;
+
+        // 6分：从强 或 强
+        if (score === 6) {
+            if (ratio >= 0.4) {
+                return {
+                    level: '从强',
+                    levelDetail: '得令、得地、得势，日主' + riZhuWuXing + '在全局占比极高，综合评定为从强'
+                };
+            }
             return {
-                deShi: false,
-                detail: '年、月、时三天干中无' + dayWX + '同类，不得势'
+                level: '强',
+                levelDetail: '得令、得地、得势，综合评定为强'
             };
         }
-    }
 
-    // ==================== 藏干表 ====================
-    var ZHI_CANG_GAN = {
-        '子': ['癸'],
-        '丑': ['己', '癸', '辛'],
-        '寅': ['甲', '丙', '戊'],
-        '卯': ['乙'],
-        '辰': ['戊', '乙', '癸'],
-        '巳': ['丙', '戊', '庚'],
-        '午': ['丁', '己'],
-        '未': ['己', '丁', '乙'],
-        '申': ['庚', '壬', '戊'],
-        '酉': ['辛'],
-        '戌': ['戊', '辛', '丁'],
-        '亥': ['壬', '甲']
-    };
-
-    // ==================== 从强/从弱判断 ====================
-
-    /**
-     * 判断是否从强：七字全生助日元
-     * 需要检查：天干五行 + 地支本气五行 + 地支藏干五行
-     */
-    function isCongQiang(pillars) {
-        var dayGan = pillars.day.gan;
-        var dayWX = getGanWuXing(dayGan);
-        var yinWX = SHENG_WO[dayWX]; // 印星五行
-
-        // 检查除日干外的7个字
-        var allShengZhu = true;
-        var details = [];
-
-        // 年、月、时天干
-        var ganKeys = ['year', 'month', 'hour'];
-        for (var i = 0; i < ganKeys.length; i++) {
-            var gan = pillars[ganKeys[i]].gan;
-            var ganWX = getGanWuXing(gan);
-            if (!isShengZhu(ganWX, dayWX)) {
-                allShengZhu = false;
-                details.push(ganKeys[i] + '干' + gan + '(' + ganWX + ')不生助');
-            }
+        if (score === 5) {
+            return {
+                level: '强',
+                levelDetail: '得令、得地、得势中占其二且有一项半得，综合评定为强'
+            };
         }
 
-        // 四个地支（检查本气+藏干）
-        var zhiKeys = ['year', 'month', 'day', 'hour'];
-        for (var j = 0; j < zhiKeys.length; j++) {
-            var zhi = pillars[zhiKeys[j]].zhi;
-            var zhiWX = Lunar.wuXingZhi[pillars[zhiKeys[j]].zhiIndex];
-
-            // 检查地支本气
-            if (!isShengZhu(zhiWX, dayWX)) {
-                // 本气不生助，再检查藏干中是否有生助的
-                var cangGan = ZHI_CANG_GAN[zhi] || [];
-                var hasShengZhuCangGan = false;
-                for (var k = 0; k < cangGan.length; k++) {
-                    var cgWX = getGanWuXing(cangGan[k]);
-                    if (isShengZhu(cgWX, dayWX)) {
-                        hasShengZhuCangGan = true;
-                        break;
-                    }
-                }
-                if (!hasShengZhuCangGan) {
-                    allShengZhu = false;
-                    details.push(zhiKeys[j] + '支' + zhi + '(' + zhiWX + ')不生助');
-                }
-            }
+        if (score === 4) {
+            return {
+                level: '偏强',
+                levelDetail: '得令、得地、得势中占其二，综合评定为偏强'
+            };
         }
 
-        return { result: allShengZhu, details: details };
+        if (score === 3) {
+            return {
+                level: '均衡',
+                levelDetail: '得令、得地、得势各得其一或半，综合评定为均衡'
+            };
+        }
+
+        if (score === 2) {
+            return {
+                level: '偏弱',
+                levelDetail: '得令、得地、得势中仅占其一，综合评定为偏弱'
+            };
+        }
+
+        if (score === 1) {
+            return {
+                level: '弱',
+                levelDetail: '得令、得地、得势中仅得半项，综合评定为弱'
+            };
+        }
+
+        // 0分：从弱
+        return {
+            level: '从弱',
+            levelDetail: '不得令、不得地、不得势，日主' + riZhuWuXing + '在全局占比极低，综合评定为从弱'
+        };
     }
 
     /**
-     * 判断是否从弱：七字全克泄耗日元
-     * 需要检查：天干五行 + 地支本气五行 + 地支藏干五行
+     * 生成综合评定描述
      */
-    function isCongRuo(pillars) {
-        var dayGan = pillars.day.gan;
-        var dayWX = getGanWuXing(dayGan);
-
-        // 检查除日干外的7个字
-        var allKeXieHao = true;
-        var details = [];
-
-        // 年、月、时天干
-        var ganKeys = ['year', 'month', 'hour'];
-        for (var i = 0; i < ganKeys.length; i++) {
-            var gan = pillars[ganKeys[i]].gan;
-            var ganWX = getGanWuXing(gan);
-            if (isShengZhu(ganWX, dayWX)) {
-                allKeXieHao = false;
-                details.push(ganKeys[i] + '干' + gan + '(' + ganWX + ')生助');
-            }
-        }
-
-        // 四个地支（检查本气+藏干）
-        var zhiKeys = ['year', 'month', 'day', 'hour'];
-        for (var j = 0; j < zhiKeys.length; j++) {
-            var zhi = pillars[zhiKeys[j]].zhi;
-            var zhiWX = Lunar.wuXingZhi[pillars[zhiKeys[j]].zhiIndex];
-
-            // 检查地支本气
-            if (isShengZhu(zhiWX, dayWX)) {
-                // 本气生助，则不是从弱
-                allKeXieHao = false;
-                details.push(zhiKeys[j] + '支' + zhi + '(' + zhiWX + ')生助');
-            } else {
-                // 本气不生助，再检查藏干中是否有生助的
-                var cangGan = ZHI_CANG_GAN[zhi] || [];
-                for (var k = 0; k < cangGan.length; k++) {
-                    var cgWX = getGanWuXing(cangGan[k]);
-                    if (isShengZhu(cgWX, dayWX)) {
-                        allKeXieHao = false;
-                        details.push(zhiKeys[j] + '支' + zhi + '藏干' + cangGan[k] + '(' + cgWX + ')生助');
-                        break;
-                    }
-                }
-            }
-        }
-
-        return { result: allKeXieHao, details: details };
-    }
-
-    // ==================== 七级综合判定 ====================
-
-    /**
-     * 根据得令、得地、得势判定强弱等级
-     */
-    function getLevel(deLing, deDi, deShi) {
-        // 强：得令+得地+得势
-        if (deLing && deDi && deShi) {
-            return { level: '强', levelDetail: '得令+得地+得势' };
-        }
-
-        // 偏强：得令+得地+不得势 或 得令+不得地+得势
-        if (deLing && deDi && !deShi) {
-            return { level: '偏强', levelDetail: '得令+得地+不得势' };
-        }
-        if (deLing && !deDi && deShi) {
-            return { level: '偏强', levelDetail: '得令+不得地+得势' };
-        }
-
-        // 均衡：不得令+得地+得势 或 得令+不得地+不得势
-        if (!deLing && deDi && deShi) {
-            return { level: '均衡', levelDetail: '不得令+得地+得势' };
-        }
-        if (deLing && !deDi && !deShi) {
-            return { level: '均衡', levelDetail: '得令+不得地+不得势' };
-        }
-
-        // 偏弱：不得令+不得地+得势 或 不得令+得地+不得势
-        if (!deLing && !deDi && deShi) {
-            return { level: '偏弱', levelDetail: '不得令+不得地+得势' };
-        }
-        if (!deLing && deDi && !deShi) {
-            return { level: '偏弱', levelDetail: '不得令+得地+不得势' };
-        }
-
-        // 弱：不得令+不得地+不得势
-        if (!deLing && !deDi && !deShi) {
-            return { level: '弱', levelDetail: '不得令+不得地+不得势' };
-        }
-
-        // 兜底（理论上不会到达）
-        return { level: '均衡', levelDetail: '综合判定' };
+    function buildSummaryDetail(deLingResult, deDiResult, deShiResult) {
+        var parts = [];
+        if (deLingResult.deLing) parts.push('得令');
+        if (deDiResult.deDi) parts.push('得地');
+        if (deShiResult.deShi) parts.push('得势');
+        if (parts.length === 0) return '不得令、不得地、不得势';
+        return parts.join('、');
     }
 
     // ==================== 核心分析方法 ====================
@@ -396,49 +322,26 @@ const BaziStrengthStable = (function() {
         var pillars = baziResult.pillars;
         var dayGan = pillars.day.gan;
         var dayWX = getGanWuXing(dayGan);
-        var monthZhi = pillars.month.zhi;
 
-        // 1. 优先检查特殊状态：从强、从弱
-        var congQiang = isCongQiang(pillars);
-        var congRuo = isCongRuo(pillars);
+        // 1. 得令判断
+        var deLingResult = analyzeDeLing(pillars.day, pillars.month);
 
-        if (congQiang.result) {
-            return {
-                riZhuGan: dayGan,
-                riZhuWuXing: dayWX,
-                deLing: true,
-                deLingDetail: '七字全生助日元',
-                deDi: true,
-                deDiDetail: '七字全生助日元',
-                deShi: true,
-                deShiDetail: '七字全生助日元',
-                level: '从强',
-                levelDetail: '七字全生助日元，从强'
-            };
-        }
-
-        if (congRuo.result) {
-            return {
-                riZhuGan: dayGan,
-                riZhuWuXing: dayWX,
-                deLing: false,
-                deLingDetail: '七字全克泄耗日元',
-                deDi: false,
-                deDiDetail: '七字全克泄耗日元',
-                deShi: false,
-                deShiDetail: '七字全克泄耗日元',
-                level: '从弱',
-                levelDetail: '七字全克泄耗日元，从弱'
-            };
-        }
-
-        // 2. 常规判断：得令、得地、得势
-        var deLingResult = analyzeDeLing(dayGan, monthZhi);
+        // 2. 得地判断
         var deDiResult = analyzeDeDi(pillars);
+
+        // 3. 得势判断
         var deShiResult = analyzeDeShi(pillars);
 
-        // 3. 七级综合判定
-        var levelResult = getLevel(deLingResult.deLing, deDiResult.deDi, deShiResult.deShi);
+        // 4. 综合得分
+        var score = deLingResult.score + deDiResult.score + deShiResult.score;
+
+        // 5. 强弱等级
+        var wuXing = baziResult.wuXing || {};
+        var levelResult = getLevel(score, wuXing, dayWX);
+
+        // 6. 综合评定描述
+        var summaryParts = buildSummaryDetail(deLingResult, deDiResult, deShiResult);
+        var levelDetail = summaryParts + '，综合评定为' + levelResult.level;
 
         return {
             riZhuGan: dayGan,
@@ -449,17 +352,14 @@ const BaziStrengthStable = (function() {
             deDiDetail: deDiResult.detail,
             deShi: deShiResult.deShi,
             deShiDetail: deShiResult.detail,
+            score: score,
             level: levelResult.level,
-            levelDetail: levelResult.levelDetail
+            levelDetail: levelDetail
         };
     }
 
     // ==================== 导出 ====================
     return {
-        analyze: analyze,
-        // 导出对照表供测试验证
-        DE_LING_MAP: DE_LING_MAP,
-        DE_DI_MAP: DE_DI_MAP,
-        GAN_WU_XING: GAN_WU_XING
+        analyze: analyze
     };
 })();

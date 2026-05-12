@@ -1,6 +1,6 @@
-5.1稳定版
+5.2一键指令退回版
 备份时间：2026年5月11日
 线上地址：https://bazi-app-production-dc37.up.railway.app/
-状态：全站功能完成✅ 安全加固完成✅ 移动端优化完成✅ 401已修复✅
-此版本永久保存，可一键恢复。
-恢复指令：cp -r /workspace/5.1稳定版/* /workspace/Railway部署包-final/
+状态：401错误已彻底解决✅ switchPage错误已修复✅ 浅色主题清爽✅ 全站功能正常✅
+此版本永久保存，不得修改。
+一键恢复指令：cp -r /workspace/5.2一键指令退回版/* /workspace/Railway部署包-final/
