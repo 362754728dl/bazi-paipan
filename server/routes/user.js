@@ -143,6 +143,7 @@ router.post('/login', (req, res) => {
     }
 
     const token = generateToken(user);
+    console.log('[登录] 用户', user.username, '密码验证通过，生成token');
 
     // 设置 HttpOnly Cookie
     try {
@@ -154,10 +155,12 @@ router.post('/login', (req, res) => {
         path: '/',
         maxAge: 7 * 24 * 60 * 60 * 1000
       });
+      console.log('[登录] Cookie设置成功');
     } catch (e) {
-      console.error('设置Cookie失败:', e.message);
+      console.error('[登录] 设置Cookie失败:', e.message);
     }
 
+    console.log('[登录] 用户', user.username, '登录成功，返回200');
     res.json({
       code: 200,
       data: {
@@ -176,12 +179,12 @@ router.post('/login', (req, res) => {
       message: '登录成功'
     });
   } catch (err) {
-    console.error('登录失败:', err);
-    res.json({ code: 500, message: '登录失败' });
+    console.error('[登录] 异常:', err);
+    res.json({ code: 500, message: '登录失败: ' + err.message });
   }
 });
 
-// GET /api/user/info（需登录）
+// POST /api/user/register
 router.get('/info', authMiddleware, (req, res) => {
   try {
     const db = getDb();
