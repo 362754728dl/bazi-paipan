@@ -385,7 +385,7 @@ const App = (function () {
             if (resultArea) resultArea.innerHTML = '';
             // 如果在记录页，刷新列表
             if (document.querySelector('#pageRecords.active')) {
-                renderRecords(true);
+                renderRecords();
             }
             showToast('已退出登录');
         });
@@ -428,14 +428,6 @@ const App = (function () {
             });
         }
 
-        // 加载更多按钮
-        var btnLoadMore = document.getElementById('btnLoadMore');
-        if (btnLoadMore) {
-            btnLoadMore.addEventListener('click', function () {
-                loadMoreRecords();
-            });
-        }
-
         // 修改密码入口按钮
         var btnChangePwdEntry = document.getElementById('btnChangePwdEntry');
         if (btnChangePwdEntry) {
@@ -462,31 +454,12 @@ const App = (function () {
             });
         }
 
-        // 管理员入口（仅admin可见，点击直接跳转后台）
+        // 管理员入口
         var adminEntry = document.getElementById('adminEntry');
         if (adminEntry) {
-            function updateAdminButton() {
-                try {
-                    var v2User = JSON.parse(localStorage.getItem('v2_user') || '{}');
-                    if (v2User.role === 'admin') {
-                        adminEntry.style.display = 'inline';
-                        adminEntry.onclick = function() {
-                            window.location.href = 'pages/admin.html';
-                        };
-                    } else {
-                        adminEntry.style.display = 'none';
-                    }
-                } catch (e) {
-                    adminEntry.style.display = 'none';
-                }
-            }
-            updateAdminButton();
-            // 登录状态变化时更新
-            var origLoginSuccess = window._onLoginSuccess;
-            window._onLoginSuccess = function() {
-                updateAdminButton();
-                if (origLoginSuccess) origLoginSuccess();
-            };
+            adminEntry.addEventListener('click', function () {
+                showAdminLoginModal();
+            });
         }
 
         // 管理员登录
@@ -688,7 +661,7 @@ const App = (function () {
 
         // 切换到记录页时刷新记录列表
         if (pageId === 'pageRecords') {
-            renderRecords(true);
+            renderRecords();
         }
 
         // 切换到管理员页面时刷新数据
@@ -706,6 +679,11 @@ const App = (function () {
         // 切换到今日运势页面时渲染
         if (pageId === 'pageToday') {
             renderTodayPage();
+        }
+
+        // 切换到会员页面时渲染
+        if (pageId === 'pageVip') {
+            renderVipPage();
         }
 
         // 切换到排盘页面时，恢复显示输入表单并隐藏返回按钮
@@ -809,9 +787,9 @@ const App = (function () {
         // 显示结果区域
         $('resultArea').style.display = 'block';
 
-        // 自动保存记录（如果已登录且非查看模式）- 异步调用
+        // 自动保存记录（如果已登录且非查看模式）
         if (Storage.isLoggedIn() && !_viewingRecord) {
-            saveRecordAsync(result, name);
+            saveRecord(result, name);
         } else if (!Storage.isLoggedIn()) {
             showToast('排盘成功！登录后可保存记录');
         }
@@ -826,7 +804,7 @@ const App = (function () {
      */
     function renderResult(result) {
         // 清理之前动态插入的分析模块（按类名精确清理）
-        document.querySelectorAll('.yuanju-analysis, .chenggu-card, .today-fortune, .liuhe-table-card, .realtime-shensha-card, .dayun-liunian-card, .fortune-layout-wrapper, .ai-eval-card, .dayun-flow-table, .gan-relations-card, .zhi-relations-card, .dyt-container, .mingju-analysis-card, .mingli-analysis-card').forEach(function(el) { el.remove(); });
+        document.querySelectorAll('.yuanju-analysis, .chenggu-card, .today-fortune, .liuhe-table-card, .realtime-shensha-card, .dayun-liunian-card, .fortune-layout-wrapper, .ai-eval-card, .dayun-flow-table, .gan-relations-card, .zhi-relations-card, .dyt-container, .mingju-analysis-card').forEach(function(el) { el.remove(); });
         // 清理动态添加的result-card（保留静态的static-result-card）
         document.querySelectorAll('.result-card:not(.static-result-card)').forEach(function(el) { el.remove(); });
         // 强制清空resultArea中所有非static-result-card的子节点，防止表格叠加
@@ -846,32 +824,23 @@ const App = (function () {
         // 1. 顶部基础信息区
         renderInfoBar(result);
 
-        // 2. 四柱核心表格（十神、天干、地支、藏干、纳音、空亡、神煞、十二长生）
-        renderBaziTable(pillars, result.shenSha, result.kongWang, result.changSheng);
+        // 2. 四柱核心表格（十神、天干、地支、藏干、纳音、空亡、神煞）
+        renderBaziTable(pillars, result.shenSha, result.kongWang);
 
-        // 3. 天干留意（统一分析器）
-        renderGanZhiRelationsUnified(result);
+        // 3. 天干留意
+        renderGanZhiRelations(result, 'gan');
 
-        // 4. 地支留意（统一分析器）
-        // 已在 renderGanZhiRelationsUnified 中一并渲染
+        // 4. 地支留意
+        renderGanZhiRelations(result, 'zhi');
 
         // 5. 五行统计
         renderWuXing(result);
-
-        // 5.5 五行旺衰（旺相休囚死）
-        renderWuXingWangShuai(result);
 
         // 6. 大运流年总表（重新设计）
         renderDaYunLiuNianTable(result);
 
         // 7. 命局基础分析（日元强弱+五行统计+命理提示）
         renderMingJuAnalysis(result);
-
-        // 7.5 命理专业评测（格局/强弱喜忌/调候/神煞/综合评述）
-        renderMingLiAnalysis(result);
-
-        // 7.6 神煞专家注释
-        renderShenShaNote();
 
         // 8. 专业命理评测按钮
         renderAIEvalButton();
@@ -982,7 +951,7 @@ const App = (function () {
      * 渲染四柱八字表格
      * @param {object} pillars - 四柱数据 {year, month, day, hour}
      */
-    function renderBaziTable(pillars, shenSha, kongWang, changSheng) {
+    function renderBaziTable(pillars, shenSha, kongWang) {
         var pillarNames = ['年柱', '月柱', '日柱', '时柱'];
         var pillarKeys = ['year', 'month', 'day', 'hour'];
         var html = '';
@@ -1060,66 +1029,54 @@ const App = (function () {
             html += '</tr>';
         }
 
-        // 第七行：十二长生
-        if (changSheng) {
-            var csColors = { '帝旺': '#e53935', '临官': '#e53935', '长生': '#43a047', '冠带': '#43a047', '养': '#43a047', '胎': '#43a047', '沐浴': '#fb8c00', '衰': '#fb8c00', '病': '#757575', '死': '#757575', '墓': '#5c6bc0', '绝': '#5c6bc0' };
-            html += '<tr>';
-            html += '<td class="label-cell">十二长生</td>';
-            pillarKeys.forEach(function (key) {
-                var cs = changSheng[key] || '—';
-                var csColor = csColors[cs] || 'inherit';
-                html += '<td class="changsheng-cell" style="color:' + csColor + ';font-weight:600;">' + cs + '</td>';
-            });
-            html += '</tr>';
-        }
-
         var baziBody = $('baziTableBody');
         if (baziBody) baziBody.innerHTML = html;
     }
 
     /**
-     * 渲染天干地支关系（统一分析器）
-     * 全站唯一的地支分析入口，通过 RelationAnalyzer.getDizhiRelations 获取结果
+     * 渲染天干留意 / 地支留意
+     * @param {object} result - 排盘结果
+     * @param {string} type - 'gan' 或 'zhi'
      */
-    function renderGanZhiRelationsUnified(result) {
-        if (!result || !result.pillars) return;
+    function renderGanZhiRelations(result, type) {
         var p = result.pillars;
-        var ganList = [p.year.gan, p.month.gan, p.day.gan, p.hour.gan];
-        var zhiList = [p.year.zhi, p.month.zhi, p.day.zhi, p.hour.zhi];
-        var posLabels = ['年', '月', '日', '时'];
+        var ganIndices = [p.year.ganIndex, p.month.ganIndex, p.day.ganIndex, p.hour.ganIndex];
+        var zhiIndices = [p.year.zhiIndex, p.month.zhiIndex, p.day.zhiIndex, p.hour.zhiIndex];
+        var pillarNames = ['年柱', '月柱', '日柱', '时柱'];
+        var relations = [];
 
-        // 统一使用 getTGDZRelations（与大运流年表同一个函数）
-        var analysis = RelationAnalyzer.getTGDZRelations(ganList, zhiList, posLabels, posLabels);
-
-        // 天干留意
-        var tgHtml = '<div class="result-card gan-relations-card"><div class="result-title">天干留意</div>';
-        if (analysis.tianGan.length > 0) {
-            analysis.tianGan.forEach(function(r) {
-                var color = r.category === '冲' ? '#DC143C' : '#2E8B57';
-                tgHtml += '<div style="padding:6px 0;font-size:13px;"><span style="color:' + color + ';font-weight:bold;">' + r.name + '</span> <span style="color:#999;">（' + r.pos1 + '柱' + r.gan1 + ' ↔ ' + r.pos2 + '柱' + r.gan2 + '）</span></div>';
-            });
+        if (type === 'gan') {
+            // 天干合化
+            for (var i = 0; i < ganIndices.length; i++) {
+                for (var j = i + 1; j < ganIndices.length; j++) {
+                    var he = Lunar.getTianGanHe(ganIndices[i], ganIndices[j]);
+                    if (he) relations.push(pillarNames[i] + pillarNames[j] + '：' + he);
+                }
+            }
+            var title = '天干留意';
         } else {
-            tgHtml += '<div style="padding:6px 0;font-size:13px;color:#999;">天干无冲合关系</div>';
+            // 地支冲合破
+            for (var i = 0; i < zhiIndices.length; i++) {
+                for (var j = i + 1; j < zhiIndices.length; j++) {
+                    var chong = Lunar.getDiZhiChong(zhiIndices[i], zhiIndices[j]);
+                    if (chong) relations.push(pillarNames[i] + pillarNames[j] + '：' + chong);
+                    var po = Lunar.getDiZhiPo(zhiIndices[i], zhiIndices[j]);
+                    if (po) relations.push(pillarNames[i] + pillarNames[j] + '：' + po);
+                }
+            }
+            var title = '地支留意';
         }
-        tgHtml += '</div>';
 
-        // 地支留意
-        var dzHtml = '<div class="result-card zhi-relations-card"><div class="result-title">地支留意</div>';
-        if (analysis.diZhi.length > 0) {
-            analysis.diZhi.forEach(function(r) {
-                var colors = { '刑': '#8B0000', '冲': '#DC143C', '害': '#FF6347', '破': '#FF8C00', '合': '#2E8B57', '会': '#4169E1' };
-                var color = colors[r.category] || '#333';
-                dzHtml += '<div style="padding:6px 0;font-size:13px;"><span style="color:' + color + ';font-weight:bold;">[' + r.category + '] ' + r.display + '</span></div>';
-            });
-        } else {
-            dzHtml += '<div style="padding:6px 0;font-size:13px;color:#999;">地支无特殊关系</div>';
-        }
-        dzHtml += '<div style="padding:6px 0;font-size:11px;color:#bbb;">以上为传统命理文化推演，仅供了解参考，不构成任何人生决策依据。</div></div>';
+        var html = '<div class="result-card ' + (type === 'gan' ? 'gan-relations-card' : 'zhi-relations-card') + '">';
+        html += '<div class="result-title">' + title + '</div>';
+        html += '<div class="paipan-desc">';
+        html += relations.length > 0 ? relations.join('；') : '无';
+        html += '</div></div>';
 
         var ra = $('resultArea');
         if (ra) {
             var div = document.createElement('div');
-            div.innerHTML = tgHtml + dzHtml;
+            div.innerHTML = html;
             ra.appendChild(div);
         }
     }
@@ -1147,176 +1104,6 @@ const App = (function () {
 
         var wxBar = $('wuxingBar');
         if (wxBar) wxBar.innerHTML = html;
-    }
-
-    /**
-     * 渲染五行旺衰（旺相休囚死）—— 查表法，彻底根治"状态为一"Bug
-     * 数据来源：十天干在十二个月令中的旺相休囚死完整对照表
-     */
-    function renderWuXingWangShuai(result) {
-        var monthZhiIdx = result.pillars.month.zhiIndex;
-        var dayGan = result.pillars.day.gan;
-        var dayGanIdx = result.pillars.day.ganIndex;
-        var dayWuXing = result.pillars.day.wuXing;
-
-        // 日主阴阳（偶数索引为阳干，奇数为阴干）
-        var dayYinYang = (dayGanIdx % 2 === 0) ? '阳' : '阴';
-        var dayLabel = dayGan + '（' + dayYinYang + dayWuXing + '）';
-
-        // 地支名称
-        var zhiNames = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥'];
-        var zhiMonthNames = { 0: '十一月', 1: '十二月', 2: '正月', 3: '二月', 4: '三月', 5: '四月', 6: '五月', 7: '六月', 8: '七月', 9: '八月', 10: '九月', 11: '十月' };
-        var monthZhiName = zhiNames[monthZhiIdx] || '';
-
-        // ========== 完整对照表：十天干 × 十二月令 = 旺相休囚死 ==========
-        // 索引：dayGanIdx(0-9) × monthZhiIdx(0-11)
-        // 天干：0甲 1乙 2丙 3丁 4戊 5己 6庚 7辛 8壬 9癸
-        // 地支：0子 1丑 2寅 3卯 4辰 5巳 6午 7未 8申 9酉 10戌 11亥
-        // 五行在四季的规律：
-        //   春(寅卯): 木旺 火相 水休 金囚 土死
-        //   夏(巳午): 火旺 土相 木休 水囚 金死
-        //   秋(申酉): 金旺 水相 土休 火囚 木死
-        //   冬(亥子): 水旺 木相 金休 土囚 火死
-        //   四季末(辰戌丑未): 土旺 金相 火休 木囚 水死
-        var TABLE = [
-            // 甲(0): 子  丑  寅  卯  辰  巳  午  未  申  酉  戌  亥
-            /* 甲 */ ['相','囚','旺','旺','囚','休','休','囚','死','死','囚','相'],
-            // 乙(1): 子  丑  寅  卯  辰  巳  午  未  申  酉  戌  亥
-            /* 乙 */ ['相','囚','旺','旺','囚','休','休','囚','死','死','囚','相'],
-            // 丙(2): 子  丑  寅  卯  辰  巳  午  未  申  酉  戌  亥
-            /* 丙 */ ['死','休','相','相','休','旺','旺','休','囚','囚','休','死'],
-            // 丁(3): 子  丑  寅  卯  辰  巳  午  未  申  酉  戌  亥
-            /* 丁 */ ['死','休','相','相','休','旺','旺','休','囚','囚','休','死'],
-            // 戊(4): 子  丑  寅  卯  辰  巳  午  未  申  酉  戌  亥
-            /* 戊 */ ['囚','相','死','死','旺','相','相','旺','休','休','旺','囚'],
-            // 己(5): 子  丑  寅  卯  辰  巳  午  未  申  酉  戌  亥
-            /* 己 */ ['囚','相','死','死','旺','相','相','旺','休','休','旺','囚'],
-            // 庚(6): 子  丑  寅  卯  辰  巳  午  未  申  酉  戌  亥
-            /* 庚 */ ['休','旺','囚','囚','死','死','死','相','旺','旺','死','休'],
-            // 辛(7): 子  丑  寅  卯  辰  巳  午  未  申  酉  戌  亥
-            /* 辛 */ ['休','旺','囚','囚','死','死','死','相','旺','旺','死','休'],
-            // 壬(8): 子  丑  寅  卯  辰  巳  午  未  申  酉  戌  亥
-            /* 壬 */ ['旺','相','休','休','囚','死','死','死','相','相','囚','旺'],
-            // 癸(9): 子  丑  寅  卯  辰  巳  午  未  申  酉  戌  亥
-            /* 癸 */ ['旺','相','休','休','囚','死','死','死','相','相','囚','旺']
-        ];
-
-        // 查表获取日主状态
-        var dayState = (TABLE[dayGanIdx] && TABLE[dayGanIdx][monthZhiIdx]) || '—';
-
-        // 当令五行（根据月令地支）
-        var wangMap = { 2: '木', 3: '木', 5: '火', 6: '火', 8: '金', 9: '金', 11: '水', 0: '水', 4: '土', 10: '土', 1: '土', 7: '土' };
-        var wangElement = wangMap[monthZhiIdx] || '木';
-
-        // 季节描述
-        var seasonLabelMap = { 2: '春季', 3: '春季', 5: '夏季', 6: '夏季', 8: '秋季', 9: '秋季', 11: '冬季', 0: '冬季', 4: '四季末', 10: '四季末', 1: '四季末', 7: '四季末' };
-        var seasonDescMap = { 2: '木旺的春季', 3: '木旺的春季', 5: '火旺的夏季', 6: '火旺的夏季', 8: '金旺的秋季', 9: '金旺的秋季', 11: '水旺的冬季', 0: '水旺的冬季', 4: '土旺的四季末', 10: '土旺的四季末', 1: '土旺的四季末', 7: '土旺的四季末' };
-        var season = seasonLabelMap[monthZhiIdx] || '春季';
-
-        // 五行在月令的状态（用于详情表格，与TABLE对照表一致）
-        var wxRuleMap = {
-            2: { '木': '旺', '火': '相', '水': '休', '金': '囚', '土': '死' },
-            3: { '木': '旺', '火': '相', '水': '休', '金': '囚', '土': '死' },
-            5: { '火': '旺', '土': '相', '木': '休', '水': '囚', '金': '死' },
-            6: { '火': '旺', '土': '相', '木': '休', '水': '囚', '金': '死' },
-            8: { '金': '旺', '水': '相', '土': '休', '火': '囚', '木': '死' },
-            9: { '金': '旺', '水': '相', '土': '休', '火': '囚', '木': '死' },
-            11: { '水': '旺', '木': '相', '金': '休', '土': '囚', '火': '死' },
-            0: { '水': '旺', '木': '相', '金': '休', '土': '囚', '火': '死' },
-            4: { '土': '旺', '金': '相', '火': '休', '木': '囚', '水': '死' },
-            10: { '土': '旺', '金': '相', '火': '休', '木': '囚', '水': '死' },
-            1: { '土': '旺', '金': '相', '火': '休', '木': '囚', '水': '死' },
-            7: { '土': '旺', '金': '相', '火': '休', '木': '囚', '水': '死' }
-        };
-        var wxRule = wxRuleMap[monthZhiIdx] || wxRuleMap[2];
-
-        // 五行旺衰详情说明
-        function getStateDesc(wx, state) {
-            var we = wangElement;
-            if (state === '旺') return we + '当令，处于旺地';
-            if (state === '相') return we + '生' + wx + '，' + wx + '受旺' + we + '生扶，处于相地';
-            if (state === '休') return wx + '生' + we + '，' + we + '旺泄' + wx + '气，处于休地';
-            if (state === '囚') return wx + '被当令之' + we + '所困，处于囚地';
-            if (state === '死') return '当令' + we + '克' + wx + '，' + wx + '气凋零，处于死地';
-            return '';
-        }
-
-        // 日主状态注解模板
-        function getDayMasterAnnotation(state) {
-            var Z = monthZhiName + '月（' + (zhiMonthNames[monthZhiIdx] || '') + '，' + (seasonDescMap[monthZhiIdx] || '') + '）';
-
-            if (state === '旺') {
-                return '在命理学中，"旺"指的是当令得时的强盛状态。你的日主是' + dayLabel + '，生于' + Z + '，正值' + dayWuXing + '当令的季节，得天时之力，处于"旺"地，力量充沛，命局根基强健。';
-            }
-            if (state === '相') {
-                return '在命理学中，"相"指的是受旺气生扶的次旺状态。你的日主是' + dayLabel + '，生于' + Z + '。' + wangElement + '旺而生' + dayWuXing + '，' + dayWuXing + '受当令旺气生扶，处于"相"地，力量较为充足。';
-            }
-            if (state === '休') {
-                return '在命理学中，"休"指的是休囚无力的状态。你的日主是' + dayLabel + '，生于' + Z + '。五行关系中' + dayWuXing + '生' + wangElement + '，' + wangElement + '旺会泄掉' + dayWuXing + '的力量，所以' + dayWuXing + '在此月处于"休"的状态，不得月令，力量被泄。';
-            }
-            if (state === '囚') {
-                return '在命理学中，"囚"指的是被克制而无力的状态。你的日主是' + dayLabel + '，生于' + Z + '。五行关系中' + dayWuXing + '克' + wangElement + '，但' + wangElement + '当令而旺，' + dayWuXing + '反而被' + wangElement + '所困，处于"囚"的状态，有志难伸。';
-            }
-            if (state === '死') {
-                return '在命理学中，"死"指的是被旺气所克的衰弱状态。你的日主是' + dayLabel + '，生于' + Z + '。五行关系中' + wangElement + '克' + dayWuXing + '，当令之' + wangElement + '压制' + dayWuXing + '，' + dayWuXing + '处于"死"地，力量衰弱，最不得时。';
-            }
-            return '';
-        }
-
-        var wsColors = { '旺': '#e53935', '相': '#43a047', '休': '#1e88e5', '囚': '#757575', '死': '#9e9e9e' };
-        var wsBgColors = { '旺': '#ffebee', '相': '#e8f5e9', '休': '#e3f2fd', '囚': '#f5f5f5', '死': '#fafafa' };
-
-        var html = '<div class="result-card" style="margin-top:10px;">';
-        html += '<div class="result-title">五行旺衰（旺相休囚死）</div>';
-        html += '<div style="font-size:13px;color:#666;margin-bottom:10px;">月令：<strong>' + monthZhiName + '</strong>（' + (seasonLabelMap[monthZhiIdx] || season) + '，' + wangElement + '旺）</div>';
-
-        // 日主状态摘要（直接查表，不再动态计算）
-        var dayColor = wsColors[dayState] || 'inherit';
-        html += '<div style="padding:10px 12px;background:var(--bg-secondary);border-radius:6px;font-size:13px;color:#333;line-height:1.8;margin-bottom:10px;border-left:3px solid ' + dayColor + ';">';
-        html += '日主为<strong>' + dayLabel + '</strong>，生于' + monthZhiName + '月，状态为<strong style="color:' + dayColor + ';">【' + dayState + '】</strong>。';
-        html += '</div>';
-
-        // 日主注解
-        var annotation = getDayMasterAnnotation(dayState);
-        if (annotation) {
-            html += '<div style="padding:10px 12px;background:#FFF8E1;border-radius:6px;font-size:12px;color:#5D4037;line-height:1.8;margin-bottom:10px;">';
-            html += '<strong style="color:#E65100;">注解：</strong>' + annotation;
-            html += '</div>';
-        }
-
-        // 五行旺衰详情表格
-        html += '<div style="font-size:13px;font-weight:600;color:var(--text-primary);margin-bottom:6px;">五行旺衰详情：</div>';
-        html += '<table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:10px;">';
-        html += '<thead><tr style="background:var(--bg-secondary);">';
-        html += '<th style="padding:6px 8px;border:1px solid var(--border-color);text-align:center;">五行</th>';
-        html += '<th style="padding:6px 8px;border:1px solid var(--border-color);text-align:center;">状态</th>';
-        html += '<th style="padding:6px 8px;border:1px solid var(--border-color);text-align:left;">说明</th>';
-        html += '</tr></thead><tbody>';
-
-        ['木', '火', '土', '金', '水'].forEach(function (wx) {
-            var state = wxRule[wx] || '—';
-            var color = wsColors[state] || 'inherit';
-            var bgColor = wsBgColors[state] || 'transparent';
-            var isDayMaster = (wx === dayWuXing);
-            var tag = isDayMaster ? '（日主）' : '';
-            var desc = getStateDesc(wx, state);
-
-            html += '<tr style="background:' + bgColor + ';">';
-            html += '<td style="padding:6px 8px;border:1px solid var(--border-color);text-align:center;font-weight:600;">' + wx + '<span style="font-size:10px;color:#e53935;">' + tag + '</span></td>';
-            html += '<td style="padding:6px 8px;border:1px solid var(--border-color);text-align:center;font-weight:700;color:' + color + ';">' + state + '</td>';
-            html += '<td style="padding:6px 8px;border:1px solid var(--border-color);color:#555;">' + desc + '</td>';
-            html += '</tr>';
-        });
-
-        html += '</tbody></table>';
-        html += '</div>';
-
-        var ra = $('resultArea');
-        if (ra) {
-            var div = document.createElement('div');
-            div.innerHTML = html;
-            ra.appendChild(div);
-        }
     }
 
     /**
@@ -1469,28 +1256,47 @@ const App = (function () {
     }
 
     /**
-     * 渲染天干留意、地支留意信息（今日运势页面）
-     * 统一使用 RelationAnalyzer
+     * 渲染天干留意、地支留意信息
      */
     function renderTodayGanZhiInfo(result) {
         var p = result.pillars;
-        var ganList = [p.year.gan, p.month.gan, p.day.gan, p.hour.gan];
-        var zhiList = [p.year.zhi, p.month.zhi, p.day.zhi, p.hour.zhi];
-        var posLabels = ['年柱', '月柱', '日柱', '时柱'];
+        var dayGanIdx = p.day.ganIndex;
+        var zhiIndices = [p.year.zhiIndex, p.month.zhiIndex, p.day.zhiIndex, p.hour.zhiIndex];
+        var ganIndices = [p.year.ganIndex, p.month.ganIndex, p.day.ganIndex, p.hour.ganIndex];
+        var pillarNames = ['年柱', '月柱', '日柱', '时柱'];
 
-        // 使用统一分析器 getTGDZRelations
-        var analysis = RelationAnalyzer.getTGDZRelations(ganList, zhiList, posLabels, posLabels);
-        var tgRelations = analysis.tianGan;
-        var dzRelations = analysis.diZhi;
+        // 天干刑冲合害
+        var tgRelations = [];
+        for (var i = 0; i < ganIndices.length; i++) {
+            for (var j = i + 1; j < ganIndices.length; j++) {
+                var he = Lunar.getTianGanHe(ganIndices[i], ganIndices[j]);
+                if (he) tgRelations.push(pillarNames[i] + pillarNames[j] + '：' + he);
+            }
+        }
+
+        // 地支刑冲合害
+        var dzRelations = [];
+        for (var i = 0; i < zhiIndices.length; i++) {
+            for (var j = i + 1; j < zhiIndices.length; j++) {
+                var he = Lunar.getDiZhiHe(zhiIndices[i], zhiIndices[j]);
+                if (he) dzRelations.push(pillarNames[i] + pillarNames[j] + '：' + he);
+                var chong = Lunar.getDiZhiChong(zhiIndices[i], zhiIndices[j]);
+                if (chong) dzRelations.push(pillarNames[i] + pillarNames[j] + '：' + chong);
+                var xing = Lunar.getDiZhiXing(zhiIndices[i], zhiIndices[j]);
+                if (xing) dzRelations.push(pillarNames[i] + pillarNames[j] + '：' + xing);
+                var hai = Lunar.getDiZhiHai(zhiIndices[i], zhiIndices[j]);
+                if (hai) dzRelations.push(pillarNames[i] + pillarNames[j] + '：' + hai);
+            }
+        }
 
         var html = '';
         html += '<div style="margin-top:10px;padding:8px;background:var(--bg-secondary);border-radius:6px;">';
         html += '<div class="relation-title">天干留意</div>';
-        html += '<div class="relation-desc">' + (tgRelations.length > 0 ? tgRelations.map(function(r) { return r.name; }).join('；') : '无天干合化冲克') + '</div>';
+        html += '<div class="relation-desc">' + (tgRelations.length > 0 ? tgRelations.join('；') : '无天干合化冲克') + '</div>';
         html += '</div>';
         html += '<div style="margin-top:6px;padding:8px;background:var(--bg-secondary);border-radius:6px;">';
         html += '<div class="relation-title">地支留意</div>';
-        html += '<div class="relation-desc">' + (dzRelations.length > 0 ? dzRelations.map(function(r) { return r.display; }).join('；') : '无地支刑冲合害') + '</div>';
+        html += '<div class="relation-desc">' + (dzRelations.length > 0 ? dzRelations.join('；') : '无地支刑冲合害') + '</div>';
         html += '</div>';
 
         return html;
@@ -1653,6 +1459,9 @@ const App = (function () {
 
         // ====== 入口按钮 ======
         html += '<div style="display:flex;gap:12px;margin-top:20px;padding:0 16px;">';
+        html += '<button onclick="switchPage(\'pageVip\')" style="flex:1;padding:14px;border:2px solid var(--gold);background:linear-gradient(135deg,#FFF8EE,#FFF);border-radius:12px;color:var(--text-primary);font-size:15px;font-weight:600;cursor:pointer;">';
+        html += '👑 会员套餐';
+        html += '</button>';
         html += '</div>';
 
         container.innerHTML = html;
@@ -1880,24 +1689,37 @@ const App = (function () {
         });
         html += '</div></div>';
 
-        // 天干留意（统一使用 getTGDZRelations）
-        var ganList = [p.year.gan, p.month.gan, p.day.gan, p.hour.gan];
-        var zhiList = [p.year.zhi, p.month.zhi, p.day.zhi, p.hour.zhi];
-        var posLabels = ['年柱', '月柱', '日柱', '时柱'];
-        var analysis = RelationAnalyzer.getTGDZRelations(ganList, zhiList, posLabels, posLabels);
-        var tgRelResult = analysis.tianGan;
+        // 天干留意
+        var ganIndices = [p.year.ganIndex, p.month.ganIndex, p.day.ganIndex, p.hour.ganIndex];
+        var zhiIndices = [p.year.zhiIndex, p.month.zhiIndex, p.day.zhiIndex, p.hour.zhiIndex];
+        var pillarNames = ['年柱', '月柱', '日柱', '时柱'];
+        var tgRelations = [];
+        for (var i = 0; i < ganIndices.length; i++) {
+            for (var j = i + 1; j < ganIndices.length; j++) {
+                var he = Lunar.getTianGanHe(ganIndices[i], ganIndices[j]);
+                if (he) tgRelations.push(pillarNames[i] + pillarNames[j] + '：' + he);
+            }
+        }
         html += '<div class="result-card">';
         html += '<div class="result-title">天干留意</div>';
         html += '<div class="paipan-desc">';
-        html += tgRelResult.length > 0 ? tgRelResult.map(function(r) { return r.name; }).join('；') : '无';
+        html += tgRelations.length > 0 ? tgRelations.join('；') : '无';
         html += '</div></div>';
 
-        // 地支留意（统一使用 RelationAnalyzer）
-        var dzRelResult = analysis.diZhi;
+        // 地支留意
+        var dzRelations = [];
+        for (var i = 0; i < zhiIndices.length; i++) {
+            for (var j = i + 1; j < zhiIndices.length; j++) {
+                var chong = Lunar.getDiZhiChong(zhiIndices[i], zhiIndices[j]);
+                if (chong) dzRelations.push(pillarNames[i] + pillarNames[j] + '：' + chong);
+                var po = Lunar.getDiZhiPo(zhiIndices[i], zhiIndices[j]);
+                if (po) dzRelations.push(pillarNames[i] + pillarNames[j] + '：' + po);
+            }
+        }
         html += '<div class="result-card">';
         html += '<div class="result-title">地支留意</div>';
         html += '<div class="paipan-desc">';
-        html += dzRelResult.length > 0 ? dzRelResult.map(function(r) { return r.display; }).join('；') : '无';
+        html += dzRelations.length > 0 ? dzRelations.join('；') : '无';
         html += '</div></div>';
 
         // 返回顶部按钮
@@ -2291,18 +2113,54 @@ const App = (function () {
         eightGans.push({ idx: dayGZ.ganIndex, label: '流日' + dayGZ.gan });
         eightZhis.push({ idx: dayGZ.zhiIndex, label: '流日' + dayGZ.zhi });
 
-        // 天干+地支留意：统一使用 getTGDZRelations（与原命局同一个函数）
-        var ganList8 = eightGans.map(function(g) { return Lunar.tianGan[g.idx]; });
-        var ganLabels8 = eightGans.map(function(g) { return g.label; });
-        var zhiList8 = eightZhis.map(function(z) { return Lunar.diZhi[z.idx]; });
-        var zhiLabels8 = eightZhis.map(function(z) { return z.label; });
-        var tgDzResult = RelationAnalyzer.getTGDZRelations(ganList8, zhiList8, ganLabels8, zhiLabels8);
-        var ganRelations = tgDzResult.tianGan.map(function(r) {
-            return { type: r.category, desc: r.name, from: r.pos1 || '', to: r.pos2 || '' };
-        });
-        var zhiRelations = tgDzResult.diZhi.map(function(r) {
-            return { type: r.category === '半合' ? '半合' : (r.category === '合' ? '合' : r.category), desc: r.display };
-        });
+        // 天干留意：8柱天干两两检查合与冲
+        var ganRelations = [];
+        for (var gi = 0; gi < eightGans.length; gi++) {
+            for (var gj = gi + 1; gj < eightGans.length; gj++) {
+                var tgHe = Lunar.getTianGanHe(eightGans[gi].idx, eightGans[gj].idx);
+                if (tgHe) ganRelations.push({ type: '合', desc: tgHe, from: eightGans[gi].label, to: eightGans[gj].label });
+                var tgChong = Lunar.getTianGanChong(eightGans[gi].idx, eightGans[gj].idx);
+                if (tgChong) ganRelations.push({ type: '冲', desc: tgChong, from: eightGans[gi].label, to: eightGans[gj].label });
+            }
+        }
+
+        // 地支留意：8柱地支两两检查合、冲、刑、害、破
+        var zhiRelations = [];
+        for (var zi = 0; zi < eightZhis.length; zi++) {
+            for (var zj = zi + 1; zj < eightZhis.length; zj++) {
+                var dzHe = Lunar.getDiZhiHe(eightZhis[zi].idx, eightZhis[zj].idx);
+                if (dzHe) zhiRelations.push({ type: '合', desc: dzHe, from: eightZhis[zi].label, to: eightZhis[zj].label });
+                var dzChong = Lunar.getDiZhiChong(eightZhis[zi].idx, eightZhis[zj].idx);
+                if (dzChong) zhiRelations.push({ type: '冲', desc: dzChong, from: eightZhis[zi].label, to: eightZhis[zj].label });
+                var dzXing = Lunar.getDiZhiXing(eightZhis[zi].idx, eightZhis[zj].idx);
+                if (dzXing) zhiRelations.push({ type: '刑', desc: dzXing, from: eightZhis[zi].label, to: eightZhis[zj].label });
+                var dzHai = Lunar.getDiZhiHai(eightZhis[zi].idx, eightZhis[zj].idx);
+                if (dzHai) zhiRelations.push({ type: '害', desc: dzHai, from: eightZhis[zi].label, to: eightZhis[zj].label });
+                var dzPo = Lunar.getDiZhiPo(eightZhis[zi].idx, eightZhis[zj].idx);
+                if (dzPo) zhiRelations.push({ type: '破', desc: dzPo, from: eightZhis[zi].label, to: eightZhis[zj].label });
+            }
+        }
+
+        // 三合检测（申子辰、寅午戌、巳酉丑、亥卯未）
+        var sanHeGroups = [[8,0,4],[2,6,10],[5,9,1],[11,3,7]]; // 申子辰、寅午戌、巳酉丑、亥卯未
+        var zhiIdxSet = eightZhis.map(function(z) { return z.idx; });
+        var sanHeNames = ['申子辰合水局','寅午戌合火局','巳酉丑合金局','亥卯未合木局'];
+        for (var sh = 0; sh < sanHeGroups.length; sh++) {
+            var grp = sanHeGroups[sh];
+            if (zhiIdxSet.indexOf(grp[0]) >= 0 && zhiIdxSet.indexOf(grp[1]) >= 0 && zhiIdxSet.indexOf(grp[2]) >= 0) {
+                zhiRelations.push({ type: '三合', desc: sanHeNames[sh] });
+            }
+        }
+
+        // 三会检测（寅卯辰、巳午未、申酉戌、亥子丑）
+        var sanHuiGroups = [[2,3,4],[5,6,7],[8,9,10],[11,0,1]];
+        var sanHuiNames = ['寅卯辰会东方木','巳午未会南方火','申酉戌会西方金','亥子丑会北方水'];
+        for (var shi = 0; shi < sanHuiGroups.length; shi++) {
+            var hgrp = sanHuiGroups[shi];
+            if (zhiIdxSet.indexOf(hgrp[0]) >= 0 && zhiIdxSet.indexOf(hgrp[1]) >= 0 && zhiIdxSet.indexOf(hgrp[2]) >= 0) {
+                zhiRelations.push({ type: '三会', desc: sanHuiNames[shi] });
+            }
+        }
 
         // 渲染天干留意
         var elGanRel = document.getElementById('dyt-info-gan');
@@ -2693,41 +2551,6 @@ const App = (function () {
         }
     }
 
-    // ==================== 命理专业评测（格局/强弱喜忌/调候/神煞/综合评述） ====================
-
-    function renderMingLiAnalysis(result) {
-        if (typeof MingliAnalyzer === 'undefined') return;
-
-        try {
-            var mlResult = MingliAnalyzer.analyze(result);
-            if (!mlResult || !mlResult.html) return;
-
-            var ra = $('resultArea');
-            if (ra) {
-                var div = document.createElement('div');
-                div.innerHTML = mlResult.html;
-                ra.appendChild(div);
-            }
-        } catch(e) {
-            console.warn('命理专业评测渲染异常:', e);
-        }
-    }
-
-    // ==================== 神煞专家注释 ====================
-
-    function renderShenShaNote() {
-        var html = '<div style="margin:12px 0;padding:12px;background:var(--bg-secondary);border-radius:8px;font-size:12px;color:#999;line-height:1.8;">';
-        html += '<div style="font-weight:600;color:#888;margin-bottom:6px;">关于神煞的说明</div>';
-        html += '传统命理学中，神煞的查法和解读，自古以来即为研习重点，亦存在不同流派观点。本站综合参考《渊海子平》《三命通会》等经典典籍，并借鉴多家权威排盘工具算法，力求提供严谨、全面的命理参考。然而，不同排盘系统或因所依经典侧重、算法细节等存在差异，这可能体现了传统命理学本身的丰富性与多元视角。若您发现本站与他站结果有别，欢迎添加站长微信 DLing3313 共同探讨。神煞仅为命理参考，人生丰盈远非星盘可尽述，愿您以平和之心，观照生活之美。';
-        html += '</div>';
-        var ra = $('resultArea');
-        if (ra) {
-            var div = document.createElement('div');
-            div.innerHTML = html;
-            ra.appendChild(div);
-        }
-    }
-
     // ==================== 专业命理评测 ====================
 
     function renderAIEvalButton() {
@@ -2753,7 +2576,29 @@ const App = (function () {
     }
 
     function showAIEval() {
-        // 直接执行基础免费评测
+        // 先检查AI次数限制
+        if (typeof window.V2Member !== 'undefined' && window.V2Member.checkAndUse) {
+            var token = localStorage.getItem('v2_token');
+            if (!token) {
+                // 未登录用户：弹出会员弹窗提示登录
+                window.V2Member.showMemberModal('请先登录后再使用专业命理评测功能');
+                return;
+            }
+            // 已登录，走统一会员检查
+            window.V2Member.checkAndUse().then(function(result) {
+                if (!result.allowed) {
+                    if (result.data && result.data.reason === 'daily_limit') {
+                        window.V2Member.showDailyLimitModal();
+                    } else {
+                        window.V2Member.showMemberModal(result.message);
+                    }
+                    return;
+                }
+                _doAIEval();
+            });
+            return;
+        }
+        // 未登录或V2Member未加载，直接执行
         _doAIEval();
     }
 
@@ -2998,7 +2843,7 @@ const App = (function () {
         // 分隔线
         html += '<div class="ai-eval-divider"></div>';
 
-        // 引导区域
+        // 付费引导区域
         html += '<div class="ai-eval-paid-section">';
         html += '<div class="ai-eval-paid-title">完整流年大运心理疏导</div>';
         html += '<div class="ai-eval-paid-features">';
@@ -3007,8 +2852,8 @@ const App = (function () {
         html += '<div class="paid-feature-item">✓ 事业财运婚姻健康综合指导</div>';
         html += '<div class="paid-feature-item">✓ 个性化心理疏导建议</div>';
         html += '</div>';
-        html += '<button id="btnAIEvalFull" class="btn-ai-eval-full">添加站长微信了解更多</button>';
-        html += '<div class="ai-eval-paid-note">微信号：DLing3313</div>';
+        html += '<button id="btnAIEvalFull" class="btn-ai-eval-full">解锁完整评测（50积分）</button>';
+        html += '<div class="ai-eval-paid-note">或开通会员无限次查看完整评测</div>';
         html += '</div>';
 
         html += '</div>';
@@ -3025,36 +2870,15 @@ const App = (function () {
         var fullBtn = document.getElementById('btnAIEvalFull');
         if (fullBtn) {
             fullBtn.addEventListener('click', function() {
-                showWechatGuide();
+                showToast('需要消耗50积分或开通会员查看完整评测');
             });
         }
 
         // 绑定分享按钮事件
         var shareBtn = document.getElementById('btnShareEval');
         if (shareBtn) {
-            shareBtn.addEventListener('click', async function() {
-                var shareData = {
-                    title: '八字排盘结果',
-                    text: '查看我的八字排盘分析',
-                    url: window.location.href
-                };
-                // 优先使用 Web Share API（手机端调起系统分享面板）
-                if (navigator.share) {
-                    try {
-                        await navigator.share(shareData);
-                    } catch (err) {
-                        // 用户取消分享，不做处理
-                    }
-                } else {
-                    // 降级方案：复制链接到剪贴板
-                    try {
-                        await navigator.clipboard.writeText(window.location.href);
-                        showToast('链接已复制，可粘贴分享给好友');
-                    } catch (e) {
-                        // 最后的降级：手动复制
-                        prompt('复制以下链接分享给好友：', window.location.href);
-                    }
-                }
+            shareBtn.addEventListener('click', function() {
+                showToast('分享功能开发中');
             });
         }
     }
@@ -3088,17 +2912,17 @@ const App = (function () {
     // ==================== 记录管理 ====================
 
     /**
-     * 保存排盘记录到后端（异步）
+     * 保存排盘记录到本地存储 + 后端数据库
      * @param {object} result - 排盘结果
      * @param {string} name - 姓名
      */
-    async function saveRecordAsync(result, name) {
+    function saveRecord(result, name) {
         var sd = result.solarDate;
         var ld = result.lunarDate;
         var pillars = result.pillars;
 
-        // 重名自动编号：检查已有记录中同名数量（先获取现有记录）
-        var existingRecords = await Storage.getRecords();
+        // 重名自动编号：检查已有记录中同名数量
+        var existingRecords = Storage.getRecords();
         var sameNameCount = 0;
         existingRecords.forEach(function(r) {
             if (r.name === name || r.name.indexOf(name) === 0) {
@@ -3121,7 +2945,7 @@ const App = (function () {
                 day: sd.day,
                 hour: sd.hour,
                 minute: sd.minute,
-                gender: result.gender,
+                gender: gender,
                 calendarType: calendarType,
                 name: name,
                 province: $('selectProvince').value,
@@ -3130,48 +2954,46 @@ const App = (function () {
             createTime: Date.now()
         };
 
-        var res = await Storage.saveRecord(record);
-        if (res.success) {
-            showToast('排盘记录已保存');
-        } else {
-            showToast('记录保存失败：' + (res.message || '未知错误'));
+        // 1. 保存到 localStorage（兼容旧版）
+        Storage.saveRecord(record);
+
+        // 2. 异步保存到后端数据库（V2 API）
+        if (typeof V2API !== 'undefined' && V2API.isLoggedIn && V2API.isLoggedIn()) {
+            V2API.savePaipanRecord({
+                name: displayName,
+                solarDate: record.solarDate,
+                lunarDate: record.lunarDate,
+                gender: result.gender,
+                shengXiao: ld.shengXiao,
+                baziStr: record.baziStr,
+                formData: record.formData
+            }).then(function(resp) {
+                if (resp && resp.code === 200) {
+                    console.log('[saveRecord] 后端保存成功');
+                } else {
+                    console.warn('[saveRecord] 后端保存失败:', resp);
+                }
+            }).catch(function(err) {
+                console.warn('[saveRecord] 后端保存异常:', err);
+            });
         }
+
+        showToast('排盘记录已保存');
     }
 
-    // ==================== 排盘记录分页状态 ====================
-    var _recordsPage = 1;
-    var _recordsPageSize = 10;
-    var _recordsHasMore = false;
-    var _recordsTotal = 0;
-    var _recordsLoading = false;
-    var _recordsAllLoaded = []; // 当前已加载的所有记录（用于点击查看详情）
-    var _recordsMaxDisplay = 50; // 列表最大同时显示条数
-    var _recordsTrackingMap = {}; // 记录状态映射表（高亮/选中等）
-    var _recordsRequestTimer = null; // 请求超时计时器
-    var _recordsRequestTimeout = 8000; // 8秒超时
-
     /**
-     * 渲染记录列表（分页版本，带状态保护和列表上限）
+     * 渲染记录列表
      */
-    async function renderRecords(resetPage) {
+    function renderRecords() {
         try {
+        var records = Storage.getRecords();
         var recordList = $('recordList');
         var emptyState = $('emptyState');
-        var loadMoreWrap = $('loadMoreWrap');
-        var recordsCount = $('recordsCount');
 
+        // 安全检查：确保DOM元素存在
         if (!recordList || !emptyState) {
-            console.error('[renderRecords] DOM元素不存在');
+            console.error('[renderRecords] DOM元素不存在: recordList=', !!recordList, 'emptyState=', !!emptyState);
             return;
-        }
-
-        // 重置分页状态
-        if (resetPage) {
-            _recordsPage = 1;
-            _recordsAllLoaded = [];
-            _recordsTrackingMap = {};
-            recordList.innerHTML = '';
-            _clearRequestTimer();
         }
 
         if (!Storage.isLoggedIn()) {
@@ -3180,8 +3002,7 @@ const App = (function () {
             emptyState.querySelector('.empty-icon').textContent = '🔒';
             emptyState.children[1].textContent = '请先登录查看记录';
             emptyState.children[2].textContent = '点击上方用户栏进行登录';
-            if (loadMoreWrap) loadMoreWrap.style.display = 'none';
-            if (recordsCount) recordsCount.style.display = 'none';
+            // 显示登录/注册按钮
             var btnLogin = $('btnEmptyLogin');
             var btnReg = $('btnEmptyRegister');
             if (btnLogin) btnLogin.style.display = 'inline-block';
@@ -3189,312 +3010,92 @@ const App = (function () {
             return;
         }
 
-        // 防止重复请求
-        if (_recordsLoading) return;
-        _recordsLoading = true;
-
-        // 首次加载显示骨架屏
-        if (_recordsPage === 1 && _recordsAllLoaded.length === 0) {
-            recordList.innerHTML = buildSkeletonHTML(3);
-        }
-
-        // 更新加载更多按钮状态
-        if (loadMoreWrap) {
-            var btn = $('btnLoadMore');
-            if (btn) { btn.disabled = true; btn.classList.add('loading'); btn.textContent = '加载中...'; }
-        }
-
-        // 设置请求超时保护
-        _clearRequestTimer();
-        _recordsRequestTimer = setTimeout(function() {
-            _recordsLoading = false;
-            var btn2 = $('btnLoadMore');
-            if (btn2) { btn2.disabled = false; btn2.classList.remove('loading'); btn2.textContent = '加载更多'; }
-            showToast('加载超时，请点击重试');
-        }, _recordsRequestTimeout);
-
-        // 分页请求
-        var result;
-        try {
-            result = await Storage.getRecordsPage(_recordsPage, _recordsPageSize);
-        } catch(e) {
-            result = { list: [], total: 0, hasMore: false };
-        }
-        _clearRequestTimer();
-
-        var records = result.list || [];
-        _recordsHasMore = !!result.hasMore;
-        _recordsTotal = result.total || 0;
-
-        // 追加到已加载列表
-        _recordsAllLoaded = _recordsAllLoaded.concat(records);
-
-        // 首页无数据
-        if (_recordsPage === 1 && records.length === 0) {
+        if (records.length === 0) {
             recordList.innerHTML = '';
             emptyState.style.display = 'block';
             emptyState.querySelector('.empty-icon').textContent = '📋';
             emptyState.children[1].textContent = '暂无排盘记录';
             emptyState.children[2].textContent = '排盘后自动保存';
-            var btnLogin2 = $('btnEmptyLogin');
-            var btnReg2 = $('btnEmptyRegister');
-            if (btnLogin2) btnLogin2.style.display = 'none';
-            if (btnReg2) btnReg2.style.display = 'none';
-            if (loadMoreWrap) loadMoreWrap.style.display = 'none';
-            if (recordsCount) recordsCount.style.display = 'none';
-            _recordsLoading = false;
+            // 已登录但无记录：隐藏登录/注册按钮
+            var btnLogin = $('btnEmptyLogin');
+            var btnReg = $('btnEmptyRegister');
+            if (btnLogin) btnLogin.style.display = 'none';
+            if (btnReg) btnReg.style.display = 'none';
             return;
         }
 
         emptyState.style.display = 'none';
 
-        // 列表上限保护：超过_maxDisplay条时裁剪
-        if (_recordsAllLoaded.length > _recordsMaxDisplay) {
-            _recordsAllLoaded = _recordsAllLoaded.slice(0, _recordsMaxDisplay);
-            _recordsHasMore = false; // 不再允许加载更多
-        }
-
-        // 保存当前状态到 trackingMap
-        _saveTrackingStates(recordList);
-
-        // 清空并重建整个列表（DocumentFragment）
-        recordList.innerHTML = '';
-        var fragment = document.createDocumentFragment();
-        _recordsAllLoaded.forEach(function (r) {
+        var html = '';
+        records.forEach(function (r) {
             var date = new Date(r.createTime);
             var timeStr = date.getFullYear() + '/' + padZero(date.getMonth() + 1) + '/' + padZero(date.getDate()) + ' ' + padZero(date.getHours()) + ':' + padZero(date.getMinutes()) + ':' + padZero(date.getSeconds());
 
-            var item = document.createElement('div');
-            item.className = 'record-item';
-            item.setAttribute('data-id', r.id);
-            item.innerHTML =
-                '<div class="record-info">' +
-                    '<div class="record-name">' + escapeHtml(r.name) + '（' + escapeHtml(r.gender) + '，' + escapeHtml(r.shengXiao) + '）</div>' +
-                    '<div class="record-date">' + escapeHtml(r.solarDate) + '（' + escapeHtml(r.lunarDate) + '）</div>' +
-                    '<div class="record-bazi">' + escapeHtml(r.baziStr) + '</div>' +
-                    '<div class="record-date" style="margin-top:2px">保存于 ' + timeStr + '</div>' +
-                '</div>' +
-                '<div class="record-actions">' +
-                    '<button class="btn-delete" data-id="' + r.id + '">删除</button>' +
-                '</div>';
-            fragment.appendChild(item);
+            html += '<div class="record-item" data-id="' + r.id + '">';
+            html += '  <div class="record-info">';
+            html += '    <div class="record-name">' + escapeHtml(r.name) + '（' + escapeHtml(r.gender) + '，' + escapeHtml(r.shengXiao) + '）</div>';
+            html += '    <div class="record-date">' + escapeHtml(r.solarDate) + '（' + escapeHtml(r.lunarDate) + '）</div>';
+            html += '    <div class="record-bazi">' + escapeHtml(r.baziStr) + '</div>';
+            html += '    <div class="record-date" style="margin-top:2px">保存于 ' + timeStr + '</div>';
+            html += '  </div>';
+            html += '  <div class="record-actions">';
+            html += '    <button class="btn-delete" data-id="' + r.id + '">删除</button>';
+            html += '  </div>';
+            html += '</div>';
         });
-        recordList.appendChild(fragment);
 
-        // 恢复 trackingMap 中的状态
-        _restoreTrackingStates(recordList);
+        recordList.innerHTML = html;
 
         // 绑定删除按钮事件
-        recordList.querySelectorAll('.btn-delete:not([data-bound])').forEach(function (btn) {
-            btn.setAttribute('data-bound', '1');
-            btn.addEventListener('click', async function (e) {
+        recordList.querySelectorAll('.btn-delete').forEach(function (btn) {
+            btn.addEventListener('click', function (e) {
                 e.stopPropagation();
                 var id = parseInt(this.getAttribute('data-id'));
-                try {
-                    if (confirm('确定要删除这条记录吗？')) {
-                        var success = await Storage.deleteRecord(id);
-                        if (success) {
-                            // 清理 trackingMap 状态
-                            delete _recordsTrackingMap[id];
-                            // 局部刷新：从DOM移除该条记录
-                            var itemEl = recordList.querySelector('.record-item[data-id="' + id + '"]');
-                            if (itemEl) {
-                                itemEl.style.transition = 'opacity 0.2s, max-height 0.3s';
-                                itemEl.style.opacity = '0';
-                                itemEl.style.maxHeight = itemEl.offsetHeight + 'px';
-                                setTimeout(function() {
-                                    itemEl.style.maxHeight = '0';
-                                    itemEl.style.padding = '0';
-                                    itemEl.style.margin = '0';
-                                    itemEl.style.overflow = 'hidden';
-                                }, 150);
-                                setTimeout(function() {
-                                    itemEl.remove();
-                                    _recordsAllLoaded = _recordsAllLoaded.filter(function(r) { return r.id !== id; });
-                                    _recordsTotal = Math.max(0, _recordsTotal - 1);
-                                    updateRecordsCount();
-                                    if (_recordsAllLoaded.length === 0) {
-                                        renderRecords(true);
-                                    }
-                                }, 400);
-                            }
-                            showToast('记录已删除');
-                        } else {
-                            showToast('删除失败，请重试');
-                        }
+                if (confirm('确定要删除这条记录吗？')) {
+                    try {
+                        Storage.deleteRecord(id);
+                        renderRecords();
+                        showToast('记录已删除');
+                    } catch (err) {
+                        console.error('[deleteRecord] 删除出错:', err);
+                        showToast('删除失败，请刷新页面重试');
+                        renderRecords();
                     }
-                } catch (err) {
-                    console.error('[deleteRecord] 删除出错:', err);
-                    showToast('删除失败，请刷新页面重试');
                 }
             });
         });
 
-        // 绑定记录点击事件
-        recordList.querySelectorAll('.record-item:not([data-click-bound])').forEach(function (item) {
-            item.setAttribute('data-click-bound', '1');
+        // 绑定记录点击事件（查看排盘详情，不重复保存）
+        recordList.querySelectorAll('.record-item').forEach(function (item) {
             item.addEventListener('click', function () {
                 var id = parseInt(this.getAttribute('data-id'));
-                var record = _recordsAllLoaded.find(function (r) { return r.id === id; });
+                var record = records.find(function (r) { return r.id === id; });
                 if (record && record.formData) {
                     loadFormData(record.formData);
+                    // 先切换到排盘页面
                     switchPage('pagePaipan');
+                    // 再隐藏输入表单、显示返回记录按钮（在switchPage之后执行，覆盖其恢复逻辑）
                     var formSection = document.querySelector('.form-section');
                     if (formSection) formSection.style.display = 'none';
                     var backBtn = $('backToRecords');
                     if (backBtn) backBtn.style.display = 'inline-block';
+                    // 标记为查看模式，不自动保存记录
                     _viewingRecord = true;
                     doPaipan();
                     _viewingRecord = false;
                 }
             });
         });
-
-        // 更新加载更多按钮和记录计数
-        updateLoadMoreButton();
-        updateRecordsCount();
-
-        _recordsLoading = false;
         } catch (err) {
             console.error('[renderRecords] 渲染出错:', err);
-            _recordsLoading = false;
-            _clearRequestTimer();
+            // 确保不会白屏：恢复空状态显示
             try {
                 var recordList = $('recordList');
-                if (recordList && _recordsAllLoaded.length === 0) {
-                    recordList.innerHTML = '<div style="text-align:center;padding:20px;color:#999;">记录加载异常，请刷新页面</div>';
-                }
+                var emptyState = $('emptyState');
+                if (recordList) recordList.innerHTML = '<div style="text-align:center;padding:20px;color:#999;">记录加载异常，请刷新页面</div>';
+                if (emptyState) emptyState.style.display = 'none';
             } catch(e) {}
         }
-    }
-
-    /**
-     * 保存当前列表中所有记录的跟踪状态
-     */
-    function _saveTrackingStates(container) {
-        if (!container) return;
-        container.querySelectorAll('.record-item').forEach(function(item) {
-            var id = item.getAttribute('data-id');
-            if (id) {
-                _recordsTrackingMap[id] = {
-                    highlighted: item.classList.contains('highlighted'),
-                    selected: item.classList.contains('selected')
-                };
-            }
-        });
-    }
-
-    /**
-     * 从 trackingMap 恢复记录状态
-     */
-    function _restoreTrackingStates(container) {
-        if (!container) return;
-        Object.keys(_recordsTrackingMap).forEach(function(id) {
-            var state = _recordsTrackingMap[id];
-            var item = container.querySelector('.record-item[data-id="' + id + '"]');
-            if (item && state) {
-                if (state.highlighted) item.classList.add('highlighted');
-                if (state.selected) item.classList.add('selected');
-            }
-        });
-    }
-
-    /**
-     * 清除请求超时计时器
-     */
-    function _clearRequestTimer() {
-        if (_recordsRequestTimer) {
-            clearTimeout(_recordsRequestTimer);
-            _recordsRequestTimer = null;
-        }
-    }
-
-    /**
-     * 构建骨架屏HTML
-     */
-    function buildSkeletonHTML(count) {
-        var html = '';
-        for (var i = 0; i < count; i++) {
-            html += '<div class="skeleton-item">';
-            html += '  <div style="flex:1;">';
-            html += '    <div class="skeleton-line w60" style="margin-bottom:8px;"></div>';
-            html += '    <div class="skeleton-line w80" style="margin-bottom:6px;"></div>';
-            html += '    <div class="skeleton-line w40"></div>';
-            html += '  </div>';
-            html += '</div>';
-        }
-        return html;
-    }
-
-    /**
-     * 更新加载更多按钮状态
-     */
-    function updateLoadMoreButton() {
-        var loadMoreWrap = $('loadMoreWrap');
-        if (!loadMoreWrap) return;
-        var btn = $('btnLoadMore');
-        if (!btn) return;
-
-        if (_recordsTotal <= 0) {
-            loadMoreWrap.style.display = 'none';
-        } else if (_recordsTotal <= _recordsPageSize) {
-            // 记录数不超过一页：隐藏加载更多按钮
-            loadMoreWrap.style.display = 'none';
-        } else if (!_recordsHasMore || _recordsAllLoaded.length >= _recordsMaxDisplay) {
-            // 已加载全部 或 达到列表上限
-            loadMoreWrap.style.display = 'block';
-            btn.disabled = true;
-            btn.classList.remove('loading');
-            if (_recordsAllLoaded.length >= _recordsMaxDisplay && _recordsTotal > _recordsMaxDisplay) {
-                btn.textContent = '已显示最近' + _recordsMaxDisplay + '条记录';
-            } else {
-                btn.textContent = '已加载全部记录（共' + _recordsTotal + '条）';
-            }
-        } else {
-            loadMoreWrap.style.display = 'block';
-            btn.disabled = false;
-            btn.classList.remove('loading');
-            btn.textContent = '加载更多（已加载' + _recordsAllLoaded.length + '/' + _recordsTotal + '）';
-        }
-    }
-
-    /**
-     * 更新记录计数显示
-     */
-    function updateRecordsCount() {
-        var recordsCount = $('recordsCount');
-        if (!recordsCount) return;
-        if (_recordsTotal > 0) {
-            recordsCount.style.display = 'block';
-            if (_recordsTotal > _recordsMaxDisplay) {
-                recordsCount.textContent = '共 ' + _recordsTotal + ' 条记录（当前显示最近' + _recordsAllLoaded.length + '条）';
-            } else {
-                recordsCount.textContent = '共 ' + _recordsTotal + ' 条记录';
-            }
-        } else {
-            recordsCount.style.display = 'none';
-        }
-    }
-
-    /**
-     * 加载更多记录（下一页）
-     */
-    function loadMoreRecords() {
-        if (_recordsLoading || !_recordsHasMore) return;
-        if (_recordsAllLoaded.length >= _recordsMaxDisplay) return;
-        _recordsPage++;
-        renderRecords(false);
-    }
-
-    /**
-     * 页面卸载时清理记录相关内存
-     */
-    function _cleanupRecordsMemory() {
-        _recordsAllLoaded = [];
-        _recordsTrackingMap = {};
-        _clearRequestTimer();
-        var recordList = $('recordList');
-        if (recordList) recordList.innerHTML = '';
     }
 
     /**
@@ -3656,44 +3257,15 @@ const App = (function () {
                 if (typeof V2API !== 'undefined') {
                     loginResult = await V2API.login(username, password);
                 } else {
-                    // 优先尝试 API 登录（支持数据库中的账号如 admin）
-                    try {
-                        var resp = await fetch('/api/user/login', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            credentials: 'same-origin',
-                            body: JSON.stringify({ username: username, password: password })
-                        });
-                        var json = await resp.json();
-                        if (json.code === 200 && json.data) {
-                            // API 登录成功，token 已通过 HttpOnly Cookie 设置，前端不存储
-                            // 仅保存非敏感用户信息到 localStorage
-                            localStorage.setItem('v2_user', JSON.stringify({
-                                username: json.data.username,
-                                level: json.data.level,
-                                role: json.data.role || (json.data.username === 'admin' ? 'admin' : '')
-                            }));
-
-                            localStorage.setItem('bazi_current_user', JSON.stringify({
-                                username: json.data.username,
-                                createTime: Date.now()
-                            }));
-                            loginResult = { success: true, user: json.data };
-                        } else {
-                            throw new Error(json.message || 'API登录失败');
-                        }
-                    } catch (apiErr) {
-                        // API 登录失败，回退到 localStorage 登录
-                        var user = Storage.login(username, password);
-                        loginResult = user ? { success: true, user: user } : { success: false, message: '用户名或密码错误' };
-                    }
+                    var user = Storage.login(username, password);
+                    loginResult = user ? { success: true, user: user } : { success: false, message: '用户名或密码错误' };
                 }
                 if (loginResult.success) {
                     hideLoginModal();
                     updateUserBar();
                     // 如果当前在记录页，刷新记录列表
                     if ($('pageRecords').classList.contains('active')) {
-                        renderRecords(true);
+                        renderRecords();
                     }
                     showToast('登录成功，欢迎 ' + (loginResult.user ? loginResult.user.username : username));
                 } else {
@@ -3758,10 +3330,6 @@ const App = (function () {
     }
 
     function renderAdminPanel() {
-        // 显示会员管理页面链接
-        var membersLink = $('adminMembersLink');
-        if (membersLink) membersLink.style.display = 'inline';
-
         // 统计数据
         var users = Storage.getAllUsers();
         var totalUsers = Object.keys(users).length;
@@ -3812,6 +3380,9 @@ const App = (function () {
         });
         if (!recordHtml) recordHtml = '<div style="text-align:center;color:var(--text-light);padding:20px;">暂无排盘记录</div>';
         $('adminRecordList').innerHTML = recordHtml;
+
+        // 会员列表
+        renderMembershipList();
     }
 
     function doAdminChangePwd() {
@@ -3828,6 +3399,60 @@ const App = (function () {
             $('adminNewPwd').value = '';
             $('adminConfirmPwd').value = '';
         }
+    }
+
+    // ==================== 会员管理 ====================
+
+    /**
+     * 管理员开通会员
+     */
+    function adminActivateVip() {
+        var username = $('vipUsername').value.trim();
+        var plan = $('vipPlan').value;
+        if (!username) { showToast('请输入用户名'); return; }
+        var expireDate = new Date();
+        if (plan === 'trial') expireDate.setMonth(expireDate.getMonth() + 1);
+        else if (plan === 'yearly') expireDate.setFullYear(expireDate.getFullYear() + 1);
+        var expireStr = expireDate.toISOString().split('T')[0];
+        Storage.activateMembership(username, plan, expireStr);
+        showToast('已为 ' + username + ' 开通' + (plan === 'trial' ? '体验' : plan === 'yearly' ? '年度' : '终身') + '会员');
+        renderMembershipList();
+    }
+
+    /**
+     * 管理员调整AI次数
+     */
+    function adminAdjustQuota() {
+        var username = $('quotaUsername').value.trim();
+        var quota = parseInt($('quotaNumber').value);
+        if (!username) { showToast('请输入用户名'); return; }
+        if (isNaN(quota)) { showToast('请输入有效次数'); return; }
+        Storage.adjustAiQuota(username, quota);
+        showToast('已调整 ' + username + ' 的AI次数为 ' + (quota === -1 ? '无限' : quota));
+        renderMembershipList();
+    }
+
+    /**
+     * 渲染会员列表
+     */
+    function renderMembershipList() {
+        var members = Storage.getAllMemberships();
+        var container = $('membershipList');
+        if (!container) return;
+        if (members.length === 0) {
+            container.innerHTML = '<div style="text-align:center;color:var(--text-light);padding:30px;">暂无会员数据</div>';
+            return;
+        }
+        var planNames = { trial: '体验会员', yearly: '年度会员', lifetime: '终身会员' };
+        var html = '<table style="width:100%;border-collapse:collapse;font-size:13px;"><thead><tr style="background:var(--bg-secondary);"><th style="padding:8px;border:1px solid var(--border-color);">用户名</th><th style="padding:8px;border:1px solid var(--border-color);">套餐</th><th style="padding:8px;border:1px solid var(--border-color);">开通日期</th><th style="padding:8px;border:1px solid var(--border-color);">到期日期</th><th style="padding:8px;border:1px solid var(--border-color);">AI次数</th><th style="padding:8px;border:1px solid var(--border-color);">状态</th></tr></thead><tbody>';
+        for (var i = 0; i < members.length; i++) {
+            var m = members[i];
+            var statusText = m.isActive ? '有效' : '过期';
+            var statusColor = m.isActive ? 'var(--green)' : 'var(--red-primary)';
+            html += '<tr><td style="padding:8px;border:1px solid var(--border-color);">' + escapeHtml(m.username) + '</td><td style="padding:8px;border:1px solid var(--border-color);">' + planNames[m.plan] + '</td><td style="padding:8px;border:1px solid var(--border-color);">' + m.activateDate + '</td><td style="padding:8px;border:1px solid var(--border-color);">' + m.expireDate + '</td><td style="padding:8px;border:1px solid var(--border-color);">' + (m.aiQuota === -1 ? '无限' : m.aiQuota) + '</td><td style="padding:8px;border:1px solid var(--border-color);color:' + statusColor + ';">' + statusText + '</td></tr>';
+        }
+        html += '</tbody></table>';
+        container.innerHTML = html;
     }
 
     // ==================== Toast提示 ====================
@@ -3890,10 +3515,11 @@ const App = (function () {
         return parts.join('，');
     }
 
-    // ==================== 服务介绍页面 ====================
+    // ==================== 会员充值套餐页面 ====================
 
     /**
-     * 渲染服务介绍页面
+     * 渲染会员充值套餐页面
+     * 包含三档套餐卡片：体验会员、年度会员（主推）、终身会员
      */
     function renderVipPage() {
         var container = $('vipContent');
@@ -3904,29 +3530,81 @@ const App = (function () {
         // 顶部标题区
         html += '<div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">';
         html += '<button onclick="switchPage(\'pageToday\')" style="background:none;border:none;font-size:20px;color:var(--text-primary);cursor:pointer;padding:4px;">&#8592;</button>';
-        html += '<h2 style="font-size:17px;font-weight:600;color:var(--text-primary);margin:0;">AI专业命理疏导 · 服务介绍</h2>';
+        html += '<h2 style="font-size:17px;font-weight:600;color:var(--text-primary);margin:0;">AI专业命理疏导 · 会员服务</h2>';
         html += '</div>';
 
         // 核心说明文案
-        html += '<div style="background:var(--bg-card);border:1px solid var(--border-color);border-radius:12px;padding:16px;margin-bottom:20px;box-shadow:0 2px 8px var(--shadow);">';
-        html += '<p style="font-size:13px;color:var(--text-secondary);line-height:1.8;margin:0;">本平台不搞迷信、不恐吓、不改运，仅以正统子平命理、五行旺衰、十神逻辑为基础，为用户提供五行缺失测算、日主强弱分析、喜忌判定、大运流年理性疏导、心理情绪引导，帮助用户认清自身命理结构，做到顺势而为、生活顺遂。</p>';
+        html += '<div class="vip-desc-card">';
+        html += '<p>本平台不搞迷信、不恐吓、不改运，仅以正统子平命理、五行旺衰、十神逻辑为基础，结合主流大模型（Kimi/DeepSeek/豆包/智谱）专业命理提示词，为用户提供五行缺失测算、日主强弱分析、喜忌判定、大运流年理性疏导、心理情绪引导，帮助用户认清自身命理结构，做到顺势而为、生活顺遂。</p>';
         html += '</div>';
 
-        // 微信引导卡片
-        html += '<div style="background:var(--bg-card);border:2px solid var(--gold);border-radius:12px;padding:20px 16px;margin-bottom:16px;box-shadow:0 4px 20px rgba(200,168,78,0.3);">';
-        html += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">';
-        html += '<span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600;background:var(--red-primary);color:#fff;">联系站长</span>';
-        html += '<span style="font-size:16px;font-weight:600;color:var(--text-primary);">添加站长微信了解更多</span>';
+        // 卡片1：体验会员
+        html += '<div class="vip-card">';
+        html += '<div class="vip-card-header">';
+        html += '<span class="vip-tag vip-tag-gray">体验</span>';
+        html += '<span class="vip-card-title">体验会员（基础疏导）</span>';
         html += '</div>';
-        html += '<div style="font-size:16px;font-weight:bold;color:#333;text-align:center;margin:16px 0 8px;">微信号：DLing3313</div>';
-        html += '<div style="display:flex;gap:12px;margin-bottom:10px;">';
-        html += '<div style="flex:1;text-align:center;"><img src="images/wechat-qr.jpg" alt="站长微信二维码" style="width:120px;height:120px;border-radius:8px;border:1px solid #e8e0d0;object-fit:cover;"><span style="display:block;font-size:12px;color:var(--text-light);margin-top:4px;">站长微信二维码</span></div>';
+        html += '<div class="vip-price">¥29.9<span class="vip-price-unit">/月</span></div>';
+        html += '<ul class="vip-features">';
+        html += '<li><span class="vip-check">&#10003;</span>每日3次AI简批</li>';
+        html += '<li><span class="vip-check">&#10003;</span>五行旺衰基础查询</li>';
+        html += '<li><span class="vip-check">&#10003;</span>基础喜忌判定</li>';
+        html += '<li><span class="vip-check">&#10003;</span>无广告体验</li>';
+        html += '</ul>';
+        html += '<div class="vip-qr-area">';
+        html += '<div class="vip-qr-img"><img src="images/wechat-qr.jpg" alt="微信收款码"><span>微信收款码</span></div>';
+        html += '<div class="vip-qr-img"><img src="images/alipay-qr.jpg" alt="支付宝收款码"><span>支付宝收款码</span></div>';
         html += '</div>';
-        html += '<p style="text-align:center;color:#666;font-size:14px;margin-top:12px;">了解更多，请添加微信</p>';
+        html += '<p class="vip-pay-note">付款请备注：会员+手机号后4位</p>';
+        html += '<button class="vip-btn vip-btn-gray" onclick="showToast(\'请联系站长完成开通\')">立即开通</button>';
+        html += '</div>';
+
+        // 卡片2：年度会员（主推）
+        html += '<div class="vip-card featured">';
+        html += '<div class="vip-card-header">';
+        html += '<span class="vip-tag vip-tag-red">主推</span>';
+        html += '<span class="vip-card-title">年度会员（深度命理疏导 · 主推）</span>';
+        html += '</div>';
+        html += '<div class="vip-price">¥199<span class="vip-price-unit">/年</span> <span class="vip-price-original">¥399/年</span></div>';
+        html += '<ul class="vip-features">';
+        html += '<li><span class="vip-check">&#10003;</span>无限次AI专业详批</li>';
+        html += '<li><span class="vip-check">&#10003;</span>完整日主强弱+喜用神深度报告</li>';
+        html += '<li><span class="vip-check">&#10003;</span>十年大运流年心理疏导</li>';
+        html += '<li><span class="vip-check">&#10003;</span>夫妻宫/事业宫/健康宫专业解读</li>';
+        html += '<li><span class="vip-check">&#10003;</span>五行平衡生活建议</li>';
+        html += '<li><span class="vip-check">&#10003;</span>全部功能解锁</li>';
+        html += '</ul>';
+        html += '<div class="vip-qr-area">';
+        html += '<div class="vip-qr-img"><img src="images/wechat-qr.jpg" alt="微信收款码"><span>微信收款码</span></div>';
+        html += '<div class="vip-qr-img"><img src="images/alipay-qr.jpg" alt="支付宝收款码"><span>支付宝收款码</span></div>';
+        html += '</div>';
+        html += '<p class="vip-pay-note">付款请备注：会员+手机号后4位</p>';
+        html += '<button class="vip-btn vip-btn-red" onclick="showToast(\'请联系站长完成开通\')">立即开通</button>';
+        html += '</div>';
+
+        // 卡片3：终身会员
+        html += '<div class="vip-card">';
+        html += '<div class="vip-card-header">';
+        html += '<span class="vip-tag vip-tag-gold">尊享</span>';
+        html += '<span class="vip-card-title">终身会员（全站永久尊享）</span>';
+        html += '</div>';
+        html += '<div class="vip-price">¥399<span class="vip-price-unit">/永久</span></div>';
+        html += '<ul class="vip-features">';
+        html += '<li><span class="vip-check">&#10003;</span>年度会员全部功能永久有效</li>';
+        html += '<li><span class="vip-check">&#10003;</span>站长一对一命理咨询优先通道</li>';
+        html += '<li><span class="vip-check">&#10003;</span>民俗表文代写专属优惠</li>';
+        html += '<li><span class="vip-check">&#10003;</span>后续全站新功能永久免费更新</li>';
+        html += '</ul>';
+        html += '<div class="vip-qr-area">';
+        html += '<div class="vip-qr-img"><img src="images/wechat-qr.jpg" alt="微信收款码"><span>微信收款码</span></div>';
+        html += '<div class="vip-qr-img"><img src="images/alipay-qr.jpg" alt="支付宝收款码"><span>支付宝收款码</span></div>';
+        html += '</div>';
+        html += '<p class="vip-pay-note">付款请备注：会员+手机号后4位</p>';
+        html += '<button class="vip-btn vip-btn-gold" onclick="showToast(\'请联系站长完成开通\')">立即开通</button>';
         html += '</div>';
 
         // 底部合规说明
-        html += '<p style="font-size:11px;color:var(--text-light);text-align:center;margin-top:16px;line-height:1.6;">以上服务均为民俗文化咨询与命理知识解读，不涉及封建迷信。如有心理疾病请及时就医。</p>';
+        html += '<p class="vip-disclaimer">以上服务均为民俗文化咨询与命理知识解读，不涉及封建迷信。如有心理疾病请及时就医。</p>';
 
         container.innerHTML = html;
     }
@@ -3943,6 +3621,9 @@ const App = (function () {
 
     // ==================== 暴露showToast到全局（供HTML onclick使用） ====================
     window.showToast = showToast;
+    window.adminActivateVip = adminActivateVip;
+    window.adminAdjustQuota = adminAdjustQuota;
+
     // 暴露到全局
     window.switchPage = switchPage;
 
@@ -3951,9 +3632,6 @@ const App = (function () {
     window.selectLiuNian = selectLiuNian;
     window.selectLiuYue = selectLiuYue;
     window.selectLiuRi = selectLiuRi;
-
-    // 页面卸载时清理排盘记录内存
-    window.addEventListener('beforeunload', _cleanupRecordsMemory);
 
     // ==================== DOM加载完成后初始化 ====================
     if (document.readyState === 'loading') {
