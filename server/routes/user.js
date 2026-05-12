@@ -256,7 +256,7 @@ router.post('/login', checkLoginRateLimit, async (req, res) => {
     res.json({
       code: 200,
       data: {
-        // token 不再返回给前端，通过 HttpOnly Cookie 传递
+        token,
         user_id: user.id,
         username: user.username,
         level: user.level,
