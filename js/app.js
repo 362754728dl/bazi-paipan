@@ -1078,71 +1078,23 @@ const App = (function () {
     }
 
     /**
-     * 渲染天干留意 / 地支留意
-     * @param {object} result - 排盘结果
-     * @param {string} type - 'gan' 或 'zhi'
-     */
-    function renderGanZhiRelations(result, type) {
-        var p = result.pillars;
-        var ganIndices = [p.year.ganIndex, p.month.ganIndex, p.day.ganIndex, p.hour.ganIndex];
-        var zhiIndices = [p.year.zhiIndex, p.month.zhiIndex, p.day.zhiIndex, p.hour.zhiIndex];
-        var pillarNames = ['年柱', '月柱', '日柱', '时柱'];
-        var relations = [];
-
-        if (type === 'gan') {
-            // 天干合化
-            for (var i = 0; i < ganIndices.length; i++) {
-                for (var j = i + 1; j < ganIndices.length; j++) {
-                    var he = Lunar.getTianGanHe(ganIndices[i], ganIndices[j]);
-                    if (he) relations.push(pillarNames[i] + pillarNames[j] + '：' + he);
-                }
-            }
-            var title = '天干留意';
-        } else {
-            // 地支冲合破
-            for (var i = 0; i < zhiIndices.length; i++) {
-                for (var j = i + 1; j < zhiIndices.length; j++) {
-                    var chong = Lunar.getDiZhiChong(zhiIndices[i], zhiIndices[j]);
-                    if (chong) relations.push(pillarNames[i] + pillarNames[j] + '：' + chong);
-                    var po = Lunar.getDiZhiPo(zhiIndices[i], zhiIndices[j]);
-                    if (po) relations.push(pillarNames[i] + pillarNames[j] + '：' + po);
-                }
-            }
-            var title = '地支留意';
-        }
-
-        var html = '<div class="result-card ' + (type === 'gan' ? 'gan-relations-card' : 'zhi-relations-card') + '">';
-        html += '<div class="result-title">' + title + '</div>';
-        html += '<div class="paipan-desc">';
-        html += relations.length > 0 ? relations.join('；') : '无';
-        html += '</div></div>';
-
-        var ra = $('resultArea');
-        if (ra) {
-            var div = document.createElement('div');
-            div.innerHTML = html;
-            ra.appendChild(div);
-        }
-    }
-
-    /**
      * 渲染天干地支关系（统一分析器）
+     * 全站唯一的地支分析入口，通过 RelationAnalyzer.getDizhiRelations 获取结果
      */
     function renderGanZhiRelationsUnified(result) {
         if (!result || !result.pillars) return;
         var p = result.pillars;
-        var baziForAnalyze = {
-            year: { gan: p.year.gan, zhi: p.year.zhi },
-            month: { gan: p.month.gan, zhi: p.month.zhi },
-            day: { gan: p.day.gan, zhi: p.day.zhi },
-            hour: { gan: p.hour.gan, zhi: p.hour.zhi }
-        };
-        var analysis = RelationAnalyzer.analyzeRelations(baziForAnalyze);
+        var ganList = [p.year.gan, p.month.gan, p.day.gan, p.hour.gan];
+        var zhiList = [p.year.zhi, p.month.zhi, p.day.zhi, p.hour.zhi];
+        var posLabels = ['年', '月', '日', '时'];
+
+        // 统一使用 getTGDZRelations（与大运流年表同一个函数）
+        var analysis = RelationAnalyzer.getTGDZRelations(ganList, zhiList, posLabels, posLabels);
 
         // 天干留意
         var tgHtml = '<div class="result-card gan-relations-card"><div class="result-title">天干留意</div>';
-        if (analysis.tianGanRelations.length > 0) {
-            analysis.tianGanRelations.forEach(function(r) {
+        if (analysis.tianGan.length > 0) {
+            analysis.tianGan.forEach(function(r) {
                 var color = r.category === '冲' ? '#DC143C' : '#2E8B57';
                 tgHtml += '<div style="padding:6px 0;font-size:13px;"><span style="color:' + color + ';font-weight:bold;">' + r.name + '</span> <span style="color:#999;">（' + r.pos1 + '柱' + r.gan1 + ' ↔ ' + r.pos2 + '柱' + r.gan2 + '）</span></div>';
             });
@@ -1153,8 +1105,8 @@ const App = (function () {
 
         // 地支留意
         var dzHtml = '<div class="result-card zhi-relations-card"><div class="result-title">地支留意</div>';
-        if (analysis.diZhiRelations.length > 0) {
-            analysis.diZhiRelations.forEach(function(r) {
+        if (analysis.diZhi.length > 0) {
+            analysis.diZhi.forEach(function(r) {
                 var colors = { '刑': '#8B0000', '冲': '#DC143C', '害': '#FF6347', '破': '#FF8C00', '合': '#2E8B57', '会': '#4169E1' };
                 var color = colors[r.category] || '#333';
                 dzHtml += '<div style="padding:6px 0;font-size:13px;"><span style="color:' + color + ';font-weight:bold;">[' + r.category + '] ' + r.display + '</span></div>';
@@ -1198,69 +1150,165 @@ const App = (function () {
     }
 
     /**
-     * 渲染五行旺衰（旺相休囚死）
+     * 渲染五行旺衰（旺相休囚死）—— 查表法，彻底根治"状态为一"Bug
+     * 数据来源：十天干在十二个月令中的旺相休囚死完整对照表
      */
     function renderWuXingWangShuai(result) {
         var monthZhiIdx = result.pillars.month.zhiIndex;
         var dayGan = result.pillars.day.gan;
+        var dayGanIdx = result.pillars.day.ganIndex;
         var dayWuXing = result.pillars.day.wuXing;
 
-        // 月令地支 → 季节
-        var seasonMap = { 2: '春', 3: '春', 4: '春', 5: '夏', 6: '夏', 7: '夏', 8: '秋', 9: '秋', 10: '秋', 11: '冬', 0: '冬', 1: '冬' };
+        // 日主阴阳（偶数索引为阳干，奇数为阴干）
+        var dayYinYang = (dayGanIdx % 2 === 0) ? '阳' : '阴';
+        var dayLabel = dayGan + '（' + dayYinYang + dayWuXing + '）';
+
+        // 地支名称
         var zhiNames = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥'];
-        var season = seasonMap[monthZhiIdx] || '春';
+        var zhiMonthNames = { 0: '十一月', 1: '十二月', 2: '正月', 3: '二月', 4: '三月', 5: '四月', 6: '五月', 7: '六月', 8: '七月', 9: '八月', 10: '九月', 11: '十月' };
         var monthZhiName = zhiNames[monthZhiIdx] || '';
 
-        // 旺相休囚死规则
-        var rules = {
-            '春': { '木': '旺', '火': '相', '水': '休', '金': '囚', '土': '死' },
-            '夏': { '火': '旺', '土': '相', '木': '休', '水': '囚', '金': '死' },
-            '秋': { '金': '旺', '水': '相', '土': '休', '火': '囚', '木': '死' },
-            '冬': { '水': '旺', '木': '相', '金': '休', '土': '囚', '火': '死' },
-            '四季末': { '土': '旺', '金': '相', '火': '休', '木': '囚', '水': '死' }
-        };
+        // ========== 完整对照表：十天干 × 十二月令 = 旺相休囚死 ==========
+        // 索引：dayGanIdx(0-9) × monthZhiIdx(0-11)
+        // 天干：0甲 1乙 2丙 3丁 4戊 5己 6庚 7辛 8壬 9癸
+        // 地支：0子 1丑 2寅 3卯 4辰 5巳 6午 7未 8申 9酉 10戌 11亥
+        // 五行在四季的规律：
+        //   春(寅卯): 木旺 火相 水休 金囚 土死
+        //   夏(巳午): 火旺 土相 木休 水囚 金死
+        //   秋(申酉): 金旺 水相 土休 火囚 木死
+        //   冬(亥子): 水旺 木相 金休 土囚 火死
+        //   四季末(辰戌丑未): 土旺 金相 火休 木囚 水死
+        var TABLE = [
+            // 甲(0): 子  丑  寅  卯  辰  巳  午  未  申  酉  戌  亥
+            /* 甲 */ ['相','囚','旺','旺','囚','休','休','囚','死','死','囚','相'],
+            // 乙(1): 子  丑  寅  卯  辰  巳  午  未  申  酉  戌  亥
+            /* 乙 */ ['相','囚','旺','旺','囚','休','休','囚','死','死','囚','相'],
+            // 丙(2): 子  丑  寅  卯  辰  巳  午  未  申  酉  戌  亥
+            /* 丙 */ ['死','休','相','相','休','旺','旺','休','囚','囚','休','死'],
+            // 丁(3): 子  丑  寅  卯  辰  巳  午  未  申  酉  戌  亥
+            /* 丁 */ ['死','休','相','相','休','旺','旺','休','囚','囚','休','死'],
+            // 戊(4): 子  丑  寅  卯  辰  巳  午  未  申  酉  戌  亥
+            /* 戊 */ ['囚','相','死','死','旺','相','相','旺','休','休','旺','囚'],
+            // 己(5): 子  丑  寅  卯  辰  巳  午  未  申  酉  戌  亥
+            /* 己 */ ['囚','相','死','死','旺','相','相','旺','休','休','旺','囚'],
+            // 庚(6): 子  丑  寅  卯  辰  巳  午  未  申  酉  戌  亥
+            /* 庚 */ ['休','旺','囚','囚','死','死','死','相','旺','旺','死','休'],
+            // 辛(7): 子  丑  寅  卯  辰  巳  午  未  申  酉  戌  亥
+            /* 辛 */ ['休','旺','囚','囚','死','死','死','相','旺','旺','死','休'],
+            // 壬(8): 子  丑  寅  卯  辰  巳  午  未  申  酉  戌  亥
+            /* 壬 */ ['旺','相','休','休','囚','死','死','死','相','相','囚','旺'],
+            // 癸(9): 子  丑  寅  卯  辰  巳  午  未  申  酉  戌  亥
+            /* 癸 */ ['旺','相','休','休','囚','死','死','死','相','相','囚','旺']
+        ];
 
-        // 辰戌丑未为四季末
-        if ([4, 10, 6, 0].indexOf(monthZhiIdx) !== -1) {
-            season = '四季末';
+        // 查表获取日主状态
+        var dayState = (TABLE[dayGanIdx] && TABLE[dayGanIdx][monthZhiIdx]) || '—';
+
+        // 当令五行（根据月令地支）
+        var wangMap = { 2: '木', 3: '木', 5: '火', 6: '火', 8: '金', 9: '金', 11: '水', 0: '水', 4: '土', 10: '土', 1: '土', 7: '土' };
+        var wangElement = wangMap[monthZhiIdx] || '木';
+
+        // 季节描述
+        var seasonLabelMap = { 2: '春季', 3: '春季', 5: '夏季', 6: '夏季', 8: '秋季', 9: '秋季', 11: '冬季', 0: '冬季', 4: '四季末', 10: '四季末', 1: '四季末', 7: '四季末' };
+        var seasonDescMap = { 2: '木旺的春季', 3: '木旺的春季', 5: '火旺的夏季', 6: '火旺的夏季', 8: '金旺的秋季', 9: '金旺的秋季', 11: '水旺的冬季', 0: '水旺的冬季', 4: '土旺的四季末', 10: '土旺的四季末', 1: '土旺的四季末', 7: '土旺的四季末' };
+        var season = seasonLabelMap[monthZhiIdx] || '春季';
+
+        // 五行在月令的状态（用于详情表格，与TABLE对照表一致）
+        var wxRuleMap = {
+            2: { '木': '旺', '火': '相', '水': '休', '金': '囚', '土': '死' },
+            3: { '木': '旺', '火': '相', '水': '休', '金': '囚', '土': '死' },
+            5: { '火': '旺', '土': '相', '木': '休', '水': '囚', '金': '死' },
+            6: { '火': '旺', '土': '相', '木': '休', '水': '囚', '金': '死' },
+            8: { '金': '旺', '水': '相', '土': '休', '火': '囚', '木': '死' },
+            9: { '金': '旺', '水': '相', '土': '休', '火': '囚', '木': '死' },
+            11: { '水': '旺', '木': '相', '金': '休', '土': '囚', '火': '死' },
+            0: { '水': '旺', '木': '相', '金': '休', '土': '囚', '火': '死' },
+            4: { '土': '旺', '金': '相', '火': '休', '木': '囚', '水': '死' },
+            10: { '土': '旺', '金': '相', '火': '休', '木': '囚', '水': '死' },
+            1: { '土': '旺', '金': '相', '火': '休', '木': '囚', '水': '死' },
+            7: { '土': '旺', '金': '相', '火': '休', '木': '囚', '水': '死' }
+        };
+        var wxRule = wxRuleMap[monthZhiIdx] || wxRuleMap[2];
+
+        // 五行旺衰详情说明
+        function getStateDesc(wx, state) {
+            var we = wangElement;
+            if (state === '旺') return we + '当令，处于旺地';
+            if (state === '相') return we + '生' + wx + '，' + wx + '受旺' + we + '生扶，处于相地';
+            if (state === '休') return wx + '生' + we + '，' + we + '旺泄' + wx + '气，处于休地';
+            if (state === '囚') return wx + '被当令之' + we + '所困，处于囚地';
+            if (state === '死') return '当令' + we + '克' + wx + '，' + wx + '气凋零，处于死地';
+            return '';
         }
-        var rule = rules[season] || rules['春'];
+
+        // 日主状态注解模板
+        function getDayMasterAnnotation(state) {
+            var Z = monthZhiName + '月（' + (zhiMonthNames[monthZhiIdx] || '') + '，' + (seasonDescMap[monthZhiIdx] || '') + '）';
+
+            if (state === '旺') {
+                return '在命理学中，"旺"指的是当令得时的强盛状态。你的日主是' + dayLabel + '，生于' + Z + '，正值' + dayWuXing + '当令的季节，得天时之力，处于"旺"地，力量充沛，命局根基强健。';
+            }
+            if (state === '相') {
+                return '在命理学中，"相"指的是受旺气生扶的次旺状态。你的日主是' + dayLabel + '，生于' + Z + '。' + wangElement + '旺而生' + dayWuXing + '，' + dayWuXing + '受当令旺气生扶，处于"相"地，力量较为充足。';
+            }
+            if (state === '休') {
+                return '在命理学中，"休"指的是休囚无力的状态。你的日主是' + dayLabel + '，生于' + Z + '。五行关系中' + dayWuXing + '生' + wangElement + '，' + wangElement + '旺会泄掉' + dayWuXing + '的力量，所以' + dayWuXing + '在此月处于"休"的状态，不得月令，力量被泄。';
+            }
+            if (state === '囚') {
+                return '在命理学中，"囚"指的是被克制而无力的状态。你的日主是' + dayLabel + '，生于' + Z + '。五行关系中' + dayWuXing + '克' + wangElement + '，但' + wangElement + '当令而旺，' + dayWuXing + '反而被' + wangElement + '所困，处于"囚"的状态，有志难伸。';
+            }
+            if (state === '死') {
+                return '在命理学中，"死"指的是被旺气所克的衰弱状态。你的日主是' + dayLabel + '，生于' + Z + '。五行关系中' + wangElement + '克' + dayWuXing + '，当令之' + wangElement + '压制' + dayWuXing + '，' + dayWuXing + '处于"死"地，力量衰弱，最不得时。';
+            }
+            return '';
+        }
 
         var wsColors = { '旺': '#e53935', '相': '#43a047', '休': '#1e88e5', '囚': '#757575', '死': '#9e9e9e' };
-        var wxClassMap = { '金': 'wx-jin', '木': 'wx-mu', '水': 'wx-shui', '火': 'wx-huo', '土': 'wx-tu' };
+        var wsBgColors = { '旺': '#ffebee', '相': '#e8f5e9', '休': '#e3f2fd', '囚': '#f5f5f5', '死': '#fafafa' };
 
         var html = '<div class="result-card" style="margin-top:10px;">';
         html += '<div class="result-title">五行旺衰（旺相休囚死）</div>';
-        html += '<div style="font-size:12px;color:#888;margin-bottom:8px;">月令：' + monthZhiName + '（' + season + '）</div>';
-        html += '<div style="display:flex;justify-content:space-around;flex-wrap:wrap;gap:8px;">';
+        html += '<div style="font-size:13px;color:#666;margin-bottom:10px;">月令：<strong>' + monthZhiName + '</strong>（' + (seasonLabelMap[monthZhiIdx] || season) + '，' + wangElement + '旺）</div>';
+
+        // 日主状态摘要（直接查表，不再动态计算）
+        var dayColor = wsColors[dayState] || 'inherit';
+        html += '<div style="padding:10px 12px;background:var(--bg-secondary);border-radius:6px;font-size:13px;color:#333;line-height:1.8;margin-bottom:10px;border-left:3px solid ' + dayColor + ';">';
+        html += '日主为<strong>' + dayLabel + '</strong>，生于' + monthZhiName + '月，状态为<strong style="color:' + dayColor + ';">【' + dayState + '】</strong>。';
+        html += '</div>';
+
+        // 日主注解
+        var annotation = getDayMasterAnnotation(dayState);
+        if (annotation) {
+            html += '<div style="padding:10px 12px;background:#FFF8E1;border-radius:6px;font-size:12px;color:#5D4037;line-height:1.8;margin-bottom:10px;">';
+            html += '<strong style="color:#E65100;">注解：</strong>' + annotation;
+            html += '</div>';
+        }
+
+        // 五行旺衰详情表格
+        html += '<div style="font-size:13px;font-weight:600;color:var(--text-primary);margin-bottom:6px;">五行旺衰详情：</div>';
+        html += '<table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:10px;">';
+        html += '<thead><tr style="background:var(--bg-secondary);">';
+        html += '<th style="padding:6px 8px;border:1px solid var(--border-color);text-align:center;">五行</th>';
+        html += '<th style="padding:6px 8px;border:1px solid var(--border-color);text-align:center;">状态</th>';
+        html += '<th style="padding:6px 8px;border:1px solid var(--border-color);text-align:left;">说明</th>';
+        html += '</tr></thead><tbody>';
 
         ['木', '火', '土', '金', '水'].forEach(function (wx) {
-            var state = rule[wx] || '—';
+            var state = wxRule[wx] || '—';
             var color = wsColors[state] || 'inherit';
+            var bgColor = wsBgColors[state] || 'transparent';
             var isDayMaster = (wx === dayWuXing);
-            var tag = isDayMaster ? ' <span style="font-size:10px;color:#e53935;">（日主）</span>' : '';
-            html += '<div style="text-align:center;flex:1;min-width:60px;">';
-            html += '<div class="wx-name ' + (wxClassMap[wx] || '') + '" style="margin-bottom:4px;">' + wx + tag + '</div>';
-            html += '<div style="font-size:18px;font-weight:700;color:' + color + ';">' + state + '</div>';
-            html += '</div>';
+            var tag = isDayMaster ? '（日主）' : '';
+            var desc = getStateDesc(wx, state);
+
+            html += '<tr style="background:' + bgColor + ';">';
+            html += '<td style="padding:6px 8px;border:1px solid var(--border-color);text-align:center;font-weight:600;">' + wx + '<span style="font-size:10px;color:#e53935;">' + tag + '</span></td>';
+            html += '<td style="padding:6px 8px;border:1px solid var(--border-color);text-align:center;font-weight:700;color:' + color + ';">' + state + '</td>';
+            html += '<td style="padding:6px 8px;border:1px solid var(--border-color);color:#555;">' + desc + '</td>';
+            html += '</tr>';
         });
 
-        html += '</div>';
-
-        // 日主旺衰说明
-        var dayState = rule[dayWuXing] || '—';
-        var dayColor = wsColors[dayState] || 'inherit';
-        html += '<div style="margin-top:10px;padding:8px;background:var(--bg-secondary);border-radius:6px;font-size:12px;color:#666;line-height:1.6;">';
-        html += '日主<strong>' + dayGan + '（' + dayWuXing + '）</strong>在' + monthZhiName + '月状态为<strong style="color:' + dayColor + ';">' + dayState + '</strong>';
-        var descMap = {
-            '旺': '，得月令之气，能量最强',
-            '相': '，受月令生扶，次强',
-            '休': '，与月令同类但已退气',
-            '囚': '，被月令克制，力量受困',
-            '死': '，与月令对立，能量最弱'
-        };
-        html += (descMap[dayState] || '') + '。';
-        html += '</div>';
+        html += '</tbody></table>';
         html += '</div>';
 
         var ra = $('resultArea');
@@ -1421,47 +1469,28 @@ const App = (function () {
     }
 
     /**
-     * 渲染天干留意、地支留意信息
+     * 渲染天干留意、地支留意信息（今日运势页面）
+     * 统一使用 RelationAnalyzer
      */
     function renderTodayGanZhiInfo(result) {
         var p = result.pillars;
-        var dayGanIdx = p.day.ganIndex;
-        var zhiIndices = [p.year.zhiIndex, p.month.zhiIndex, p.day.zhiIndex, p.hour.zhiIndex];
-        var ganIndices = [p.year.ganIndex, p.month.ganIndex, p.day.ganIndex, p.hour.ganIndex];
-        var pillarNames = ['年柱', '月柱', '日柱', '时柱'];
+        var ganList = [p.year.gan, p.month.gan, p.day.gan, p.hour.gan];
+        var zhiList = [p.year.zhi, p.month.zhi, p.day.zhi, p.hour.zhi];
+        var posLabels = ['年柱', '月柱', '日柱', '时柱'];
 
-        // 天干刑冲合害
-        var tgRelations = [];
-        for (var i = 0; i < ganIndices.length; i++) {
-            for (var j = i + 1; j < ganIndices.length; j++) {
-                var he = Lunar.getTianGanHe(ganIndices[i], ganIndices[j]);
-                if (he) tgRelations.push(pillarNames[i] + pillarNames[j] + '：' + he);
-            }
-        }
-
-        // 地支刑冲合害
-        var dzRelations = [];
-        for (var i = 0; i < zhiIndices.length; i++) {
-            for (var j = i + 1; j < zhiIndices.length; j++) {
-                var he = Lunar.getDiZhiHe(zhiIndices[i], zhiIndices[j]);
-                if (he) dzRelations.push(pillarNames[i] + pillarNames[j] + '：' + he);
-                var chong = Lunar.getDiZhiChong(zhiIndices[i], zhiIndices[j]);
-                if (chong) dzRelations.push(pillarNames[i] + pillarNames[j] + '：' + chong);
-                var xing = Lunar.getDiZhiXing(zhiIndices[i], zhiIndices[j]);
-                if (xing) dzRelations.push(pillarNames[i] + pillarNames[j] + '：' + xing);
-                var hai = Lunar.getDiZhiHai(zhiIndices[i], zhiIndices[j]);
-                if (hai) dzRelations.push(pillarNames[i] + pillarNames[j] + '：' + hai);
-            }
-        }
+        // 使用统一分析器 getTGDZRelations
+        var analysis = RelationAnalyzer.getTGDZRelations(ganList, zhiList, posLabels, posLabels);
+        var tgRelations = analysis.tianGan;
+        var dzRelations = analysis.diZhi;
 
         var html = '';
         html += '<div style="margin-top:10px;padding:8px;background:var(--bg-secondary);border-radius:6px;">';
         html += '<div class="relation-title">天干留意</div>';
-        html += '<div class="relation-desc">' + (tgRelations.length > 0 ? tgRelations.join('；') : '无天干合化冲克') + '</div>';
+        html += '<div class="relation-desc">' + (tgRelations.length > 0 ? tgRelations.map(function(r) { return r.name; }).join('；') : '无天干合化冲克') + '</div>';
         html += '</div>';
         html += '<div style="margin-top:6px;padding:8px;background:var(--bg-secondary);border-radius:6px;">';
         html += '<div class="relation-title">地支留意</div>';
-        html += '<div class="relation-desc">' + (dzRelations.length > 0 ? dzRelations.join('；') : '无地支刑冲合害') + '</div>';
+        html += '<div class="relation-desc">' + (dzRelations.length > 0 ? dzRelations.map(function(r) { return r.display; }).join('；') : '无地支刑冲合害') + '</div>';
         html += '</div>';
 
         return html;
@@ -1851,37 +1880,24 @@ const App = (function () {
         });
         html += '</div></div>';
 
-        // 天干留意
-        var ganIndices = [p.year.ganIndex, p.month.ganIndex, p.day.ganIndex, p.hour.ganIndex];
-        var zhiIndices = [p.year.zhiIndex, p.month.zhiIndex, p.day.zhiIndex, p.hour.zhiIndex];
-        var pillarNames = ['年柱', '月柱', '日柱', '时柱'];
-        var tgRelations = [];
-        for (var i = 0; i < ganIndices.length; i++) {
-            for (var j = i + 1; j < ganIndices.length; j++) {
-                var he = Lunar.getTianGanHe(ganIndices[i], ganIndices[j]);
-                if (he) tgRelations.push(pillarNames[i] + pillarNames[j] + '：' + he);
-            }
-        }
+        // 天干留意（统一使用 getTGDZRelations）
+        var ganList = [p.year.gan, p.month.gan, p.day.gan, p.hour.gan];
+        var zhiList = [p.year.zhi, p.month.zhi, p.day.zhi, p.hour.zhi];
+        var posLabels = ['年柱', '月柱', '日柱', '时柱'];
+        var analysis = RelationAnalyzer.getTGDZRelations(ganList, zhiList, posLabels, posLabels);
+        var tgRelResult = analysis.tianGan;
         html += '<div class="result-card">';
         html += '<div class="result-title">天干留意</div>';
         html += '<div class="paipan-desc">';
-        html += tgRelations.length > 0 ? tgRelations.join('；') : '无';
+        html += tgRelResult.length > 0 ? tgRelResult.map(function(r) { return r.name; }).join('；') : '无';
         html += '</div></div>';
 
-        // 地支留意
-        var dzRelations = [];
-        for (var i = 0; i < zhiIndices.length; i++) {
-            for (var j = i + 1; j < zhiIndices.length; j++) {
-                var chong = Lunar.getDiZhiChong(zhiIndices[i], zhiIndices[j]);
-                if (chong) dzRelations.push(pillarNames[i] + pillarNames[j] + '：' + chong);
-                var po = Lunar.getDiZhiPo(zhiIndices[i], zhiIndices[j]);
-                if (po) dzRelations.push(pillarNames[i] + pillarNames[j] + '：' + po);
-            }
-        }
+        // 地支留意（统一使用 RelationAnalyzer）
+        var dzRelResult = analysis.diZhi;
         html += '<div class="result-card">';
         html += '<div class="result-title">地支留意</div>';
         html += '<div class="paipan-desc">';
-        html += dzRelations.length > 0 ? dzRelations.join('；') : '无';
+        html += dzRelResult.length > 0 ? dzRelResult.map(function(r) { return r.display; }).join('；') : '无';
         html += '</div></div>';
 
         // 返回顶部按钮
@@ -2275,54 +2291,18 @@ const App = (function () {
         eightGans.push({ idx: dayGZ.ganIndex, label: '流日' + dayGZ.gan });
         eightZhis.push({ idx: dayGZ.zhiIndex, label: '流日' + dayGZ.zhi });
 
-        // 天干留意：8柱天干两两检查合与冲
-        var ganRelations = [];
-        for (var gi = 0; gi < eightGans.length; gi++) {
-            for (var gj = gi + 1; gj < eightGans.length; gj++) {
-                var tgHe = Lunar.getTianGanHe(eightGans[gi].idx, eightGans[gj].idx);
-                if (tgHe) ganRelations.push({ type: '合', desc: tgHe, from: eightGans[gi].label, to: eightGans[gj].label });
-                var tgChong = Lunar.getTianGanChong(eightGans[gi].idx, eightGans[gj].idx);
-                if (tgChong) ganRelations.push({ type: '冲', desc: tgChong, from: eightGans[gi].label, to: eightGans[gj].label });
-            }
-        }
-
-        // 地支留意：8柱地支两两检查合、冲、刑、害、破
-        var zhiRelations = [];
-        for (var zi = 0; zi < eightZhis.length; zi++) {
-            for (var zj = zi + 1; zj < eightZhis.length; zj++) {
-                var dzHe = Lunar.getDiZhiHe(eightZhis[zi].idx, eightZhis[zj].idx);
-                if (dzHe) zhiRelations.push({ type: '合', desc: dzHe, from: eightZhis[zi].label, to: eightZhis[zj].label });
-                var dzChong = Lunar.getDiZhiChong(eightZhis[zi].idx, eightZhis[zj].idx);
-                if (dzChong) zhiRelations.push({ type: '冲', desc: dzChong, from: eightZhis[zi].label, to: eightZhis[zj].label });
-                var dzXing = Lunar.getDiZhiXing(eightZhis[zi].idx, eightZhis[zj].idx);
-                if (dzXing) zhiRelations.push({ type: '刑', desc: dzXing, from: eightZhis[zi].label, to: eightZhis[zj].label });
-                var dzHai = Lunar.getDiZhiHai(eightZhis[zi].idx, eightZhis[zj].idx);
-                if (dzHai) zhiRelations.push({ type: '害', desc: dzHai, from: eightZhis[zi].label, to: eightZhis[zj].label });
-                var dzPo = Lunar.getDiZhiPo(eightZhis[zi].idx, eightZhis[zj].idx);
-                if (dzPo) zhiRelations.push({ type: '破', desc: dzPo, from: eightZhis[zi].label, to: eightZhis[zj].label });
-            }
-        }
-
-        // 三合检测（申子辰、寅午戌、巳酉丑、亥卯未）
-        var sanHeGroups = [[8,0,4],[2,6,10],[5,9,1],[11,3,7]]; // 申子辰、寅午戌、巳酉丑、亥卯未
-        var zhiIdxSet = eightZhis.map(function(z) { return z.idx; });
-        var sanHeNames = ['申子辰合水局','寅午戌合火局','巳酉丑合金局','亥卯未合木局'];
-        for (var sh = 0; sh < sanHeGroups.length; sh++) {
-            var grp = sanHeGroups[sh];
-            if (zhiIdxSet.indexOf(grp[0]) >= 0 && zhiIdxSet.indexOf(grp[1]) >= 0 && zhiIdxSet.indexOf(grp[2]) >= 0) {
-                zhiRelations.push({ type: '三合', desc: sanHeNames[sh] });
-            }
-        }
-
-        // 三会检测（寅卯辰、巳午未、申酉戌、亥子丑）
-        var sanHuiGroups = [[2,3,4],[5,6,7],[8,9,10],[11,0,1]];
-        var sanHuiNames = ['寅卯辰会东方木','巳午未会南方火','申酉戌会西方金','亥子丑会北方水'];
-        for (var shi = 0; shi < sanHuiGroups.length; shi++) {
-            var hgrp = sanHuiGroups[shi];
-            if (zhiIdxSet.indexOf(hgrp[0]) >= 0 && zhiIdxSet.indexOf(hgrp[1]) >= 0 && zhiIdxSet.indexOf(hgrp[2]) >= 0) {
-                zhiRelations.push({ type: '三会', desc: sanHuiNames[shi] });
-            }
-        }
+        // 天干+地支留意：统一使用 getTGDZRelations（与原命局同一个函数）
+        var ganList8 = eightGans.map(function(g) { return Lunar.tianGan[g.idx]; });
+        var ganLabels8 = eightGans.map(function(g) { return g.label; });
+        var zhiList8 = eightZhis.map(function(z) { return Lunar.diZhi[z.idx]; });
+        var zhiLabels8 = eightZhis.map(function(z) { return z.label; });
+        var tgDzResult = RelationAnalyzer.getTGDZRelations(ganList8, zhiList8, ganLabels8, zhiLabels8);
+        var ganRelations = tgDzResult.tianGan.map(function(r) {
+            return { type: r.category, desc: r.name, from: r.pos1 || '', to: r.pos2 || '' };
+        });
+        var zhiRelations = tgDzResult.diZhi.map(function(r) {
+            return { type: r.category === '半合' ? '半合' : (r.category === '合' ? '合' : r.category), desc: r.display };
+        });
 
         // 渲染天干留意
         var elGanRel = document.getElementById('dyt-info-gan');

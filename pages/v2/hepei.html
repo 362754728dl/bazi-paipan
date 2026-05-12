@@ -490,6 +490,10 @@
                 <label>出生时</label>
                 <select id="hourA"></select>
             </div>
+            <div class="form-group">
+                <label>出生分</label>
+                <select id="minuteA"></select>
+            </div>
         </div>
         <div class="form-row">
             <div class="form-group">
@@ -545,6 +549,10 @@
             <div class="form-group">
                 <label>出生时</label>
                 <select id="hourB"></select>
+            </div>
+            <div class="form-group">
+                <label>出生分</label>
+                <select id="minuteB"></select>
             </div>
         </div>
         <div class="form-row">
@@ -675,6 +683,19 @@
                     opt.textContent = h + '时';
                 }
                 if (h === 8) opt.selected = true;
+                sel.appendChild(opt);
+            }
+        });
+
+        // 分钟 0-59
+        var minutes = ['minuteA', 'minuteB'];
+        minutes.forEach(function(id) {
+            var sel = document.getElementById(id);
+            if (!sel) return;
+            for (var m = 0; m < 60; m++) {
+                var opt = document.createElement('option');
+                opt.value = m;
+                opt.textContent = m < 10 ? '0' + m + '分' : m + '分';
                 sel.appendChild(opt);
             }
         });
@@ -964,11 +985,13 @@
         var monthA = parseInt(document.getElementById('monthA').value);
         var dayA = parseInt(document.getElementById('dayA').value);
         var hourA = parseInt(document.getElementById('hourA').value);
+        var minuteA = parseInt(document.getElementById('minuteA').value);
 
         var yearB = parseInt(document.getElementById('yearB').value);
         var monthB = parseInt(document.getElementById('monthB').value);
         var dayB = parseInt(document.getElementById('dayB').value);
         var hourB = parseInt(document.getElementById('hourB').value);
+        var minuteB = parseInt(document.getElementById('minuteB').value);
 
         if (dayA > getDaysInMonth(yearA, monthA)) {
             alert('甲方出生日期不合法');
@@ -990,8 +1013,8 @@
         var lngB = getCityLongitude('B');
 
         // 生成双方排盘
-        var resultA = Bazi.generate(yearA, monthA, dayA, hourA, 0, genderA, lngA);
-        var resultB = Bazi.generate(yearB, monthB, dayB, hourB, 0, genderB, lngB);
+        var resultA = Bazi.generate(yearA, monthA, dayA, hourA, minuteA, genderA, lngA);
+        var resultB = Bazi.generate(yearB, monthB, dayB, hourB, minuteB, genderB, lngB);
 
         if (!resultA || !resultB) {
             alert('排盘失败，请检查输入的日期是否正确');
@@ -1054,11 +1077,13 @@
         var monthA = parseInt(document.getElementById('monthA').value);
         var dayA = parseInt(document.getElementById('dayA').value);
         var hourA = parseInt(document.getElementById('hourA').value);
+        var minuteA = parseInt(document.getElementById('minuteA').value);
 
         var yearB = parseInt(document.getElementById('yearB').value);
         var monthB = parseInt(document.getElementById('monthB').value);
         var dayB = parseInt(document.getElementById('dayB').value);
         var hourB = parseInt(document.getElementById('hourB').value);
+        var minuteB = parseInt(document.getElementById('minuteB').value);
 
         // 验证日期
         if (dayA > getDaysInMonth(yearA, monthA)) {
@@ -1081,8 +1106,8 @@
         var lngB = getCityLongitude('B');
 
         // 生成双方排盘
-        var resultA = Bazi.generate(yearA, monthA, dayA, hourA, 0, genderA, lngA);
-        var resultB = Bazi.generate(yearB, monthB, dayB, hourB, 0, genderB, lngB);
+        var resultA = Bazi.generate(yearA, monthA, dayA, hourA, minuteA, genderA, lngA);
+        var resultB = Bazi.generate(yearB, monthB, dayB, hourB, minuteB, genderB, lngB);
 
         if (!resultA || !resultB) {
             alert('排盘失败，请检查输入的日期是否正确');
@@ -1105,6 +1130,10 @@
         html += '</div>';
         html += '<div class="ai-result-content" id="aiResult" style="display:none;"></div>';
         html += '</div>';
+        // 分享按钮
+        html += '<div id="shareBtnArea" style="text-align:center;margin:16px 0;display:none;">';
+        html += '<button onclick="shareHepeiResult()" style="padding:10px 28px;background:var(--red-primary);color:#fff;border:none;border-radius:8px;font-size:14px;cursor:pointer;">📤 分享合配结果</button>';
+        html += '</div>';
 
         resultArea.innerHTML = html;
 
@@ -1120,6 +1149,9 @@
             var aiResultEl = document.getElementById('aiResult');
             aiResultEl.innerHTML = formatAIContent(aiContent);
             aiResultEl.style.display = 'block';
+            // 显示分享按钮
+            var shareArea = document.getElementById('shareBtnArea');
+            if (shareArea) shareArea.style.display = 'block';
         } catch (err) {
             document.getElementById('aiLoading').style.display = 'none';
             var aiResultEl = document.getElementById('aiResult');
@@ -1275,11 +1307,44 @@
                     if (daySel) daySel.value = parseInt(parts[2]);
                 }
             }
-            // 填充出生时间
-            if (record.birthHour !== undefined && record.birthHour !== null) {
-                var hourSel = document.getElementById('hour' + party);
-                if (hourSel) hourSel.value = record.birthHour;
+            // ===== 时辰回填（稳健版） =====
+            var birthHour = 0;
+            var birthMinute = 0;
+
+            // 按优先级依次尝试所有可能的字段名
+            if (record.formData) {
+                if (record.formData.hour !== undefined && record.formData.hour !== null) {
+                    birthHour = parseInt(record.formData.hour);
+                }
+                if (record.formData.minute !== undefined && record.formData.minute !== null) {
+                    birthMinute = parseInt(record.formData.minute);
+                }
+                if (birthHour === 0 && record.formData.birthHour !== undefined) {
+                    birthHour = parseInt(record.formData.birthHour);
+                }
+                if (birthMinute === 0 && record.formData.birthMinute !== undefined) {
+                    birthMinute = parseInt(record.formData.birthMinute);
+                }
+                if (birthHour === 0 && record.formData.birth_hour !== undefined) {
+                    birthHour = parseInt(record.formData.birth_hour);
+                }
             }
+            if (birthHour === 0 && record.birthHour !== undefined) {
+                birthHour = parseInt(record.birthHour);
+            }
+            if (birthMinute === 0 && record.birthMinute !== undefined) {
+                birthMinute = parseInt(record.birthMinute);
+            }
+
+            if (isNaN(birthHour) || birthHour < 0 || birthHour > 23) birthHour = 0;
+            if (isNaN(birthMinute) || birthMinute < 0 || birthMinute > 59) birthMinute = 0;
+
+            console.log('[合配回填] 提取到的时辰：', birthHour + ':' + birthMinute);
+
+            var hourSel = document.getElementById('hour' + party);
+            if (hourSel) hourSel.value = birthHour;
+            var minuteSel = document.getElementById('minute' + party);
+            if (minuteSel) minuteSel.value = birthMinute;
             // 填充省市（兼容新旧数据格式）
             var formData = record.formData || record;
             if (formData.province) {
@@ -1345,6 +1410,19 @@ function checkMemberAndAnalyze() {
         startAnalysis();
     } else {
         showWechatGuide();
+    }
+}
+</script>
+<script>
+// 分享合配结果
+async function shareHepeiResult() {
+    if (navigator.share) {
+        try {
+            await navigator.share({ title: '五行鲤 · 八字合配', url: window.location.href });
+        } catch (e) {}
+    } else if (navigator.clipboard) {
+        await navigator.clipboard.writeText(window.location.href);
+        alert('链接已复制到剪贴板');
     }
 }
 </script>

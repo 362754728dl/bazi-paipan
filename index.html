@@ -66,7 +66,8 @@
 
 <!-- 顶部标题栏 -->
 <header class="header">
-    <h1>四柱八字排盘</h1>
+    <img src="/images/logo.png" alt="五行鲤" style="height:50px;display:block;margin:0 auto 8px;">
+    <h1>五行鲤 · 四柱八字排盘</h1>
     <div class="subtitle">传统命理 · 精准排盘</div>
 </header>
 
@@ -323,6 +324,8 @@
     <a class="drawer-item" href="pages/yangsheng.html" onclick="closeDrawer()">🥗 身心调养</a>
     <div class="drawer-divider"></div>
     <a class="drawer-item" href="pages/my.html" onclick="closeDrawer()">👤 我的</a>
+    <div class="drawer-divider"></div>
+    <a class="drawer-item" href="pages/admin/members.html" id="adminDrawerItem" style="display:none;" onclick="closeDrawer()">⚙️ 管理后台</a>
 </div>
 
 <!-- 核心函数预定义（确保在app.js加载前可用） -->
@@ -406,6 +409,62 @@ var AuthReadyManager = {
 function afterAuthReady(callback) {
     AuthReadyManager.onReady(callback);
 }
+
+// ==================== 分享功能 ====================
+async function sharePaipanResult() {
+    if (navigator.share) {
+        try {
+            await navigator.share({
+                title: '五行鲤 · 传统命理排盘',
+                text: '来看看这个八字排盘结果',
+                url: window.location.href
+            });
+        } catch (err) {
+            console.log('分享取消:', err);
+        }
+    } else if (navigator.clipboard) {
+        try {
+            await navigator.clipboard.writeText(window.location.href);
+            if (typeof showToast === 'function') {
+                showToast('链接已复制到剪贴板');
+            } else {
+                alert('链接已复制到剪贴板');
+            }
+        } catch (err) {
+            console.error('复制失败:', err);
+        }
+    } else {
+        // 降级方案
+        var textArea = document.createElement('textarea');
+        textArea.value = window.location.href;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+        if (typeof showToast === 'function') {
+            showToast('链接已复制到剪贴板');
+        } else {
+            alert('链接已复制到剪贴板');
+        }
+    }
+}
+
+// ==================== 管理员入口控制 ====================
+function checkAdminAccess() {
+    // 从本地存储或Cookie检查是否是admin
+    var username = localStorage.getItem('username') || '';
+    if (username === 'admin') {
+        var adminItem = document.getElementById('adminDrawerItem');
+        if (adminItem) {
+            adminItem.style.display = 'block';
+        }
+    }
+}
+
+// 页面加载后检查管理员权限
+document.addEventListener('DOMContentLoaded', function() {
+    checkAdminAccess();
+});
 </script>
 
 <!-- 抽屉菜单控制脚本（独立，不修改app.js） -->
@@ -622,6 +681,11 @@ window.addEventListener('load', function() {
 <!-- 底部版权信息 -->
 <div style="text-align:center;padding:16px 12px 24px;font-size:12px;color:#999;background:var(--bg-primary);">
     © 2026 五行鲤 ｜ 传统民俗文化参考，不构成人生决策依据
+    <p style="font-size:12px;color:#999;margin-top:4px;">
+        <a href="https://beian.miit.gov.cn/" target="_blank" rel="noopener" style="color:#999;text-decoration:none;">
+            京ICP备XXXXXXXX号-1
+        </a>
+    </p>
 </div>
 
 </body>
