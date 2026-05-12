@@ -117,7 +117,13 @@ router.post('/login', (req, res) => {
       return res.json({ code: 403, message: '账号已被禁用' });
     }
 
-    const valid = bcrypt.compareSync(password, user.password_hash);
+    // 兼容旧数据库：可能使用 password 或 password_hash 字段
+    var passwordHash = user.password_hash || user.password;
+    if (!passwordHash) {
+      console.log('[登录] 用户', username, '没有密码字段');
+      return res.json({ code: 400, message: '用户名或密码错误' });
+    }
+    const valid = bcrypt.compareSync(password, passwordHash);
     if (!valid) {
       return res.json({ code: 400, message: '用户名或密码错误' });
     }

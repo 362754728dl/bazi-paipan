@@ -289,21 +289,6 @@ async function initDb() {
     compatDb.exec(`ALTER TABLE users ADD COLUMN ai_experience_used INTEGER DEFAULT 0`);
   } catch(e) { /* 列已存在则忽略 */ }
 
-  // 【关键修复】兼容旧数据库：如果 users 表使用 password 字段而非 password_hash，则迁移
-  try {
-    const tableInfo = compatDb.prepare("PRAGMA table_info(users)").all();
-    const hasPasswordHash = tableInfo.some(function(col) { return col.name === 'password_hash'; });
-    const hasPassword = tableInfo.some(function(col) { return col.name === 'password'; });
-    if (!hasPasswordHash && hasPassword) {
-      console.log('[数据库迁移] 检测到旧版 password 字段，正在迁移到 password_hash...');
-      compatDb.exec(`ALTER TABLE users ADD COLUMN password_hash TEXT`);
-      compatDb.exec(`UPDATE users SET password_hash = password WHERE password IS NOT NULL`);
-      console.log('[数据库迁移] password -> password_hash 迁移完成');
-    }
-  } catch(e) {
-    console.log('[数据库迁移] password_hash 检查/迁移失败:', e.message);
-  }
-
   // 创建默认管理员账号
   const adminExists = compatDb.prepare('SELECT id FROM users WHERE username = ?').get(config.adminUser);
   if (!adminExists) {
