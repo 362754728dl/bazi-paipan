@@ -72,15 +72,19 @@ router.post('/register', (req, res) => {
 
     const token = generateToken(user);
 
-    // 设置 HttpOnly Cookie（双保险：前端用 Bearer token，后端也读 cookie）
-    const isProduction = process.env.NODE_ENV === 'production';
-    res.cookie('auth_token', token, {
-      httpOnly: true,
-      secure: isProduction,
-      sameSite: 'lax',
-      path: '/',
-      maxAge: 7 * 24 * 60 * 60 * 1000 // 7天
-    });
+    // 设置 HttpOnly Cookie（Express内置res.cookie，无需cookie-parser）
+    try {
+      var isProduction = process.env.NODE_ENV === 'production';
+      res.cookie('auth_token', token, {
+        httpOnly: true,
+        secure: isProduction,
+        sameSite: 'lax',
+        path: '/',
+        maxAge: 7 * 24 * 60 * 60 * 1000
+      });
+    } catch (e) {
+      console.error('设置Cookie失败:', e.message);
+    }
 
     res.json({
       code: 200,
@@ -141,14 +145,18 @@ router.post('/login', (req, res) => {
     const token = generateToken(user);
 
     // 设置 HttpOnly Cookie
-    const isProduction = process.env.NODE_ENV === 'production';
-    res.cookie('auth_token', token, {
-      httpOnly: true,
-      secure: isProduction,
-      sameSite: 'lax',
-      path: '/',
-      maxAge: 7 * 24 * 60 * 60 * 1000
-    });
+    try {
+      var isProduction = process.env.NODE_ENV === 'production';
+      res.cookie('auth_token', token, {
+        httpOnly: true,
+        secure: isProduction,
+        sameSite: 'lax',
+        path: '/',
+        maxAge: 7 * 24 * 60 * 60 * 1000
+      });
+    } catch (e) {
+      console.error('设置Cookie失败:', e.message);
+    }
 
     res.json({
       code: 200,
