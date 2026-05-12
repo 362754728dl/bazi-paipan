@@ -262,6 +262,7 @@ const Storage = (function () {
       if (data.code === 200) {
         // 清除缓存，下次读取时重新加载
         _recordsCache = null;
+        console.log('[排盘保存] 保存成功，记录ID:', data.data ? data.data.id : 'N/A');
         return { success: true, data: data.data };
       } else {
         console.error('[saveRecord] 保存失败:', data.message);
@@ -339,7 +340,7 @@ const Storage = (function () {
         // 更新缓存
         _recordsCache = records;
         _recordsCacheTime = Date.now();
-        console.log('[性能日志] 排盘记录加载完成，数量：' + records.length);
+        console.log('[排盘记录] 加载成功，记录数:', records.length);
 
         // 同步备份到本地
         _saveLocalRecords(records);
