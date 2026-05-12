@@ -161,8 +161,8 @@ const Storage = (function () {
   function isLoggedIn() {
     // V1本地登录状态
     if (!!load(CURRENT_USER_KEY, null)) return true;
-    // V2通过后端验证Cookie（异步，这里返回缓存状态）
-    // 实际登录状态以后端验证为准
+    // V2登录状态：检查 v2_user 或 v2_token 是否存在
+    if (localStorage.getItem('v2_user') || localStorage.getItem('v2_token')) return true;
     return false;
   }
 
