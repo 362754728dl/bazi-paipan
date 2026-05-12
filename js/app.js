@@ -810,7 +810,9 @@ const App = (function () {
         $('resultArea').style.display = 'block';
 
         // 自动保存记录（如果已登录且非查看模式）- 异步调用
+        console.log('[排盘调试] isLoggedIn:', Storage.isLoggedIn(), '_viewingRecord:', !!window._viewingRecord);
         if (Storage.isLoggedIn() && !_viewingRecord) {
+            console.log('[排盘调试] 开始调用 saveRecordAsync');
             saveRecordAsync(result, name);
         } else if (!Storage.isLoggedIn()) {
             showToast('排盘成功！登录后可保存记录');
@@ -3093,12 +3095,14 @@ const App = (function () {
      * @param {string} name - 姓名
      */
     async function saveRecordAsync(result, name) {
+        console.log('[排盘调试] saveRecordAsync 被调用，name:', name);
         var sd = result.solarDate;
         var ld = result.lunarDate;
         var pillars = result.pillars;
 
         // 重名自动编号：检查已有记录中同名数量（先获取现有记录）
         var existingRecords = await Storage.getRecords();
+        console.log('[排盘调试] 已有记录数:', existingRecords.length);
         var sameNameCount = 0;
         existingRecords.forEach(function(r) {
             if (r.name === name || r.name.indexOf(name) === 0) {
